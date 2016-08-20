@@ -1,0 +1,7 @@
+packages/
+.vs/
+bin/
+obj/
+*.csproj.user
+src/WebApiTestApplication/Scripts/typings/
+src/WebApiTestApplication/Scripts/CompiledTypeScript/
