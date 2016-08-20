@@ -4,7 +4,12 @@ using System.Web.Http;
 
 namespace WebApiTestApplication.Controllers
 {
-    [RoutePrefix("api/Test")]
+    public class EncryptedIntAttribute : Attribute
+    {
+
+    }
+
+    [RoutePrefix("api/Test/actions")]
     public class TestController : ApiController
     {
         // GET: api/Test
@@ -17,15 +22,22 @@ namespace WebApiTestApplication.Controllers
 
         // GET: api/Test/5
         [HttpGet]
-        public string Get(int id)
+        public string Get([EncryptedInt] int id)
         {
             return "value";
         }
 
         [HttpGet]
+        [Route("getSomething/{id}/ha")]
         public string GetSomething(int id, int y = 7)
         {
-            return "value";
+            return $"value {id} {y}";
+        }
+
+        [HttpGet]
+        public string GetSomethingElse(int id, string y)
+        {
+            return $"value {id} {y}";
         }
 
         // POST: api/Test
