@@ -20,6 +20,17 @@ namespace WebApiToTypeScript
             AppendLineWithoutIndent(line);
         }
 
+        public void AppendWithoutIndent(string line)
+        {
+            stringBuilder.Append(line);
+        }
+
+        public void Append(string line)
+        {
+            AppendIndent();
+            AppendWithoutIndent(line);
+        }
+
         public override string ToString()
         {
             return stringBuilder.ToString();

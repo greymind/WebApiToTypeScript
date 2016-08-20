@@ -1,19 +1,37 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace WebApiToTypeScript
 {
-    public class TypeScriptBlock
+    public interface ITypeScriptCode
+    {
+        string ToString(int indent);
+    }
+
+    public class TypeScriptStatement : ITypeScriptCode
+    {
+        public string Statement { get; set; }
+
+        public string ToString(int indent)
+        {
+            var stringBuilder = new IndentAwareStringBuilder
+            {
+                Indent = indent
+            };
+
+            stringBuilder.AppendLine(Statement);
+
+            return stringBuilder.ToString();
+        }
+    }
+
+    public class TypeScriptBlock : ITypeScriptCode
     {
         private const int IndentPerLevel = 4;
 
         public string Outer { get; set; }
 
-        public List<string> Statements { get; set; }
-            = new List<string>();
-
-        public List<TypeScriptBlock> Children { get; set; }
-            = new List<TypeScriptBlock>();
+        public List<ITypeScriptCode> Children { get; set; }
+            = new List<ITypeScriptCode>();
 
         public TypeScriptBlock Parent { get; set; }
 
@@ -46,10 +64,18 @@ namespace WebApiToTypeScript
 
         public TypeScriptBlock AddStatement(string statement)
         {
-            Statements.Add(statement);
+            var child = new TypeScriptStatement
+            {
+                Statement = statement
+            };
+
+            Children.Add(child);
 
             return this;
         }
+
+        public TypeScriptBlock AddNewLine()
+            => AddStatement(string.Empty);
 
         public override string ToString()
             => ToString(0);
@@ -63,22 +89,26 @@ namespace WebApiToTypeScript
 
             stringBuilder.AppendLine($"{Outer} {{");
 
-            stringBuilder.Indent += IndentPerLevel;
-
-            foreach (var statement in Statements)
-                stringBuilder.AppendLine(statement);
-
-            stringBuilder.Indent -= IndentPerLevel;
-
-            if (Statements.Any() && Children.Any())
-                stringBuilder.AppendLine(string.Empty);
-
-            foreach (var child in Children)
+            for (int c = 0; c < Children.Count; c++)
             {
+                var child = Children[c];
+
                 var childIndent = stringBuilder.Indent + IndentPerLevel;
                 var childString = child.ToString(childIndent);
 
-                stringBuilder.AppendLineWithoutIndent(childString);
+                stringBuilder.AppendWithoutIndent(childString);
+
+                var nextChild = c < Children.Count - 1 ? Children[c + 1] : null;
+
+                var isNextChildDifferent = nextChild?.GetType() != child.GetType();
+                var isNextChildABlock = nextChild is TypeScriptBlock;
+                var isThisTheLastChild = c == Children.Count - 1;
+
+                if ((isNextChildDifferent || isNextChildABlock)
+                    && !isThisTheLastChild)
+                {
+                    stringBuilder.AppendLine(string.Empty);
+                }
             }
 
             stringBuilder.AppendLine("}");
