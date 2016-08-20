@@ -9,7 +9,7 @@ using Mono.Cecil;
 
 namespace WebApiToTypeScript
 {
-    public class WebApiToTypeScript : Task
+    public class WebApiToTypeScript : AppDomainIsolatedTask
     {
         [Required]
         public string WebApiApplicationAssembly { get; set; }
@@ -31,7 +31,7 @@ namespace WebApiToTypeScript
 
             var endpointBlock = new TypeScriptBlock
             {
-                Outer = "module Endpoints"
+                Outer = "namespace Endpoints"
             };
 
             foreach (var apiController in apiControllers)
@@ -51,7 +51,111 @@ namespace WebApiToTypeScript
             var endpointName = apiController.Name
                 .Replace("Controller", string.Empty);
 
-            endpointBlock.WithBlock($"export class {endpointName}Endpoint");
+            var moduleBlock = endpointBlock.AddAndUseBlock($"export module {endpointName}Endpoint");
+
+            var httpVerbs = new string[] {
+                "HttpGetAttribute",
+                "HttpPostAttribute",
+                "HttpPutAttribute",
+                "HttpDeleteAttribute"
+            };
+
+            var methods = apiController.Methods
+                .Where(m => m.IsPublic
+                    && m.HasCustomAttributes
+                    && m.CustomAttributes.Any(a => httpVerbs.Contains(a.AttributeType.Name)))
+                .Select(m => new
+                {
+                    MethodDefinition = m,
+                    HttpVerb = m.CustomAttributes.Single(a => httpVerbs.Contains(a.AttributeType.Name))
+                });
+
+            var methodNames = new HashSet<string>();
+
+            foreach (var method in methods)
+            {
+                var methodDefinition = method.MethodDefinition;
+                var originalMethodName = methodDefinition.Name;
+                var verbName = method.HttpVerb.AttributeType.Name;
+
+                var methodName = GetUniqueMethodName(methodNames, originalMethodName);
+
+                var classBlock = moduleBlock
+                    .AddAndUseBlock($"export class {methodName}");
+
+                CreateAllParameters(methodDefinition, classBlock);
+
+                CreateConstructorBlock(methodDefinition, classBlock);
+
+                classBlock
+                    .AddAndUseBlock("toString(): string")
+                    .AddStatement($"//{verbName}")
+                    .AddStatement($"return `/api/{endpointName}/{methodName}`;");
+            }
+        }
+
+        private string GetUniqueMethodName(HashSet<string> methodNames, string originalMethodName)
+        {
+            var methodName = originalMethodName;
+
+            var counter = 1;
+            while (methodNames.Contains(methodName))
+                methodName = $"{originalMethodName}{counter++}";
+
+            methodNames.Add(methodName);
+
+            return methodName;
+        }
+
+        private void CreateAllParameters(MethodDefinition methodDefinition, TypeScriptBlock classBlock)
+        {
+            var allParameters = methodDefinition.Parameters
+                .Select(GetParameterStrings());
+
+            foreach (var parameter in allParameters)
+                classBlock.AddStatement(parameter);
+        }
+
+        private void CreateConstructorBlock(MethodDefinition methodDefinition, TypeScriptBlock classBlock)
+        {
+            var constructorParameters = methodDefinition.Parameters
+                .Where(p => !p.IsOptional);
+
+            if (!constructorParameters.Any())
+                return;
+
+            var constructorParameterStrings = constructorParameters
+                .Select(GetParameterStrings());
+
+            var constructorParametersList = string.Join(", ", constructorParameters);
+
+            var constructorBlock = classBlock.AddAndUseBlock($"constructor({constructorParametersList})");
+
+            foreach (var constructorParameter in constructorParameters)
+            {
+                var parameterName = constructorParameter.Name;
+
+                constructorBlock
+                    .AddStatement($"this.{parameterName} = {parameterName};");
+            }
+        }
+
+        private Func<ParameterDefinition, string> GetParameterStrings()
+            => p => $"{p.Name}: {GetTypeScriptType(p.ParameterType)}";
+
+        private string GetTypeScriptType(TypeReference parameterType)
+        {
+            switch (parameterType.FullName)
+            {
+                case "System.String":
+                    return "string";
+
+                case "System.Int32":
+                    return "number";
+
+                default:
+                    return "any";
+            }
         }
 
         private Func<TypeDefinition, bool> IsControllerType()

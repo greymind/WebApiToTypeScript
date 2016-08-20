@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace WebApiToTypeScript
 {
@@ -8,12 +9,29 @@ namespace WebApiToTypeScript
 
         public string Outer { get; set; }
 
+        public List<string> Statements { get; set; }
+            = new List<string>();
+
         public List<TypeScriptBlock> Children { get; set; }
             = new List<TypeScriptBlock>();
 
         public TypeScriptBlock Parent { get; set; }
 
-        public TypeScriptBlock WithBlock(string outer = null)
+        public TypeScriptBlock AddBlock(string outer = null)
+        {
+            var child = CreateChild(outer);
+
+            return this;
+        }
+
+        public TypeScriptBlock AddAndUseBlock(string outer = null)
+        {
+            var child = CreateChild(outer);
+
+            return child;
+        }
+
+        private TypeScriptBlock CreateChild(string outer)
         {
             var child = new TypeScriptBlock
             {
@@ -24,6 +42,13 @@ namespace WebApiToTypeScript
             Children.Add(child);
 
             return child;
+        }
+
+        public TypeScriptBlock AddStatement(string statement)
+        {
+            Statements.Add(statement);
+
+            return this;
         }
 
         public override string ToString()
@@ -38,12 +63,22 @@ namespace WebApiToTypeScript
 
             stringBuilder.AppendLine($"{Outer} {{");
 
+            stringBuilder.Indent += IndentPerLevel;
+
+            foreach (var statement in Statements)
+                stringBuilder.AppendLine(statement);
+
+            stringBuilder.Indent -= IndentPerLevel;
+
+            if (Statements.Any() && Children.Any())
+                stringBuilder.AppendLine(string.Empty);
+
             foreach (var child in Children)
             {
-                var childIndent = indent + IndentPerLevel;
+                var childIndent = stringBuilder.Indent + IndentPerLevel;
                 var childString = child.ToString(childIndent);
 
-                stringBuilder.AppendLine(childString);
+                stringBuilder.AppendLineWithoutIndent(childString);
             }
 
             stringBuilder.AppendLine("}");
