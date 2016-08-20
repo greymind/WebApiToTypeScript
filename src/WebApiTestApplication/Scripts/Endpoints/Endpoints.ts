@@ -2,7 +2,7 @@ namespace Endpoints {
     export module TestEndpoint {
         export class Get {
             toString(): string {
-                return '/api/Test/GetAll';
+                return `/api/Test/actions`;
             }
         }
     
@@ -26,7 +26,7 @@ namespace Endpoints {
             }
         
             toString(): string {
-                return '/api/Test/Get' + this.getQueryString();;
+                return `/api/Test/actions` + this.getQueryString();;
             }
         }
     
@@ -55,7 +55,34 @@ namespace Endpoints {
             }
         
             toString(): string {
-                return '/api/Test/GetSomething' + this.getQueryString();;
+                return `/api/Test/actions` + this.getQueryString();;
+            }
+        }
+    
+        export class GetSomethingElse {
+            id: number
+            y: string
+        
+            constructor(id: number, y: string) {
+                this.id = id;
+                this.y = y;
+            }
+        
+            private getQueryString(): string {
+                var parameters: string[]
+                
+                parameters.push(`id=${this.id}`);
+                parameters.push(`y=${this.y}`);
+            
+                if (parameters.length > 0) {
+                    return '?' + parameters.join('&');
+                }
+            
+                return '';
+            }
+        
+            toString(): string {
+                return `/api/Test/actions` + this.getQueryString();;
             }
         }
     
@@ -66,19 +93,8 @@ namespace Endpoints {
                 this.value = value;
             }
         
-            private getQueryString(): string {
-                var parameters: string[]
-                
-            
-                if (parameters.length > 0) {
-                    return '?' + parameters.join('&');
-                }
-            
-                return '';
-            }
-        
             toString(): string {
-                return '/api/Test/Post' + this.getQueryString();;
+                return `/api/Test/actions`;
             }
         }
     
@@ -104,7 +120,7 @@ namespace Endpoints {
             }
         
             toString(): string {
-                return '/api/Test/Put' + this.getQueryString();;
+                return `/api/Test/actions` + this.getQueryString();;
             }
         }
     
@@ -128,7 +144,7 @@ namespace Endpoints {
             }
         
             toString(): string {
-                return '/api/Test/Delete' + this.getQueryString();;
+                return `/api/Test/actions` + this.getQueryString();;
             }
         }
     }

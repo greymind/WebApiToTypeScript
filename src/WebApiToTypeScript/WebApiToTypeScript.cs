@@ -48,89 +48,50 @@ namespace WebApiToTypeScript
 
         private void WriteEndpointClass(TypeScriptBlock endpointBlock, TypeDefinition apiController)
         {
-            var endpointName = apiController.Name
-                .Replace("Controller", string.Empty);
-
-            var endpointRouteName =
-                GetEndpointRouteName(apiController) ?? endpointName;
+            var webApiController = new WebApiController(apiController);
 
             var moduleBlock = endpointBlock
-                .AddAndUseBlock($"export module {endpointName}Endpoint");
+                .AddAndUseBlock($"export module {webApiController.Name}Endpoint");
 
-            var httpVerbs = new string[] {
-                "HttpGetAttribute",
-                "HttpPostAttribute",
-                "HttpPutAttribute",
-                "HttpDeleteAttribute"
-            };
+            var actions = webApiController.Actions;
 
-            var methods = apiController.Methods
-                .Where(m => m.IsPublic
-                    && m.HasCustomAttributes
-                    && m.CustomAttributes.Any(a => httpVerbs.Contains(a.AttributeType.Name)));
-
-            var methodNames = new HashSet<string>();
-
-            foreach (var method in methods)
+            foreach (var action in actions)
             {
-                var methodName = GetUniqueMethodName(methodNames, method.Name);
-
-                var methodRouteName = GetMethodRouteName(method) ?? method.Name;
+                var method = action.Method;
 
                 var classBlock = moduleBlock
-                    .AddAndUseBlock($"export class {methodName}");
+                    .AddAndUseBlock($"export class {action.Name}");
 
                 CreateAllParameters(classBlock, method);
 
                 CreateConstructorBlock(classBlock, method);
 
-                CreateQueryStringBlock(classBlock, method);
+                CreateQueryStringBlock(classBlock, webApiController.RouteParts, action);
 
-                CreateToStringBlock(classBlock, endpointRouteName, methodRouteName,
-                    method);
+                CreateToStringBlock(classBlock, webApiController.BaseEndpoint, action);
             }
         }
 
-        private string GetMethodRouteName(MethodDefinition method)
-        {
-            return method.CustomAttributes
-                ?.SingleOrDefault(a => a.AttributeType.Name == "RouteAttribute")
-                ?.ConstructorArguments
-                .First()
-                .Value
-                .ToString();
-        }
-
-        private string GetEndpointRouteName(TypeDefinition apiController)
-        {
-            return apiController.CustomAttributes
-                ?.SingleOrDefault(a => a.AttributeType.Name == "RoutePrefixAttribute")
-                ?.ConstructorArguments
-                .First()
-                .Value
-                .ToString();
-        }
-
-        private void CreateToStringBlock(TypeScriptBlock classBlock, string endpointRouteName,
-            string methodRouteName, MethodDefinition method)
+        private void CreateToStringBlock(TypeScriptBlock classBlock,
+            string baseEndpoint, WebApiAction action)
         {
             var toStringBlock = classBlock
                 .AddAndUseBlock("toString(): string");
 
-            var baseEndpoint = $"/{endpointRouteName}/{methodRouteName}";
-            var queryString = method.Parameters.Any()
+            var queryString = action.QueryStringParameters.Any()
                 ? " + this.getQueryString();"
                 : string.Empty;
 
             toStringBlock
-                .AddStatement($"return '{baseEndpoint}'{queryString};");
+                .AddStatement($"return `{baseEndpoint}`{queryString};");
         }
 
-        private void CreateQueryStringBlock(TypeScriptBlock classBlock, MethodDefinition method)
+        private void CreateQueryStringBlock(TypeScriptBlock classBlock,
+            List<WebApiRoutePart> baseRouteParts, WebApiAction action)
         {
-            var allParameters = method.Parameters;
+            var queryStringParameters = action.QueryStringParameters;
 
-            if (!allParameters.Any())
+            if (!queryStringParameters.Any())
                 return;
 
             var queryStringBlock = classBlock
@@ -138,14 +99,8 @@ namespace WebApiToTypeScript
                 .AddStatement("var parameters: string[]")
                 .AddNewLine();
 
-            foreach (var parameter in allParameters)
+            foreach (var parameter in queryStringParameters)
             {
-                var isFromBody = parameter.HasCustomAttributes
-                    && parameter.CustomAttributes.Any(a => a.AttributeType.Name == "FromBodyAttribute");
-
-                if (isFromBody)
-                    continue;
-
                 var isOptional = parameter.IsOptional;
                 var parameterName = parameter.Name;
 
@@ -163,19 +118,6 @@ namespace WebApiToTypeScript
                 .AddStatement("return '?' + parameters.join('&');")
                 .Parent
                 .AddStatement("return '';");
-        }
-
-        private string GetUniqueMethodName(HashSet<string> methodNames, string originalMethodName)
-        {
-            var methodName = originalMethodName;
-
-            var counter = 1;
-            while (methodNames.Contains(methodName))
-                methodName = $"{originalMethodName}{counter++}";
-
-            methodNames.Add(methodName);
-
-            return methodName;
         }
 
         private void CreateAllParameters(TypeScriptBlock classBlock, MethodDefinition method)
