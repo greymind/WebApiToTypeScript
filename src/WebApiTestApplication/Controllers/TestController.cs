@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Web.Http;
 
 namespace WebApiTestApplication.Controllers
 {
+    [Route("api/Test")]
     public class TestController : ApiController
     {
         // GET: api/Test
@@ -15,6 +17,12 @@ namespace WebApiTestApplication.Controllers
         // GET: api/Test/5
         [HttpGet]
         public string Get(int id)
+        {
+            return "value";
+        }
+
+        [HttpGet]
+        public string GetSomething(int id, int y = 7)
         {
             return "value";
         }
