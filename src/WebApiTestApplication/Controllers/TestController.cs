@@ -4,11 +4,12 @@ using System.Web.Http;
 
 namespace WebApiTestApplication.Controllers
 {
-    [Route("api/Test")]
+    [RoutePrefix("api/Test")]
     public class TestController : ApiController
     {
         // GET: api/Test
         [HttpGet]
+        [Route("GetAll")]
         public IEnumerable<string> Get()
         {
             return new string[] { "value1", "value2" };
