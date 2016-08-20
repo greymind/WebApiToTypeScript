@@ -51,7 +51,7 @@ namespace WebApiToTypeScript
             var endpointName = apiController.Name
                 .Replace("Controller", string.Empty);
 
-            var endpointRouteName = 
+            var endpointRouteName =
                 GetEndpointRouteName(apiController) ?? endpointName;
 
             var moduleBlock = endpointBlock
@@ -80,13 +80,14 @@ namespace WebApiToTypeScript
                 var classBlock = moduleBlock
                     .AddAndUseBlock($"export class {methodName}");
 
-                CreateAllParameters(method, classBlock);
+                CreateAllParameters(classBlock, method);
 
-                CreateConstructorBlock(method, classBlock);
+                CreateConstructorBlock(classBlock, method);
 
-                CreateQueryStringBlock(method, classBlock);
+                CreateQueryStringBlock(classBlock, method);
 
-                CreateToStringBlock(method, classBlock, endpointRouteName, methodRouteName);
+                CreateToStringBlock(classBlock, endpointRouteName, methodRouteName,
+                    method);
             }
         }
 
@@ -110,8 +111,8 @@ namespace WebApiToTypeScript
                 .ToString();
         }
 
-        private void CreateToStringBlock(MethodDefinition method, TypeScriptBlock classBlock,
-            string endpointRouteName, string methodRouteName)
+        private void CreateToStringBlock(TypeScriptBlock classBlock, string endpointRouteName,
+            string methodRouteName, MethodDefinition method)
         {
             var toStringBlock = classBlock
                 .AddAndUseBlock("toString(): string");
@@ -125,7 +126,7 @@ namespace WebApiToTypeScript
                 .AddStatement($"return '{baseEndpoint}'{queryString};");
         }
 
-        private void CreateQueryStringBlock(MethodDefinition method, TypeScriptBlock classBlock)
+        private void CreateQueryStringBlock(TypeScriptBlock classBlock, MethodDefinition method)
         {
             var allParameters = method.Parameters;
 
@@ -177,7 +178,7 @@ namespace WebApiToTypeScript
             return methodName;
         }
 
-        private void CreateAllParameters(MethodDefinition method, TypeScriptBlock classBlock)
+        private void CreateAllParameters(TypeScriptBlock classBlock, MethodDefinition method)
         {
             var allParameters = method.Parameters
                 .Select(GetParameterStrings());
@@ -186,7 +187,7 @@ namespace WebApiToTypeScript
                 classBlock.AddStatement(parameter);
         }
 
-        private void CreateConstructorBlock(MethodDefinition method, TypeScriptBlock classBlock)
+        private void CreateConstructorBlock(TypeScriptBlock classBlock, MethodDefinition method)
         {
             var constructorParameters = method.Parameters
                 .Where(p => !p.IsOptional);
