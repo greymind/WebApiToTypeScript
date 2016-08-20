@@ -121,14 +121,8 @@
     <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <ProjectReference Include="..\WebApiToTypeScript\WebApiToTypeScript.csproj">
-      <Project>{9e94a78b-6ada-4eb8-8477-bd2947227e58}</Project>
-      <Name>WebApiToTypeScript</Name>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup>
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VisualStudioVersion>14.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
@@ -149,7 +143,6 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
@@ -179,7 +172,7 @@
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild"></Target><Target Name="AfterBuild"></Target>
   -->
-  <UsingTask TaskName="WebApiToTypeScript.WebApiToTypeScript" AssemblyFile="$(TargetDir)WebApiToTypeScript.dll" />
+  <UsingTask TaskName="WebApiToTypeScript.WebApiToTypeScript" AssemblyFile="$(ProjectDir)..\WebApiToTypeScript\bin\Debug\WebApiToTypeScript.dll" />
   <Target Name="AfterBuild">
     <WebApiToTypeScript WebApiApplicationAssembly="$(TargetDir)WebApiTestApplication.dll" OutputDirectory="$(ProjectDir)Scripts\Endpoints" />
   </Target>
