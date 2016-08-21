@@ -56,7 +56,7 @@ namespace WebApiToTypeScript
                     .AddAndUseBlock($"export class {action.Name}")
                     .AddStatement($"verb: string = '{action.Verb}'");
 
-                CreateConstructorBlock(classBlock, method);
+                CreateConstructorBlock(classBlock, webApiController.RouteParts, action);
 
                 CreateQueryStringBlock(classBlock, webApiController.RouteParts, action);
 
@@ -112,9 +112,13 @@ namespace WebApiToTypeScript
                 .AddStatement("return '';");
         }
 
-        private void CreateConstructorBlock(TypeScriptBlock classBlock, MethodDefinition method)
+        private void CreateConstructorBlock(TypeScriptBlock classBlock, 
+            List<WebApiRoutePart> baseRouteParts, WebApiAction action)
         {
-            var constructorParameters = method.Parameters;
+            var constructorParameters = action.Method.Parameters
+                .Where(p => baseRouteParts.Any(brp => brp.ParameterName == p.Name)
+                    || action.RouteParts.Any(rp => rp.ParameterName == p.Name)
+                    || action.QueryStringParameters.Any(qsp => qsp.Name == p.Name));
 
             if (!constructorParameters.Any())
                 return;

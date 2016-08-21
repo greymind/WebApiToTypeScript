@@ -16,7 +16,7 @@ Ensure the DLL is part of the build process, so you have access to it. Easiest w
 </Target>
 ```
 
-## Contributors
+## Team
 * Balakrishnan (Balki) Ranganathan
 
 ## License

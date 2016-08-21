@@ -87,7 +87,7 @@ namespace Endpoints {
         export class Post {
             verb: string = 'POST'
         
-            constructor(public hole: string, public value: string) {
+            constructor(public hole: string) {
             }
         
             toString = (): string => {
@@ -98,23 +98,11 @@ namespace Endpoints {
         export class Put {
             verb: string = 'PUT'
         
-            constructor(public id: number, public value: string, public hole: string) {
-            }
-        
-            private getQueryString = (): string => {
-                let parameters: string[] = []
-                
-                parameters.push(`id=${this.id}`);
-            
-                if (parameters.length > 0) {
-                    return '?' + parameters.join('&');
-                }
-            
-                return '';
+            constructor(public id: number, public hole: string) {
             }
         
             toString = (): string => {
-                return `/api/Test/${this.hole}/actions` + this.getQueryString();;
+                return `/api/Test/${this.hole}/actions/${this.id}`;
             }
         }
     
