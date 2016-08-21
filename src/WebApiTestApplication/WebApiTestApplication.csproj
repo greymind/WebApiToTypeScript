@@ -167,10 +167,10 @@
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild"></Target><Target Name="AfterBuild"></Target>
   -->
+  <UsingTask TaskName="WebApiToTypeScript.WebApiToTypeScript" AssemblyFile="$(ProjectDir)..\WebApiToTypeScript\bin\Debug\WebApiToTypeScript.dll" />
   <Target Name="BeforeBuild">
     <RemoveDir Directories="$(ProjectDir)Scripts\CompiledTypescript" ContinueOnError="true" />
   </Target>
-  <UsingTask TaskName="WebApiToTypeScript.WebApiToTypeScript" AssemblyFile="$(ProjectDir)..\WebApiToTypeScript\bin\Debug\WebApiToTypeScript.dll" />
   <Target Name="AfterBuild">
     <WebApiToTypeScript WebApiApplicationAssembly="$(TargetDir)WebApiTestApplication.dll" OutputDirectory="$(ProjectDir)Scripts\Endpoints" />
   </Target>
