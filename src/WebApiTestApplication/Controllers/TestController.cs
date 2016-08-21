@@ -1,11 +1,55 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
 using System.Web.Http;
+using System.Web.Http.Controllers;
+using System.Web.Http.Metadata;
 
 namespace WebApiTestApplication.Controllers
 {
-    public class EncryptedIntAttribute : Attribute
+    public class EncryptedIntBinding : HttpParameterBinding
     {
+        public EncryptedIntBinding(HttpParameterDescriptor descriptor)
+            : base(descriptor)
+        {
+        }
+
+        public override Task ExecuteBindingAsync(ModelMetadataProvider metadataProvider,
+            HttpActionContext actionContext, CancellationToken cancellationToken)
+        {
+            var queryString = actionContext.Request
+                .RequestUri
+                .Query;
+
+            var query = HttpUtility.ParseQueryString(queryString);
+
+            var value = query.GetValues(Descriptor.ParameterName)
+                .Single();
+
+            SetValue(actionContext, int.Parse(value));
+
+            var tsc = new TaskCompletionSource<object>();
+            tsc.SetResult(null);
+            return tsc.Task;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
+    public class EncryptedIntAttribute : ParameterBindingAttribute
+    {
+        public override HttpParameterBinding GetBinding(HttpParameterDescriptor parameterDescriptor)
+        {
+            return new EncryptedIntBinding(parameterDescriptor);
+        }
+    }
+
+    public class DummyClass
+    {
+        public string Name { get; set; }
+        public DateTime Date { get; set; }
     }
 
     [RoutePrefix("api/Test/{hole}/actions")]
@@ -34,9 +78,9 @@ namespace WebApiTestApplication.Controllers
 
         [HttpGet]
         [Route("GetSomethingElse")]
-        public string GetSomethingElse(int id, string y, string hole)
+        public string GetSomethingElse(int id, [FromUri]DummyClass y, string hole)
         {
-            return $"value {id} {y} {hole}";
+            return $"value {id} {y.Name} {y.Date.ToShortDateString()} {hole}";
         }
 
         [HttpPost]

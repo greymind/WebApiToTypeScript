@@ -1,4 +1,8 @@
 namespace Endpoints {
+    export abstract class QueryParam {
+        abstract getQueryParams(): string
+    }
+
     export namespace TestEndpoint {
         export class Get {
             verb: string = 'GET'
@@ -14,7 +18,7 @@ namespace Endpoints {
         export class Get1 {
             verb: string = 'GET'
         
-            constructor(public id: number, public hole: string) {
+            constructor(public id: string, public hole: string) {
             }
         
             private getQueryString = (): string => {
@@ -30,7 +34,7 @@ namespace Endpoints {
             }
         
             toString = (): string => {
-                return `/api/Test/${this.hole}/actions` + this.getQueryString();;
+                return `/api/Test/${this.hole}/actions` + this.getQueryString();
             }
         }
     
@@ -56,21 +60,27 @@ namespace Endpoints {
             }
         
             toString = (): string => {
-                return `/api/Test/${this.hole}/actions/getSomething/${this.id}/ha` + this.getQueryString();;
+                return `/api/Test/${this.hole}/actions/getSomething/${this.id}/ha` + this.getQueryString();
             }
         }
     
         export class GetSomethingElse {
             verb: string = 'GET'
         
-            constructor(public id: number, public y: string, public hole: string) {
+            constructor(public id: number, public y: QueryParam, public hole: string) {
             }
         
             private getQueryString = (): string => {
                 let parameters: string[] = []
                 
                 parameters.push(`id=${this.id}`);
-                parameters.push(`y=${this.y}`);
+            
+                if (this.y instanceof QueryParam) {
+                    parameters.push(this.y.getQueryParams());
+                }
+                else {
+                    console.error('y should extend QueryParam!');
+                }
             
                 if (parameters.length > 0) {
                     return '?' + parameters.join('&');
@@ -80,7 +90,7 @@ namespace Endpoints {
             }
         
             toString = (): string => {
-                return `/api/Test/${this.hole}/actions/GetSomethingElse` + this.getQueryString();;
+                return `/api/Test/${this.hole}/actions/GetSomethingElse` + this.getQueryString();
             }
         }
     
@@ -125,7 +135,7 @@ namespace Endpoints {
             }
         
             toString = (): string => {
-                return `/api/Test/${this.hole}/actions` + this.getQueryString();;
+                return `/api/Test/${this.hole}/actions` + this.getQueryString();
             }
         }
     }
