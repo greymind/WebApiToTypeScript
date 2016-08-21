@@ -1,20 +1,17 @@
 namespace Endpoints {
-    export module TestEndpoint {
+    export namespace TestEndpoint {
         export class Get {
-            toString(): string {
+            toString = (): string => {
                 return `/api/Test/actions`;
             }
         }
     
         export class Get1 {
-            id: number
-        
-            constructor(id: number) {
-                this.id = id;
+            constructor(public id: number) {
             }
         
-            private getQueryString(): string {
-                var parameters: string[]
+            private getQueryString = (): string => {
+                let parameters: string[] = []
                 
                 parameters.push(`id=${this.id}`);
             
@@ -25,21 +22,17 @@ namespace Endpoints {
                 return '';
             }
         
-            toString(): string {
+            toString = (): string => {
                 return `/api/Test/actions` + this.getQueryString();;
             }
         }
     
         export class GetSomething {
-            id: number
-            y: number
-        
-            constructor(id: number) {
-                this.id = id;
+            constructor(public id: number, public y?: number) {
             }
         
-            private getQueryString(): string {
-                var parameters: string[]
+            private getQueryString = (): string => {
+                let parameters: string[] = []
                 
                 parameters.push(`id=${this.id}`);
             
@@ -54,22 +47,17 @@ namespace Endpoints {
                 return '';
             }
         
-            toString(): string {
+            toString = (): string => {
                 return `/api/Test/actions` + this.getQueryString();;
             }
         }
     
         export class GetSomethingElse {
-            id: number
-            y: string
-        
-            constructor(id: number, y: string) {
-                this.id = id;
-                this.y = y;
+            constructor(public id: number, public y: string) {
             }
         
-            private getQueryString(): string {
-                var parameters: string[]
+            private getQueryString = (): string => {
+                let parameters: string[] = []
                 
                 parameters.push(`id=${this.id}`);
                 parameters.push(`y=${this.y}`);
@@ -81,34 +69,26 @@ namespace Endpoints {
                 return '';
             }
         
-            toString(): string {
+            toString = (): string => {
                 return `/api/Test/actions` + this.getQueryString();;
             }
         }
     
         export class Post {
-            value: string
-        
-            constructor(value: string) {
-                this.value = value;
+            constructor(public value: string) {
             }
         
-            toString(): string {
+            toString = (): string => {
                 return `/api/Test/actions`;
             }
         }
     
         export class Put {
-            id: number
-            value: string
-        
-            constructor(id: number, value: string) {
-                this.id = id;
-                this.value = value;
+            constructor(public id: number, public value: string) {
             }
         
-            private getQueryString(): string {
-                var parameters: string[]
+            private getQueryString = (): string => {
+                let parameters: string[] = []
                 
                 parameters.push(`id=${this.id}`);
             
@@ -119,20 +99,17 @@ namespace Endpoints {
                 return '';
             }
         
-            toString(): string {
+            toString = (): string => {
                 return `/api/Test/actions` + this.getQueryString();;
             }
         }
     
         export class Delete {
-            id: number
-        
-            constructor(id: number) {
-                this.id = id;
+            constructor(public id: number) {
             }
         
-            private getQueryString(): string {
-                var parameters: string[]
+            private getQueryString = (): string => {
+                let parameters: string[] = []
                 
                 parameters.push(`id=${this.id}`);
             
@@ -143,7 +120,7 @@ namespace Endpoints {
                 return '';
             }
         
-            toString(): string {
+            toString = (): string => {
                 return `/api/Test/actions` + this.getQueryString();;
             }
         }
