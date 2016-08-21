@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
@@ -112,7 +111,7 @@ namespace WebApiToTypeScript
                 .AddStatement("return '';");
         }
 
-        private void CreateConstructorBlock(TypeScriptBlock classBlock, 
+        private void CreateConstructorBlock(TypeScriptBlock classBlock,
             List<WebApiRoutePart> baseRouteParts, WebApiAction action)
         {
             var constructorParameters = action.Method.Parameters
@@ -127,7 +126,7 @@ namespace WebApiToTypeScript
                 .Select(GetParameterStrings(true))
                 .Select(p => $"public {p}");
 
-            var constructorParametersList = 
+            var constructorParametersList =
                 string.Join(", ", constructorParameterStrings);
 
             var constructorBlock = classBlock
@@ -189,7 +188,7 @@ namespace WebApiToTypeScript
                 endpointFileWriter.Write(endpointBlock.ToString());
             }
 
-            Log.LogMessage($"{endpointFilePath} created!");
+            LogMessage($"{endpointFilePath} created!");
         }
 
         private void CreateOuputDirectory()
@@ -197,11 +196,23 @@ namespace WebApiToTypeScript
             if (!Directory.Exists(OutputDirectory))
             {
                 Directory.CreateDirectory(OutputDirectory);
-                Log.LogMessage($"{OutputDirectory} created!");
+                LogMessage($"{OutputDirectory} created!");
             }
             else
             {
-                Log.LogMessage($"{OutputDirectory} already exists!");
+                LogMessage($"{OutputDirectory} already exists!");
+            }
+        }
+
+        private void LogMessage(string log)
+        {
+            try
+            {
+                Log.LogMessage(log);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine(log);
             }
         }
     }
