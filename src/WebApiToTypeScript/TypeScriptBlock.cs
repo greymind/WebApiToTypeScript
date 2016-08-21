@@ -108,8 +108,10 @@ namespace WebApiToTypeScript
                 var isNextChildDifferent = nextChild?.GetType() != child.GetType();
                 var isNextChildABlock = nextChild is TypeScriptBlock;
                 var isThisTheLastChild = c == Children.Count - 1;
+                var isNextChildANonElseBlock = isNextChildABlock
+                    && ((TypeScriptBlock)nextChild).Outer != "else";
 
-                if ((isNextChildDifferent || isNextChildABlock)
+                if ((isNextChildDifferent || isNextChildANonElseBlock)
                     && !isThisTheLastChild)
                 {
                     stringBuilder.AppendLine(string.Empty);

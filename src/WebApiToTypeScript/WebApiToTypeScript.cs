@@ -5,16 +5,22 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using Newtonsoft.Json;
 
 namespace WebApiToTypeScript
 {
     public class WebApiToTypeScript : AppDomainIsolatedTask
     {
+        private List<TypeMapping> TypeMappings { get; set; }
+            = new List<TypeMapping>();
+
         [Required]
         public string WebApiApplicationAssembly { get; set; }
 
         [Required]
         public string OutputDirectory { get; set; }
+
+        public string TypeMappingsFileName { get; set; }
 
         public string EndpointFileName { get; set; }
 
@@ -28,7 +34,13 @@ namespace WebApiToTypeScript
             var apiControllers = webApiApplicationModule.GetTypes()
                 .Where(IsControllerType());
 
-            var endpointBlock = new TypeScriptBlock("namespace Endpoints");
+            if (!string.IsNullOrEmpty(TypeMappingsFileName))
+                TypeMappings = GetTypeMappings();
+
+            var endpointBlock = new TypeScriptBlock("namespace Endpoints")
+                .AddAndUseBlock("export abstract class QueryParam")
+                .AddStatement("abstract getQueryParams(): string")
+                .Parent;
 
             foreach (var apiController in apiControllers)
                 WriteEndpointClass(endpointBlock, apiController);
@@ -38,7 +50,8 @@ namespace WebApiToTypeScript
             return true;
         }
 
-        private void WriteEndpointClass(TypeScriptBlock endpointBlock, TypeDefinition apiController)
+        private void WriteEndpointClass(TypeScriptBlock endpointBlock,
+            TypeDefinition apiController)
         {
             var webApiController = new WebApiController(apiController);
 
@@ -70,7 +83,7 @@ namespace WebApiToTypeScript
                 .AddAndUseBlock("toString = (): string =>");
 
             var queryString = action.QueryStringParameters.Any()
-                ? " + this.getQueryString();"
+                ? " + this.getQueryString()"
                 : string.Empty;
 
             toStringBlock
@@ -100,8 +113,21 @@ namespace WebApiToTypeScript
                     : queryStringBlock
                         .AddAndUseBlock($"if (this.{parameterName} != null)");
 
-                block
-                    .AddStatement($"parameters.push(`{parameterName}=${{this.{parameterName}}}`);");
+                if (parameter.HasCustomAttributes
+                    && parameter.CustomAttributes.Any(a => a.AttributeType.Name == "FromUriAttribute"))
+                {
+                    block
+                        .AddAndUseBlock($"if (this.{parameterName} instanceof QueryParam)")
+                        .AddStatement($"parameters.push(this.{parameterName}.getQueryParams());")
+                        .Parent
+                        .AddAndUseBlock("else")
+                        .AddStatement($"console.error('{parameterName} should extend QueryParam!');");
+                }
+                else
+                {
+                    block
+                        .AddStatement($"parameters.push(`{parameterName}=${{this.{parameterName}}}`);");
+                }
             }
 
             queryStringBlock
@@ -133,14 +159,26 @@ namespace WebApiToTypeScript
                 .AddAndUseBlock($"constructor({constructorParametersList})");
         }
 
-        private Func<ParameterDefinition, string> GetParameterStrings(bool processOptional = false)
+        private Func<ParameterDefinition, string> GetParameterStrings(
+            bool processOptional = false)
         {
-            return p => $"{p.Name}{(processOptional && p.IsOptional ? "?" : "")}: {GetTypeScriptType(p.ParameterType)}";
+            return p => $"{p.Name}{(processOptional && p.IsOptional ? "?" : "")}: {GetTypeScriptType(p)}";
         }
 
-        private string GetTypeScriptType(TypeReference parameterType)
+        private string GetTypeScriptType(ParameterDefinition parameter)
         {
-            switch (parameterType.FullName)
+            var typeName = parameter.ParameterType.FullName;
+
+            var typeMapping = TypeMappings
+                .SingleOrDefault(t => t.WebApiTypeName == typeName
+                    || (t.TreatAsAttribute
+                        && parameter.HasCustomAttributes
+                        && parameter.CustomAttributes.Any(a => a.AttributeType.Name == t.WebApiTypeName)));
+
+            if (typeMapping != null)
+                return typeMapping.TypeScriptTypeName;
+
+            switch (typeName)
             {
                 case "System.String":
                     return "string";
@@ -152,8 +190,18 @@ namespace WebApiToTypeScript
                     return "boolean";
 
                 default:
-                    return "any";
+                    return "QueryParam";
             }
+        }
+
+        private List<TypeMapping> GetTypeMappings()
+        {
+            var typeMappingsFileContent = File.ReadAllText(TypeMappingsFileName);
+
+            var typeMappings =
+                JsonConvert.DeserializeObject<TypeMapping[]>(typeMappingsFileContent);
+
+            return typeMappings.ToList();
         }
 
         private Func<TypeDefinition, bool> IsControllerType()
@@ -180,9 +228,9 @@ namespace WebApiToTypeScript
 
         private void CreateEndpointFile(TypeScriptBlock endpointBlock)
         {
-            EndpointFileName = "Endpoints.ts";
+            var endpointFileName = EndpointFileName ?? "Endpoints.ts";
 
-            var endpointFilePath = Path.Combine(OutputDirectory, EndpointFileName);
+            var endpointFilePath = Path.Combine(OutputDirectory, endpointFileName);
             using (var endpointFileWriter = new StreamWriter(endpointFilePath, false))
             {
                 endpointFileWriter.Write(endpointBlock.ToString());
