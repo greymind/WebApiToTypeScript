@@ -35,6 +35,11 @@ namespace WebApiToTypeScript
 
         public TypeScriptBlock Parent { get; set; }
 
+        public TypeScriptBlock(string outer = "")
+        {
+            Outer = outer;
+        }
+
         public TypeScriptBlock AddBlock(string outer = null)
         {
             var child = CreateChild(outer);
