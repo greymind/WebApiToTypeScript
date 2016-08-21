@@ -2,11 +2,10 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "0.1.0",
-    "command": "msbuild",
+    "command": "C:\\Program Files (x86)\\MSBuild\\14.0\\Bin\\MsBuild.exe",
     "args": [
         // Ask msbuild to generate full paths for file names.
-        "/property:GenerateFullPaths=true",
-        "src/WebApiTestApplication/WebApiTestApplication.csproj"
+        "/property:GenerateFullPaths=true"
     ],
     "taskSelector": "/t:",
     "showOutput": "silent",
@@ -16,7 +15,24 @@
             // Show the output window only if unrecognized errors occur.
             "showOutput": "silent",
             // Use the standard MS compiler pattern to detect errors, warnings and infos
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "args": [
+                "src/WebApiTestApplication/WebApiTestApplication.csproj"
+            ],
+            "isBuildCommand": true
+        },
+        {
+            "taskName": "codegen",
+            "suppressTaskName": true,
+            // Show the output window only if unrecognized errors occur.
+            "showOutput": "silent",
+            // Use the standard MS compiler pattern to detect errors, warnings and infos
+            "problemMatcher": "$msCompile",
+            "args": [
+                "/t:build",
+                "src/WebApiToTypeScript/WebApiToTypeScript.csproj"
+            ],
+            "isBuildCommand": true
         }
     ]
 }
