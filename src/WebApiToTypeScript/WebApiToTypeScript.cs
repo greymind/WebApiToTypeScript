@@ -23,25 +23,18 @@ namespace WebApiToTypeScript
         {
             CreateOuputDirectory();
 
-            var endpointSource = new StringBuilder();
+            var webApiApplicationModule = ModuleDefinition
+                .ReadModule(WebApiApplicationAssembly);
 
-            var webApiApplicationModule = ModuleDefinition.ReadModule(WebApiApplicationAssembly);
             var apiControllers = webApiApplicationModule.GetTypes()
                 .Where(IsControllerType());
 
-            var endpointBlock = new TypeScriptBlock
-            {
-                Outer = "namespace Endpoints"
-            };
+            var endpointBlock = new TypeScriptBlock("namespace Endpoints");
 
             foreach (var apiController in apiControllers)
-            {
                 WriteEndpointClass(endpointBlock, apiController);
-            }
 
-            endpointSource.Append(endpointBlock.ToString());
-
-            CreateEndpointFile(endpointSource);
+            CreateEndpointFile(endpointBlock);
 
             return true;
         }
@@ -60,7 +53,8 @@ namespace WebApiToTypeScript
                 var method = action.Method;
 
                 var classBlock = moduleBlock
-                    .AddAndUseBlock($"export class {action.Name}");
+                    .AddAndUseBlock($"export class {action.Name}")
+                    .AddStatement($"verb: string = '{action.Verb}'");
 
                 CreateConstructorBlock(classBlock, method);
 
@@ -81,7 +75,7 @@ namespace WebApiToTypeScript
                 : string.Empty;
 
             toStringBlock
-                .AddStatement($"return `{baseEndpoint}`{queryString};");
+                .AddStatement($"return `{baseEndpoint}{action.Endpoint}`{queryString};");
         }
 
         private void CreateQueryStringBlock(TypeScriptBlock classBlock,
@@ -181,14 +175,14 @@ namespace WebApiToTypeScript
             }
         }
 
-        private void CreateEndpointFile(StringBuilder endpointSource)
+        private void CreateEndpointFile(TypeScriptBlock endpointBlock)
         {
             EndpointFileName = "Endpoints.ts";
 
             var endpointFilePath = Path.Combine(OutputDirectory, EndpointFileName);
             using (var endpointFileWriter = new StreamWriter(endpointFilePath, false))
             {
-                endpointFileWriter.Write(endpointSource.ToString());
+                endpointFileWriter.Write(endpointBlock.ToString());
             }
 
             Log.LogMessage($"{endpointFilePath} created!");

@@ -1,15 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Mono.Cecil;
 
 namespace WebApiToTypeScript
 {
     public class WebApiController
     {
-        private readonly Regex RouteParameterRegex
-            = new Regex("{(.*)}");
-
         public string Name { get; set; }
         public string BaseRoute { get; set; }
         public string BaseEndpoint { get; set; }
@@ -25,10 +21,10 @@ namespace WebApiToTypeScript
             Name = apiController.Name
                 .Replace("Controller", string.Empty);
 
-            BaseRoute = GetEndpointRoute(apiController) ?? Name;
+            BaseRoute = GetEndpointRoute(apiController) ?? $"api/{Name}";
 
-            UpdateRouteParts();
-            UpdateBaseEndpoint();
+            RouteParts = Helpers.GetRouteParts(BaseRoute);
+            BaseEndpoint = Helpers.GetBaseEndpoint(RouteParts);
 
             UpdateActions(apiController);
         }
@@ -36,47 +32,30 @@ namespace WebApiToTypeScript
         private void UpdateActions(TypeDefinition apiController)
         {
             var methodNames = new HashSet<string>();
+            var httpVerbs = new WebApiHttpVerb[] {
+                new WebApiHttpVerb("Get"),
+                new WebApiHttpVerb("Post"),
+                new WebApiHttpVerb("Put"),
+                new WebApiHttpVerb("Delete")
+            };
 
             Actions = apiController.Methods
                 .Where(m => m.IsPublic
                     && m.HasCustomAttributes
-                    && m.CustomAttributes.Any(a => WebApiAction.HttpVerbs.Contains(a.AttributeType.Name)))
+                    && m.CustomAttributes.Any(a => httpVerbs.Any(v => v.VerbAttribute == a.AttributeType.Name)))
                 .Select(m => new WebApiAction
                 (
                     baseRouteParts: RouteParts,
                     method: m,
                     name: GetUniqueMethodName(methodNames, m.Name),
-                    verb: m.CustomAttributes.Single(a => WebApiAction.HttpVerbs.Contains(a.AttributeType.Name))
-                        .AttributeType.Name
+                    verb: httpVerbs
+                        .Single(verb => verb.VerbAttribute == m.CustomAttributes
+                            .Single(a => httpVerbs
+                                .Any(v => v.VerbAttribute == a.AttributeType.Name))
+                            .AttributeType.Name)
+                        .VerbMethod
                 ))
                 .ToList();
-        }
-
-        private void UpdateBaseEndpoint()
-        {
-            var baseEndpointParts = RouteParts
-                .Select(routePart => string.IsNullOrEmpty(routePart.ParameterName)
-                    ? routePart.Name
-                    : $"${{this.{routePart.ParameterName}}}");
-
-            BaseEndpoint = $"/{string.Join("/", baseEndpointParts)}";
-        }
-
-        private void UpdateRouteParts()
-        {
-            RouteParts = BaseRoute.Split('/')
-                .Select(p => new WebApiRoutePart
-                {
-                    Name = p,
-                    ParameterName = RouteParameterRegex.Match(p).Groups[1].Value
-                })
-                .ToList();
-
-            foreach (var routePart in RouteParts)
-            {
-                if (!string.IsNullOrEmpty(routePart.ParameterName))
-                    routePart.ParameterName = routePart.ParameterName.Split(':').First();
-            }
         }
 
         private string GetEndpointRoute(TypeDefinition apiController)

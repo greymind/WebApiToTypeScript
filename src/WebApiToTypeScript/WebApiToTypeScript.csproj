@@ -58,10 +58,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers.cs" />
     <Compile Include="IndentAwareStringBuilder.cs" />
     <Compile Include="TypeScriptBlock.cs" />
     <Compile Include="WebApiAction.cs" />
     <Compile Include="WebApiController.cs" />
+    <Compile Include="WebApiHttpVerb.cs" />
     <Compile Include="WebApiRoutePart.cs" />
     <Compile Include="WebApiToTypeScript.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

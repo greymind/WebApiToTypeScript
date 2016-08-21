@@ -6,21 +6,15 @@ namespace WebApiToTypeScript
 {
     public class WebApiAction
     {
-        public static readonly string[] HttpVerbs = new string[] {
-            "HttpGetAttribute",
-            "HttpPostAttribute",
-            "HttpPutAttribute",
-            "HttpDeleteAttribute"
-        };
-
         public string Name { get; set; }
         public string Route { get; set; }
+        public string Endpoint { get; set; }
 
         public MethodDefinition Method { get; set; }
         public string Verb { get; set; }
 
-        public List<PropertyDefinition> RouteProperties { get; set; }
-            = new List<PropertyDefinition>();
+        public List<WebApiRoutePart> RouteParts { get; set; }
+            = new List<WebApiRoutePart>();
 
         public List<ParameterDefinition> QueryStringParameters { get; set; }
             = new List<ParameterDefinition>();
@@ -32,10 +26,14 @@ namespace WebApiToTypeScript
             Name = name;
             Verb = verb;
 
-            Route = GetMethodRoute(Method) ?? Name;
+            Route = GetMethodRoute(Method) ?? string.Empty;
+
+            RouteParts = Helpers.GetRouteParts(Route);
+            Endpoint = Helpers.GetBaseEndpoint(RouteParts);
 
             QueryStringParameters = Method.Parameters
                 .Where(p => !baseRouteParts.Any(brp => brp.ParameterName == p.Name)
+                    && !RouteParts.Any(rp => rp.ParameterName == p.Name)
                     && !(p.HasCustomAttributes
                         && p.CustomAttributes.Any(a => a.AttributeType.Name == "FromBodyAttribute")))
                 .ToList();
