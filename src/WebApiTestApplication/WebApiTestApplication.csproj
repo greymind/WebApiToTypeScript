@@ -139,7 +139,7 @@
     <TypeScriptOutDir>Scripts\CompiledTypeScript</TypeScriptOutDir>
     <TypeScriptGeneratesDeclarations>False</TypeScriptGeneratesDeclarations>
     <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
-    <TypeScriptSourceMap>False</TypeScriptSourceMap>
+    <TypeScriptSourceMap>True</TypeScriptSourceMap>
     <TypeScriptMapRoot />
     <TypeScriptSourceRoot />
   </PropertyGroup>
@@ -172,7 +172,7 @@
     <RemoveDir Directories="$(ProjectDir)Scripts\CompiledTypescript" ContinueOnError="true" />
   </Target>
   <Target Name="AfterBuild">
-    <WebApiToTypeScript WebApiApplicationAssembly="$(TargetDir)WebApiTestApplication.dll" OutputDirectory="$(ProjectDir)Scripts\Endpoints" />
+    <!--<WebApiToTypeScript WebApiApplicationAssembly="$(TargetDir)WebApiTestApplication.dll" OutputDirectory="$(ProjectDir)Scripts\Endpoints" />-->
   </Target>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
