@@ -51,7 +51,7 @@ namespace WebApiToTypeScript
             var webApiController = new WebApiController(apiController);
 
             var moduleBlock = endpointBlock
-                .AddAndUseBlock($"export module {webApiController.Name}Endpoint");
+                .AddAndUseBlock($"export namespace {webApiController.Name}Endpoint");
 
             var actions = webApiController.Actions;
 
@@ -61,8 +61,6 @@ namespace WebApiToTypeScript
 
                 var classBlock = moduleBlock
                     .AddAndUseBlock($"export class {action.Name}");
-
-                CreateAllParameters(classBlock, method);
 
                 CreateConstructorBlock(classBlock, method);
 
@@ -76,7 +74,7 @@ namespace WebApiToTypeScript
             string baseEndpoint, WebApiAction action)
         {
             var toStringBlock = classBlock
-                .AddAndUseBlock("toString(): string");
+                .AddAndUseBlock("toString = (): string =>");
 
             var queryString = action.QueryStringParameters.Any()
                 ? " + this.getQueryString();"
@@ -95,8 +93,8 @@ namespace WebApiToTypeScript
                 return;
 
             var queryStringBlock = classBlock
-                .AddAndUseBlock("private getQueryString(): string")
-                .AddStatement("var parameters: string[]")
+                .AddAndUseBlock("private getQueryString = (): string =>")
+                .AddStatement("let parameters: string[] = []")
                 .AddNewLine();
 
             foreach (var parameter in queryStringParameters)
@@ -120,41 +118,28 @@ namespace WebApiToTypeScript
                 .AddStatement("return '';");
         }
 
-        private void CreateAllParameters(TypeScriptBlock classBlock, MethodDefinition method)
-        {
-            var allParameters = method.Parameters
-                .Select(GetParameterStrings());
-
-            foreach (var parameter in allParameters)
-                classBlock.AddStatement(parameter);
-        }
-
         private void CreateConstructorBlock(TypeScriptBlock classBlock, MethodDefinition method)
         {
-            var constructorParameters = method.Parameters
-                .Where(p => !p.IsOptional);
+            var constructorParameters = method.Parameters;
 
             if (!constructorParameters.Any())
                 return;
 
             var constructorParameterStrings = constructorParameters
-                .Select(GetParameterStrings());
+                .Select(GetParameterStrings(true))
+                .Select(p => $"public {p}");
 
-            var constructorParametersList = string.Join(", ", constructorParameterStrings);
+            var constructorParametersList = 
+                string.Join(", ", constructorParameterStrings);
 
-            var constructorBlock = classBlock.AddAndUseBlock($"constructor({constructorParametersList})");
-
-            foreach (var constructorParameter in constructorParameters)
-            {
-                var parameterName = constructorParameter.Name;
-
-                constructorBlock
-                    .AddStatement($"this.{parameterName} = {parameterName};");
-            }
+            var constructorBlock = classBlock
+                .AddAndUseBlock($"constructor({constructorParametersList})");
         }
 
-        private Func<ParameterDefinition, string> GetParameterStrings()
-            => p => $"{p.Name}: {GetTypeScriptType(p.ParameterType)}";
+        private Func<ParameterDefinition, string> GetParameterStrings(bool processOptional = false)
+        {
+            return p => $"{p.Name}{(processOptional && p.IsOptional ? "?" : "")}: {GetTypeScriptType(p.ParameterType)}";
+        }
 
         private string GetTypeScriptType(TypeReference parameterType)
         {
@@ -165,6 +150,9 @@ namespace WebApiToTypeScript
 
                 case "System.Int32":
                     return "number";
+
+                case "System.Boolean":
+                    return "boolean";
 
                 default:
                     return "any";
