@@ -80,7 +80,7 @@ namespace Endpoints {
             }
         
             toString = (): string => {
-                return `/api/Test/${this.hole}/actions/GetSomethingElsex` + this.getQueryString();;
+                return `/api/Test/${this.hole}/actions/GetSomethingElse` + this.getQueryString();;
             }
         }
     
@@ -98,7 +98,7 @@ namespace Endpoints {
         export class Put {
             verb: string = 'PUT'
         
-            constructor(public id: number, public value: string) {
+            constructor(public id: number, public value: string, public hole: string) {
             }
         
             private getQueryString = (): string => {
