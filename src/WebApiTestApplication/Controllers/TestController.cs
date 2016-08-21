@@ -9,52 +9,52 @@ namespace WebApiTestApplication.Controllers
 
     }
 
-    [RoutePrefix("api/Test/actions")]
+    [RoutePrefix("api/Test/{hole}/actions")]
     public class TestController : ApiController
     {
-        // GET: api/Test
         [HttpGet]
         [Route("GetAll")]
-        public IEnumerable<string> Get()
+        public IEnumerable<string> Get(string hole)
         {
             return new string[] { "value1", "value2" };
         }
 
-        // GET: api/Test/5
         [HttpGet]
-        public string Get([EncryptedInt] int id)
+        [Route("")]
+        public string Get([EncryptedInt] int id, string hole)
         {
-            return "value";
+            return $"value {id}";
         }
 
         [HttpGet]
         [Route("getSomething/{id}/ha")]
-        public string GetSomething(int id, int y = 7)
+        public string GetSomething(string hole, int id, int y = 7)
         {
             return $"value {id} {y}";
         }
 
         [HttpGet]
-        public string GetSomethingElse(int id, string y)
+        [Route("GetSomethingElse")]
+        public string GetSomethingElse(int id, string y, string hole)
         {
-            return $"value {id} {y}";
+            return $"value {id} {y} {hole}";
         }
 
-        // POST: api/Test
         [HttpPost]
-        public void Post([FromBody]string value)
+        [Route("")]
+        public void Post(string hole, [FromBody]string value)
         {
         }
 
-        // PUT: api/Test/5
         [HttpPut]
-        public void Put(int id, [FromBody]string value)
+        [Route("")]
+        public void Put(int id, [FromBody]string value, string hole)
         {
         }
 
-        // DELETE: api/Test/5
         [HttpDelete]
-        public void Delete(int id)
+        [Route("")]
+        public void Delete(int id, string hole)
         {
         }
     }
