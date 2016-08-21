@@ -6,7 +6,6 @@ namespace WebApiTestApplication.Controllers
 {
     public class EncryptedIntAttribute : Attribute
     {
-
     }
 
     [RoutePrefix("api/Test/{hole}/actions")]
@@ -42,12 +41,13 @@ namespace WebApiTestApplication.Controllers
 
         [HttpPost]
         [Route("")]
-        public void Post(string hole, [FromBody]string value)
+        public string Post(string hole, [FromBody]string value)
         {
+            return $"thanks for the {value} in the {hole}";
         }
 
         [HttpPut]
-        [Route("")]
+        [Route("{id}")]
         public void Put(int id, [FromBody]string value, string hole)
         {
         }

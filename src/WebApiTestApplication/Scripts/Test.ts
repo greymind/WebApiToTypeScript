@@ -6,8 +6,8 @@ var endpoints: any[] = [
     new TestEndpoint.Get1(7, "cap"),
     new TestEndpoint.GetSomething("cap", 1, 2),
     new TestEndpoint.GetSomethingElse(3, "clap", "cap"),
-    new TestEndpoint.Post("cap", "balki"),
-    new TestEndpoint.Put(5, "boo", "cap"),
+    new TestEndpoint.Post("cap"),
+    new TestEndpoint.Put(5, "cap"),
     new TestEndpoint.Delete(2, "cap")
 ];
 
@@ -15,10 +15,18 @@ endpoints.forEach(e => {
     let endpoint = e.toString();
     console.log(endpoint);
 
-    $.ajax({
+    let request: JQueryAjaxSettings = {
         method: e.verb,
-        url: endpoint
-    }).then((data, status) => {
+        url: endpoint,
+    }
+
+    if (e.verb === "POST" || e.verb === "PUT") {
+        request.data = {
+            "": "balkithewise"
+        };
+    }
+
+    $.ajax(request).then((data, status) => {
         console.log(e.verb, endpoint, status, data);
     });
 });
