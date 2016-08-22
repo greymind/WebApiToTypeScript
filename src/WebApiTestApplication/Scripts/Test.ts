@@ -1,24 +1,32 @@
 import TestEndpoint = Endpoints.TestEndpoint;
 
-class TestObject extends Endpoints.QueryParam {
+class TestObject implements Endpoints.QueryParam {
     Name = "something"
-    Date = new Date()
+    Date = new Date().toJSON()
 
     getQueryParams() {
-        return $.param({
-            Name: this.Name,
-            Date: this.Date.toJSON()
-        });
+        return this;
     }
 }
 
 var testObject = new TestObject();
+var b = {
+    getQueryParams() {
+        return {
+            Name: "asd",
+            Date: new Date().toJSON()
+        }
+    }
+}
 
 var endpoints: any[] = [
     new TestEndpoint.Get("cap"),
     new TestEndpoint.Get1("7", "cap"),
     new TestEndpoint.GetSomething("cap", 1, 2),
     new TestEndpoint.GetSomethingElse(3, testObject, "cap"),
+    //new TestEndpoint.GetSomethingElse(3, "asd", "cap"),
+    //new TestEndpoint.GetSomethingElse(3, 0, "cap"),
+    new TestEndpoint.GetSomethingElse(3, b, "cap"),
     new TestEndpoint.Post("cap"),
     new TestEndpoint.Put(5, "cap"),
     new TestEndpoint.Delete(2, "cap")
