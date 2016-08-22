@@ -38,8 +38,8 @@ namespace WebApiToTypeScript
                 TypeMappings = GetTypeMappings();
 
             var endpointBlock = new TypeScriptBlock("namespace Endpoints")
-                .AddAndUseBlock("export abstract class QueryParam")
-                .AddStatement("abstract getQueryParams(): string")
+                .AddAndUseBlock("export interface IHaveQueryParams")
+                .AddStatement("getQueryParams(): Object")
                 .Parent;
 
             foreach (var apiController in apiControllers)
@@ -117,11 +117,10 @@ namespace WebApiToTypeScript
                     && parameter.CustomAttributes.Any(a => a.AttributeType.Name == "FromUriAttribute"))
                 {
                     block
-                        .AddAndUseBlock($"if (this.{parameterName} instanceof QueryParam)")
-                        .AddStatement($"parameters.push(this.{parameterName}.getQueryParams());")
-                        .Parent
-                        .AddAndUseBlock("else")
-                        .AddStatement($"console.error('{parameterName} should extend QueryParam!');");
+                        .AddAndUseBlock()
+                        .AddStatement($"let {parameterName}Params = this.{parameterName}.getQueryParams();")
+                        .AddAndUseBlock($"Object.keys({parameterName}Params).forEach((key) =>", isFunctionBlock: true)
+                        .AddStatement($"parameters.push(`${{key}}=${{{parameterName}Params[key]}}`);");
                 }
                 else
                 {
@@ -190,7 +189,7 @@ namespace WebApiToTypeScript
                     return "boolean";
 
                 default:
-                    return "QueryParam";
+                    return "IHaveQueryParams";
             }
         }
 

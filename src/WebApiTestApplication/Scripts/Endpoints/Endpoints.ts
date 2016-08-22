@@ -1,6 +1,6 @@
 namespace Endpoints {
-    export abstract class QueryParam {
-        abstract getQueryParams(): string
+    export interface IHaveQueryParams {
+        getQueryParams(): Object
     }
 
     export namespace TestEndpoint {
@@ -67,7 +67,7 @@ namespace Endpoints {
         export class GetSomethingElse {
             verb: string = 'GET'
         
-            constructor(public id: number, public y: QueryParam, public hole: string) {
+            constructor(public id: number, public y: IHaveQueryParams, public hole: string) {
             }
         
             private getQueryString = (): string => {
@@ -75,11 +75,12 @@ namespace Endpoints {
                 
                 parameters.push(`id=${this.id}`);
             
-                if (this.y instanceof QueryParam) {
-                    parameters.push(this.y.getQueryParams());
-                }
-                else {
-                    console.error('y should extend QueryParam!');
+                {
+                    let yParams = this.y.getQueryParams();
+                
+                    Object.keys(yParams).forEach((key) => {
+                        parameters.push(`${key}=${yParams[key]}`);
+                    });
                 }
             
                 if (parameters.length > 0) {
