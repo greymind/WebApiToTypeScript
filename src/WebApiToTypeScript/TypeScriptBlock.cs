@@ -35,31 +35,34 @@ namespace WebApiToTypeScript
 
         public TypeScriptBlock Parent { get; set; }
 
+        public bool IsFunctionBlock { get; set; }
+
         public TypeScriptBlock(string outer = "")
         {
             Outer = outer;
         }
 
-        public TypeScriptBlock AddBlock(string outer = null)
+        public TypeScriptBlock AddBlock(string outer = null, bool isFunctionBlock = false)
         {
-            var child = CreateChild(outer);
+            var child = CreateChild(outer, isFunctionBlock);
 
             return this;
         }
 
-        public TypeScriptBlock AddAndUseBlock(string outer = null)
+        public TypeScriptBlock AddAndUseBlock(string outer = null, bool isFunctionBlock = false)
         {
-            var child = CreateChild(outer);
+            var child = CreateChild(outer, isFunctionBlock);
 
             return child;
         }
 
-        private TypeScriptBlock CreateChild(string outer)
+        private TypeScriptBlock CreateChild(string outer, bool isFunctionBlock)
         {
             var child = new TypeScriptBlock
             {
                 Outer = outer,
-                Parent = this
+                Parent = this,
+                IsFunctionBlock = isFunctionBlock
             };
 
             Children.Add(child);
@@ -92,7 +95,10 @@ namespace WebApiToTypeScript
                 Indent = indent
             };
 
-            stringBuilder.AppendLine($"{Outer} {{");
+            if (!string.IsNullOrEmpty(Outer))
+                stringBuilder.AppendLine($"{Outer} {{");
+            else
+                stringBuilder.AppendLine($"{{");
 
             for (int c = 0; c < Children.Count; c++)
             {
@@ -118,7 +124,10 @@ namespace WebApiToTypeScript
                 }
             }
 
-            stringBuilder.AppendLine("}");
+            if (IsFunctionBlock)
+                stringBuilder.AppendLine("});");
+            else
+                stringBuilder.AppendLine("}");
 
             return stringBuilder.ToString();
         }
