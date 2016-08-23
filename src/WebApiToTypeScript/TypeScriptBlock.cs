@@ -100,7 +100,7 @@ namespace WebApiToTypeScript
             else
                 stringBuilder.AppendLine($"{{");
 
-            for (int c = 0; c < Children.Count; c++)
+            for (var c = 0; c < Children.Count; c++)
             {
                 var child = Children[c];
 
@@ -110,26 +110,31 @@ namespace WebApiToTypeScript
                 stringBuilder.AppendWithoutIndent(childString);
 
                 var nextChild = c < Children.Count - 1 ? Children[c + 1] : null;
-
-                var isNextChildDifferent = nextChild?.GetType() != child.GetType();
-                var isNextChildABlock = nextChild is TypeScriptBlock;
                 var isThisTheLastChild = c == Children.Count - 1;
-                var isNextChildANonElseBlock = isNextChildABlock
-                    && ((TypeScriptBlock)nextChild).Outer != "else";
 
-                if ((isNextChildDifferent || isNextChildANonElseBlock)
-                    && !isThisTheLastChild)
-                {
-                    stringBuilder.AppendLine(string.Empty);
-                }
+                AppendNewLineIfApplicable(nextChild, child, isThisTheLastChild, stringBuilder);
             }
 
-            if (IsFunctionBlock)
-                stringBuilder.AppendLine("});");
-            else
-                stringBuilder.AppendLine("}");
+            stringBuilder.AppendLine(IsFunctionBlock ? "});" : "}");
 
             return stringBuilder.ToString();
+        }
+
+        private static void AppendNewLineIfApplicable(ITypeScriptCode nextChild, ITypeScriptCode child,
+            bool isThisTheLastChild, IndentAwareStringBuilder stringBuilder)
+        {
+            var isNextChildDifferent = nextChild?.GetType() != child.GetType();
+            var isNextChildABlock = nextChild is TypeScriptBlock;
+            var isNextChildANonElseBlock = isNextChildABlock
+                && ((TypeScriptBlock)nextChild).Outer != "else";
+            var isNextChildFunctionBlock = isNextChildABlock
+                && ((TypeScriptBlock)nextChild).IsFunctionBlock;
+
+            if ((isNextChildDifferent || isNextChildANonElseBlock)
+                && !isThisTheLastChild && !isNextChildFunctionBlock)
+            {
+                stringBuilder.AppendLine(string.Empty);
+            }
         }
     }
 }
