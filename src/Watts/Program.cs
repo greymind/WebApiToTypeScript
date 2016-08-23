@@ -6,20 +6,16 @@ namespace Watts
     {
         private static int Main(string[] args)
         {
-            if (args.Length < 2)
+            if (args.Length != 1)
             {
-                Console.WriteLine("Usage: Watts.exe <\"Path/To/WebApplication.dll\"> <\"Path/To/OutputFolder\"> [\"Path/To/TypeMappings.json\"]");
+                Console.WriteLine("Usage: Watts.exe <\"Path/To/Config.json\">");
                 return 1;
             }
 
-            var watts = new WebApiToTypeScript.WebApiToTypeScript()
+            var watts = new WebApiToTypeScript.WebApiToTypeScript
             {
-                WebApiApplicationAssembly = args[0],
-                OutputDirectory = args[1]
+                ConfigFilePath = args[0]
             };
-
-            if (args.Length >= 3)
-                watts.TypeMappingsFileName = args[2];
 
             watts.Execute();
 
