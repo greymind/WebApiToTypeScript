@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Mono.Cecil;
+using System.Collections.Generic;
 using System.Linq;
-using Mono.Cecil;
 
 namespace WebApiToTypeScript
 {
@@ -32,7 +32,7 @@ namespace WebApiToTypeScript
         private void UpdateActions(TypeDefinition apiController)
         {
             var methodNames = new HashSet<string>();
-            var httpVerbs = new WebApiHttpVerb[] {
+            var httpVerbs = new [] {
                 new WebApiHttpVerb("Get"),
                 new WebApiHttpVerb("Post"),
                 new WebApiHttpVerb("Put"),
@@ -50,9 +50,9 @@ namespace WebApiToTypeScript
                     name: GetUniqueMethodName(methodNames, m.Name),
                     verb: httpVerbs
                         .Single(verb => verb.VerbAttribute == m.CustomAttributes
-                            .Single(a => httpVerbs
-                                .Any(v => v.VerbAttribute == a.AttributeType.Name))
-                            .AttributeType.Name)
+                            .First(a => httpVerbs.Any(v => v.VerbAttribute == a.AttributeType.Name))
+                            .AttributeType
+                            .Name)
                         .VerbMethod
                 ))
                 .ToList();

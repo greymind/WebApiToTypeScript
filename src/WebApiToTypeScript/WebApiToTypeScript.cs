@@ -1,44 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.Build.Framework;
+﻿using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace WebApiToTypeScript
 {
     public class WebApiToTypeScript : AppDomainIsolatedTask
     {
-        private List<TypeMapping> TypeMappings { get; set; }
-            = new List<TypeMapping>();
+        private const string IHaveQueryParams = nameof(IHaveQueryParams);
 
         [Required]
-        public string WebApiApplicationAssembly { get; set; }
+        public string ConfigFilePath { get; set; }
 
-        [Required]
-        public string OutputDirectory { get; set; }
-
-        public string TypeMappingsFileName { get; set; }
-
-        public string EndpointFileName { get; set; }
+        public Config Config { get; set; }
 
         public override bool Execute()
         {
+            Config = GetConfig(ConfigFilePath);
+
             CreateOuputDirectory();
 
             var webApiApplicationModule = ModuleDefinition
-                .ReadModule(WebApiApplicationAssembly);
+                .ReadModule(Config.WebApiApplicationAssembly);
 
             var apiControllers = webApiApplicationModule.GetTypes()
                 .Where(IsControllerType());
 
-            if (!string.IsNullOrEmpty(TypeMappingsFileName))
-                TypeMappings = GetTypeMappings();
+            var moduleOrNamespace = Config.WriteAsModule ? "module" : "namespace";
 
-            var endpointBlock = new TypeScriptBlock("namespace Endpoints")
-                .AddAndUseBlock("export interface IHaveQueryParams")
+            var endpointBlock = new TypeScriptBlock($"{moduleOrNamespace} {Config.Namespace}")
+                .AddAndUseBlock($"export interface {IHaveQueryParams}")
                 .AddStatement("getQueryParams(): Object")
                 .Parent;
 
@@ -56,7 +51,7 @@ namespace WebApiToTypeScript
             var webApiController = new WebApiController(apiController);
 
             var moduleBlock = endpointBlock
-                .AddAndUseBlock($"export namespace {webApiController.Name}Endpoint");
+                .AddAndUseBlock($"export namespace {webApiController.Name}");
 
             var actions = webApiController.Actions;
 
@@ -66,11 +61,11 @@ namespace WebApiToTypeScript
 
                 var classBlock = moduleBlock
                     .AddAndUseBlock($"export class {action.Name}")
-                    .AddStatement($"verb: string = '{action.Verb}'");
+                    .AddStatement($"verb: string = '{action.Verb}';");
 
                 CreateConstructorBlock(classBlock, webApiController.RouteParts, action);
 
-                CreateQueryStringBlock(classBlock, webApiController.RouteParts, action);
+                CreateQueryStringBlock(classBlock, action);
 
                 CreateToStringBlock(classBlock, webApiController.BaseEndpoint, action);
             }
@@ -90,9 +85,10 @@ namespace WebApiToTypeScript
                 .AddStatement($"return `{baseEndpoint}{action.Endpoint}`{queryString};");
         }
 
-        private void CreateQueryStringBlock(TypeScriptBlock classBlock,
-            List<WebApiRoutePart> baseRouteParts, WebApiAction action)
+        private void CreateQueryStringBlock(TypeScriptBlock classBlock, WebApiAction action)
         {
+            var baseTypeScriptTypes = new[] { "string", "number", "boolean" };
+
             var queryStringParameters = action.QueryStringParameters;
 
             if (!queryStringParameters.Any())
@@ -114,10 +110,10 @@ namespace WebApiToTypeScript
                         .AddAndUseBlock($"if (this.{parameterName} != null)");
 
                 if (parameter.HasCustomAttributes
-                    && parameter.CustomAttributes.Any(a => a.AttributeType.Name == "FromUriAttribute"))
+                    && parameter.CustomAttributes.Any(a => a.AttributeType.Name == "FromUriAttribute")
+                    && !baseTypeScriptTypes.Contains(GetTypeScriptType(parameter)))
                 {
                     block
-                        .AddAndUseBlock()
                         .AddStatement($"let {parameterName}Params = this.{parameterName}.getQueryParams();")
                         .AddAndUseBlock($"Object.keys({parameterName}Params).forEach((key) =>", isFunctionBlock: true)
                         .AddStatement($"parameters.push(`${{key}}=${{{parameterName}Params[key]}}`);");
@@ -142,7 +138,8 @@ namespace WebApiToTypeScript
             var constructorParameters = action.Method.Parameters
                 .Where(p => baseRouteParts.Any(brp => brp.ParameterName == p.Name)
                     || action.RouteParts.Any(rp => rp.ParameterName == p.Name)
-                    || action.QueryStringParameters.Any(qsp => qsp.Name == p.Name));
+                    || action.QueryStringParameters.Any(qsp => qsp.Name == p.Name))
+                .ToList();
 
             if (!constructorParameters.Any())
                 return;
@@ -154,7 +151,7 @@ namespace WebApiToTypeScript
             var constructorParametersList =
                 string.Join(", ", constructorParameterStrings);
 
-            var constructorBlock = classBlock
+            classBlock
                 .AddAndUseBlock($"constructor({constructorParametersList})");
         }
 
@@ -168,7 +165,7 @@ namespace WebApiToTypeScript
         {
             var typeName = parameter.ParameterType.FullName;
 
-            var typeMapping = TypeMappings
+            var typeMapping = Config.TypeMappings
                 .SingleOrDefault(t => t.WebApiTypeName == typeName
                     || (t.TreatAsAttribute
                         && parameter.HasCustomAttributes
@@ -176,6 +173,10 @@ namespace WebApiToTypeScript
 
             if (typeMapping != null)
                 return typeMapping.TypeScriptTypeName;
+
+            var parameterTypeDefinition = parameter.ParameterType as TypeDefinition;
+            if (parameterTypeDefinition?.BaseType.FullName == "System.Enum")
+                return "number";
 
             switch (typeName)
             {
@@ -189,18 +190,16 @@ namespace WebApiToTypeScript
                     return "boolean";
 
                 default:
-                    return "IHaveQueryParams";
+                    return $"{IHaveQueryParams}"
+            ;
             }
         }
 
-        private List<TypeMapping> GetTypeMappings()
+        private Config GetConfig(string configFilePath)
         {
-            var typeMappingsFileContent = File.ReadAllText(TypeMappingsFileName);
+            var configFileContent = File.ReadAllText(configFilePath);
 
-            var typeMappings =
-                JsonConvert.DeserializeObject<TypeMapping[]>(typeMappingsFileContent);
-
-            return typeMappings.ToList();
+            return JsonConvert.DeserializeObject<Config>(configFileContent);
         }
 
         private Func<TypeDefinition, bool> IsControllerType()
@@ -227,9 +226,9 @@ namespace WebApiToTypeScript
 
         private void CreateEndpointFile(TypeScriptBlock endpointBlock)
         {
-            var endpointFileName = EndpointFileName ?? "Endpoints.ts";
+            var endpointFileName = Config.EndpointFileName ?? "Endpoints.ts";
 
-            var endpointFilePath = Path.Combine(OutputDirectory, endpointFileName);
+            var endpointFilePath = Path.Combine(Config.OutputDirectory, endpointFileName);
             using (var endpointFileWriter = new StreamWriter(endpointFilePath, false))
             {
                 endpointFileWriter.Write(endpointBlock.ToString());
@@ -240,14 +239,14 @@ namespace WebApiToTypeScript
 
         private void CreateOuputDirectory()
         {
-            if (!Directory.Exists(OutputDirectory))
+            if (!Directory.Exists(Config.OutputDirectory))
             {
-                Directory.CreateDirectory(OutputDirectory);
-                LogMessage($"{OutputDirectory} created!");
+                Directory.CreateDirectory(Config.OutputDirectory);
+                LogMessage($"{Config.OutputDirectory} created!");
             }
             else
             {
-                LogMessage($"{OutputDirectory} already exists!");
+                LogMessage($"{Config.OutputDirectory} already exists!");
             }
         }
 
