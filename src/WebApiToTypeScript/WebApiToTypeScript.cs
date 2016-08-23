@@ -50,8 +50,10 @@ namespace WebApiToTypeScript
         {
             var webApiController = new WebApiController(apiController);
 
+            var moduleOrNamespace = Config.WriteAsModule ? "module" : "namespace";
+
             var moduleBlock = endpointBlock
-                .AddAndUseBlock($"export namespace {webApiController.Name}");
+                .AddAndUseBlock($"export {moduleOrNamespace} {webApiController.Name}");
 
             var actions = webApiController.Actions;
 
