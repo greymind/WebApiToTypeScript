@@ -96,7 +96,7 @@ namespace WebApiToTypeScript
 
             var queryStringBlock = classBlock
                 .AddAndUseBlock("private getQueryString = (): string =>")
-                .AddStatement("let parameters: string[] = []")
+                .AddStatement("let parameters: string[] = [];")
                 .AddNewLine();
 
             foreach (var parameter in queryStringParameters)
@@ -190,6 +190,11 @@ namespace WebApiToTypeScript
                     return "boolean";
 
                 default:
+                    if (Config.GenerateInterfaces)
+                    {
+                        
+                    }
+
                     return $"{IHaveQueryParams}"
             ;
             }
