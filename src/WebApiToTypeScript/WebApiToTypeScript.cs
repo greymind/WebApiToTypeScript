@@ -18,6 +18,12 @@ namespace WebApiToTypeScript
 
         public Config Config { get; set; }
 
+        private List<TypeDefinition> Types { get; }
+            = new List<TypeDefinition>();
+
+        private List<TypeDefinition> Enums { get; set; }
+            = new List<TypeDefinition>();
+
         public override bool Execute()
         {
             Config = GetConfig(ConfigFilePath);
@@ -25,14 +31,16 @@ namespace WebApiToTypeScript
             CreateOuputDirectory();
 
             var webApiApplicationModule = ModuleDefinition
-                .ReadModule(Config.WebApiApplicationAssembly);
+                .ReadModule(Config.WebApiModuleFileName);
+
+            AddAllTypes(webApiApplicationModule);
 
             var apiControllers = webApiApplicationModule.GetTypes()
                 .Where(IsControllerType());
 
-            var moduleOrNamespace = Config.WriteAsModule ? "module" : "namespace";
+            var moduleOrNamespace = Config.WriteNamespaceAsModule ? "module" : "namespace";
 
-            var endpointBlock = new TypeScriptBlock($"{moduleOrNamespace} {Config.Namespace}")
+            var endpointBlock = new TypeScriptBlock($"{moduleOrNamespace} {Config.EndpointsNamespace}")
                 .AddAndUseBlock($"export interface {IHaveQueryParams}")
                 .AddStatement("getQueryParams(): Object")
                 .Parent;
@@ -40,9 +48,38 @@ namespace WebApiToTypeScript
             foreach (var apiController in apiControllers)
                 WriteEndpointClass(endpointBlock, apiController);
 
-            CreateEndpointFile(endpointBlock);
+            CreateFileForBlock(endpointBlock, Config.EndpointsOutputDirectory, Config.EndpointsFileName);
+
+            if (Config.GenerateEnums)
+            {
+                var enumsBlock = new TypeScriptBlock($"{moduleOrNamespace} {Config.EnumsNamespace}");
+
+                foreach (var typeDefinition in Enums)
+                    CreateEnumForType(enumsBlock, typeDefinition);
+
+                CreateFileForBlock(enumsBlock, Config.EnumsOutputDirectory, Config.EnumsFileName);
+            }
 
             return true;
+        }
+
+        private void AddAllTypes(ModuleDefinition webApiApplicationModule)
+        {
+            Types.AddRange(webApiApplicationModule.GetTypes());
+
+            var moduleDirectoryName = Path.GetDirectoryName(Config.WebApiModuleFileName);
+
+            foreach (var reference in webApiApplicationModule.AssemblyReferences)
+            {
+                var fileName = $"{reference.Name}.dll";
+                var path = Path.Combine(moduleDirectoryName, fileName);
+
+                if (!File.Exists(path))
+                    continue;
+
+                var moduleDefinition = ModuleDefinition.ReadModule(path);
+                Types.AddRange(moduleDefinition.GetTypes());
+            }
         }
 
         private void WriteEndpointClass(TypeScriptBlock endpointBlock,
@@ -50,7 +87,7 @@ namespace WebApiToTypeScript
         {
             var webApiController = new WebApiController(apiController);
 
-            var moduleOrNamespace = Config.WriteAsModule ? "module" : "namespace";
+            var moduleOrNamespace = Config.WriteNamespaceAsModule ? "module" : "namespace";
 
             var moduleBlock = endpointBlock
                 .AddAndUseBlock($"export {moduleOrNamespace} {webApiController.Name}");
@@ -59,11 +96,9 @@ namespace WebApiToTypeScript
 
             foreach (var action in actions)
             {
-                var method = action.Method;
-
                 var classBlock = moduleBlock
-                    .AddAndUseBlock($"export class {action.Name}")
-                    .AddStatement($"verb: string = '{action.Verb}';");
+                     .AddAndUseBlock($"export class {action.Name}")
+                     .AddStatement($"verb: string = '{action.Verb}';");
 
                 CreateConstructorBlock(classBlock, webApiController.RouteParts, action);
 
@@ -176,9 +211,19 @@ namespace WebApiToTypeScript
             if (typeMapping != null)
                 return typeMapping.TypeScriptTypeName;
 
-            var parameterTypeDefinition = parameter.ParameterType as TypeDefinition;
-            if (parameterTypeDefinition?.BaseType.FullName == "System.Enum")
-                return "number";
+            var typeDefinition = Types
+                .FirstOrDefault(t => t.FullName == parameter.ParameterType.FullName);
+
+            if (typeDefinition?.IsEnum ?? false)
+            {
+                if (!Config.GenerateEnums)
+                    return "number";
+
+                if (Enums.All(e => e.FullName != typeDefinition.FullName))
+                    Enums.Add(typeDefinition);
+
+                return $"{Config.EnumsNamespace}.{typeDefinition.Name}";
+            }
 
             switch (typeName)
             {
@@ -194,12 +239,23 @@ namespace WebApiToTypeScript
                 default:
                     if (Config.GenerateInterfaces)
                     {
-                        
                     }
 
                     return $"{IHaveQueryParams}"
             ;
             }
+        }
+
+        private static void CreateEnumForType(TypeScriptBlock enumsBlock, TypeDefinition typeDefinition)
+        {
+            var fields = typeDefinition.Fields
+                .Where(f => f.HasConstant && !f.IsSpecialName);
+
+            var enumBlock = enumsBlock
+                .AddAndUseBlock($"export enum {typeDefinition.Name}");
+
+            foreach (var field in fields)
+                enumBlock.AddStatement($"{field.Name} = {field.Constant},");
         }
 
         private Config GetConfig(string configFilePath)
@@ -231,29 +287,27 @@ namespace WebApiToTypeScript
             }
         }
 
-        private void CreateEndpointFile(TypeScriptBlock endpointBlock)
+        private void CreateFileForBlock(TypeScriptBlock typeScriptBlock, string outputDirectory, string fileName)
         {
-            var endpointFileName = Config.EndpointFileName ?? "Endpoints.ts";
-
-            var endpointFilePath = Path.Combine(Config.OutputDirectory, endpointFileName);
-            using (var endpointFileWriter = new StreamWriter(endpointFilePath, false))
+            var filePath = Path.Combine(outputDirectory, fileName);
+            using (var endpointFileWriter = new StreamWriter(filePath, false))
             {
-                endpointFileWriter.Write(endpointBlock.ToString());
+                endpointFileWriter.Write(typeScriptBlock.ToString());
             }
 
-            LogMessage($"{endpointFilePath} created!");
+            LogMessage($"{filePath} created!");
         }
 
         private void CreateOuputDirectory()
         {
-            if (!Directory.Exists(Config.OutputDirectory))
+            if (!Directory.Exists(Config.EndpointsOutputDirectory))
             {
-                Directory.CreateDirectory(Config.OutputDirectory);
-                LogMessage($"{Config.OutputDirectory} created!");
+                Directory.CreateDirectory(Config.EndpointsOutputDirectory);
+                LogMessage($"{Config.EndpointsOutputDirectory} created!");
             }
             else
             {
-                LogMessage($"{Config.OutputDirectory} already exists!");
+                LogMessage($"{Config.EndpointsOutputDirectory} already exists!");
             }
         }
 

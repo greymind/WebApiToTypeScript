@@ -4,20 +4,34 @@ namespace WebApiToTypeScript
 {
     public class Config
     {
-        public string WebApiApplicationAssembly { get; set; }
+        public string WebApiModuleFileName { get; set; }
 
-        public string OutputDirectory { get; set; }
+        public string EndpointsOutputDirectory { get; set; }
 
-        public string EndpointFileName { get; set; }
+        public string EndpointsFileName { get; set; }
             = "Endpoints.ts";
 
-        public string Namespace { get; set; }
+        public string EndpointsNamespace { get; set; }
             = "Endpoints";
 
-        public bool WriteAsModule { get; set; }
+        public bool GenerateInterfaces { get; set; }
             = false;
 
-        public bool GenerateInterfaces { get; set; }
+        public bool GenerateEnums { get; set; }
+            = true;
+
+        public string EnumsOutputDirectory { get; set; }
+
+        public string EnumsFileName { get; set; }
+            = "Enums.ts";
+
+        public string EnumsNamespace { get; set; }
+            = "Enums";
+
+        public bool ScanOtherModules { get; set; }
+            = true;
+
+        public bool WriteNamespaceAsModule { get; set; }
             = false;
 
         public List<TypeMapping> TypeMappings { get; set; }
