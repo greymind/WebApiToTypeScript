@@ -24,7 +24,7 @@ namespace WebApiToTypeScript
         private List<TypeDefinition> Enums { get; }
             = new List<TypeDefinition>();
 
-        private Dictionary<string, List<Type>> TypeScriptPrimitiveTypesMapping { get; set; }
+        private Dictionary<string, List<Type>> TypeScriptPrimitiveTypesMapping { get; }
             = new Dictionary<string, List<Type>>();
 
         public override bool Execute()
@@ -74,7 +74,7 @@ namespace WebApiToTypeScript
 
             mapping["string"] = new List<Type> { typeof(string), typeof(System.Guid) };
             mapping["boolean"] = new List<Type> { typeof(bool) };
-            mapping["number"] = new List<Type> { typeof(int), typeof(long), typeof(float), typeof(double) };
+            mapping["number"] = new List<Type> { typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
         }
 
         private void AddAllTypes(ModuleDefinition webApiApplicationModule)
@@ -150,26 +150,24 @@ namespace WebApiToTypeScript
 
             foreach (var parameter in queryStringParameters)
             {
-                var isOptional = IsParameterOptional(parameter);
                 var parameterName = parameter.Name;
 
-                var block = !isOptional
-                    ? queryStringBlock
-                    : queryStringBlock
-                        .AddAndUseBlock($"if (this.{parameterName} != null)");
+                queryStringBlock
+                    .AddAndUseBlock($"if (this.{parameterName} != null)");
 
                 if (parameter.HasCustomAttributes
                     && parameter.CustomAttributes.Any(a => a.AttributeType.Name == "FromUriAttribute")
                     && !TypeScriptPrimitiveTypesMapping.Keys.Contains(GetTypeScriptType(parameter)))
                 {
-                    block
+                    queryStringBlock
                         .AddStatement($"let {parameterName}Params = this.{parameterName}.getQueryParams();")
                         .AddAndUseBlock($"Object.keys({parameterName}Params).forEach((key) =>", isFunctionBlock: true)
+                        .AddAndUseBlock($"if ({parameterName}Params[key] != null)")
                         .AddStatement($"parameters.push(`${{key}}=${{{parameterName}Params[key]}}`);");
                 }
                 else
                 {
-                    block
+                    queryStringBlock
                         .AddStatement($"parameters.push(`{parameterName}=${{this.{parameterName}}}`);");
                 }
             }
@@ -193,20 +191,34 @@ namespace WebApiToTypeScript
             if (!constructorParameters.Any())
                 return;
 
-            var constructorParameterStrings = constructorParameters
+            var constructorParameterMappings = constructorParameters
                 .Select(p => new
                 {
                     IsOptional = IsParameterOptional(p),
+                    TypeMapping = GetTypeMapping(p),
+                    Name = p.Name,
                     String = GetParameterStringForConstructor(p)
                 })
-                .OrderBy(p => p.IsOptional)
+                .OrderBy(p => p.IsOptional);
+
+            var constructorParameterStrings = constructorParameterMappings
                 .Select(p => $"public {p.String}");
 
             var constructorParametersList =
                 string.Join(", ", constructorParameterStrings);
 
-            classBlock
+            var constructorBlock = classBlock
                 .AddAndUseBlock($"constructor({constructorParametersList})");
+
+            foreach (var mapping in constructorParameterMappings)
+            {
+                if (mapping.TypeMapping?.AutoInitialize ?? false)
+                {
+                    constructorBlock
+                        .AddAndUseBlock($"if (this.{mapping.Name} == null)")
+                        .AddStatement($"this.{mapping.Name} = new {mapping.TypeMapping.TypeScriptTypeName}();");
+                }
+            }
         }
 
         private string GetParameterStringForConstructor(ParameterDefinition parameter)
@@ -217,7 +229,7 @@ namespace WebApiToTypeScript
 
         private bool IsParameterOptional(ParameterDefinition parameter)
         {
-            return parameter.IsOptional || !parameter.ParameterType.IsValueType;
+            return parameter.IsOptional || !parameter.ParameterType.IsValueType || IsNullable(parameter.ParameterType);
         }
 
         private string GetTypeScriptType(ParameterDefinition parameter)
@@ -225,11 +237,7 @@ namespace WebApiToTypeScript
             var type = parameter.ParameterType;
             var typeName = type.FullName;
 
-            var typeMapping = Config.TypeMappings
-                .SingleOrDefault(t => typeName.StartsWith(t.WebApiTypeName)
-                    || (t.TreatAsAttribute
-                        && parameter.HasCustomAttributes
-                        && parameter.CustomAttributes.Any(a => a.AttributeType.Name == t.WebApiTypeName)));
+            var typeMapping = GetTypeMapping(parameter);
 
             if (typeMapping != null)
                 return typeMapping.TypeScriptTypeName;
@@ -266,6 +274,26 @@ namespace WebApiToTypeScript
             }
 
             return $"{IHaveQueryParams}";
+        }
+
+        private TypeMapping GetTypeMapping(ParameterDefinition parameter)
+        {
+            var typeName = parameter.ParameterType.FullName;
+
+            var typeMapping = Config.TypeMappings
+                .SingleOrDefault(t => typeName.StartsWith(t.WebApiTypeName)
+                    || (t.TreatAsAttribute
+                            && parameter.HasCustomAttributes
+                            && parameter.CustomAttributes.Any(a => a.AttributeType.Name == t.WebApiTypeName)));
+
+            return typeMapping;
+        }
+
+        private bool IsNullable(TypeReference type)
+        {
+            var genericType = type as GenericInstanceType;
+            return genericType != null
+                   && genericType.FullName.StartsWith("System.Nullable`1");
         }
 
         private string StripNullable(TypeReference type)
