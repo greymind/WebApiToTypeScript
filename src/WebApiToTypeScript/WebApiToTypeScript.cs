@@ -145,21 +145,20 @@ namespace WebApiToTypeScript
 
             var queryStringBlock = classBlock
                 .AddAndUseBlock("private getQueryString = (): string =>")
-                .AddStatement("let parameters: string[] = [];")
-                .AddNewLine();
+                .AddStatement("let parameters: string[] = [];");
 
             foreach (var parameter in queryStringParameters)
             {
                 var parameterName = parameter.Name;
 
-                queryStringBlock
+                var block = queryStringBlock
                     .AddAndUseBlock($"if (this.{parameterName} != null)");
 
                 if (parameter.HasCustomAttributes
                     && parameter.CustomAttributes.Any(a => a.AttributeType.Name == "FromUriAttribute")
                     && !TypeScriptPrimitiveTypesMapping.Keys.Contains(GetTypeScriptType(parameter)))
                 {
-                    queryStringBlock
+                    block
                         .AddStatement($"let {parameterName}Params = this.{parameterName}.getQueryParams();")
                         .AddAndUseBlock($"Object.keys({parameterName}Params).forEach((key) =>", isFunctionBlock: true)
                         .AddAndUseBlock($"if ({parameterName}Params[key] != null)")
@@ -167,7 +166,7 @@ namespace WebApiToTypeScript
                 }
                 else
                 {
-                    queryStringBlock
+                    block
                         .AddStatement($"parameters.push(`{parameterName}=${{this.{parameterName}}}`);");
                 }
             }
