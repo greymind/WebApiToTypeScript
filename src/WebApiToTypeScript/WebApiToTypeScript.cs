@@ -33,8 +33,6 @@ namespace WebApiToTypeScript
 
             LoadTypeScriptPrimitiveTypesMapping();
 
-            CreateOuputDirectory();
-
             var webApiApplicationModule = ModuleDefinition
                 .ReadModule(Config.WebApiModuleFileName);
 
@@ -352,7 +350,10 @@ namespace WebApiToTypeScript
 
         private void CreateFileForBlock(TypeScriptBlock typeScriptBlock, string outputDirectory, string fileName)
         {
+            CreateOuputDirectory(outputDirectory);
+
             var filePath = Path.Combine(outputDirectory, fileName);
+
             using (var endpointFileWriter = new StreamWriter(filePath, false))
             {
                 endpointFileWriter.Write(typeScriptBlock.ToString());
@@ -361,16 +362,16 @@ namespace WebApiToTypeScript
             LogMessage($"{filePath} created!");
         }
 
-        private void CreateOuputDirectory()
+        private void CreateOuputDirectory(string directory)
         {
-            if (!Directory.Exists(Config.EndpointsOutputDirectory))
+            if (!Directory.Exists(directory))
             {
-                Directory.CreateDirectory(Config.EndpointsOutputDirectory);
-                LogMessage($"{Config.EndpointsOutputDirectory} created!");
+                Directory.CreateDirectory(directory);
+                LogMessage($"{directory} created!");
             }
             else
             {
-                LogMessage($"{Config.EndpointsOutputDirectory} already exists!");
+                LogMessage($"{directory} already exists!");
             }
         }
 
