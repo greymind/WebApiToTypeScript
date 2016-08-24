@@ -21,12 +21,17 @@ namespace WebApiToTypeScript
         private List<TypeDefinition> Types { get; }
             = new List<TypeDefinition>();
 
-        private List<TypeDefinition> Enums { get; set; }
+        private List<TypeDefinition> Enums { get; }
             = new List<TypeDefinition>();
+
+        private Dictionary<string, List<Type>> TypeScriptPrimitiveTypesMapping { get; set; }
+            = new Dictionary<string, List<Type>>();
 
         public override bool Execute()
         {
             Config = GetConfig(ConfigFilePath);
+
+            LoadTypeScriptPrimitiveTypesMapping();
 
             CreateOuputDirectory();
 
@@ -61,6 +66,15 @@ namespace WebApiToTypeScript
             }
 
             return true;
+        }
+
+        private void LoadTypeScriptPrimitiveTypesMapping()
+        {
+            var mapping = TypeScriptPrimitiveTypesMapping;
+
+            mapping["string"] = new List<Type> { typeof(string) };
+            mapping["boolean"] = new List<Type> { typeof(bool) };
+            mapping["number"] = new List<Type> { typeof(int), typeof(long), typeof(float), typeof(double) };
         }
 
         private void AddAllTypes(ModuleDefinition webApiApplicationModule)
@@ -138,7 +152,7 @@ namespace WebApiToTypeScript
 
             foreach (var parameter in queryStringParameters)
             {
-                var isOptional = parameter.IsOptional;
+                var isOptional = IsParameterOptional(parameter);
                 var parameterName = parameter.Name;
 
                 var block = !isOptional
@@ -182,8 +196,13 @@ namespace WebApiToTypeScript
                 return;
 
             var constructorParameterStrings = constructorParameters
-                .Select(GetParameterStrings(true))
-                .Select(p => $"public {p}");
+                .Select(p => new
+                {
+                    IsOptional = IsParameterOptional(p),
+                    String = GetParameterStringForConstructor(p)
+                })
+                .OrderBy(p => p.IsOptional)
+                .Select(p => $"public {p.String}");
 
             var constructorParametersList =
                 string.Join(", ", constructorParameterStrings);
@@ -192,10 +211,15 @@ namespace WebApiToTypeScript
                 .AddAndUseBlock($"constructor({constructorParametersList})");
         }
 
-        private Func<ParameterDefinition, string> GetParameterStrings(
-            bool processOptional = false)
+        private string GetParameterStringForConstructor(ParameterDefinition parameter)
         {
-            return p => $"{p.Name}{(processOptional && p.IsOptional ? "?" : "")}: {GetTypeScriptType(p)}";
+            var isOptional = IsParameterOptional(parameter);
+            return $"{parameter.Name}{(isOptional ? "?" : "")}: {GetTypeScriptType(parameter)}";
+        }
+
+        private bool IsParameterOptional(ParameterDefinition parameter)
+        {
+            return parameter.IsOptional || !parameter.ParameterType.IsValueType;
         }
 
         private string GetTypeScriptType(ParameterDefinition parameter)
@@ -235,25 +259,20 @@ namespace WebApiToTypeScript
                 typeName = genericType.GenericArguments.Single().FullName;
             }
 
-            switch (typeName)
+            var result = TypeScriptPrimitiveTypesMapping
+                .Select(m => m.Value.Any(t => t.FullName == typeName) ? m.Key : string.Empty)
+                .SingleOrDefault(name => !string.IsNullOrEmpty(name));
+
+            if (!string.IsNullOrEmpty(result))
             {
-                case "System.String":
-                    return "string";
-
-                case "System.Int32":
-                    return "number";
-
-                case "System.Boolean":
-                    return "boolean";
-
-                default:
-                    if (Config.GenerateInterfaces)
-                    {
-                    }
-
-                    return $"{IHaveQueryParams}"
-            ;
+                return result;
             }
+
+            if (Config.GenerateInterfaces)
+            {
+            }
+
+            return $"{IHaveQueryParams}";
         }
 
         private static void CreateEnumForType(TypeScriptBlock enumsBlock, TypeDefinition typeDefinition)

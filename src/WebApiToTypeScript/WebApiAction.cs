@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Mono.Cecil;
+using System.Collections.Generic;
 using System.Linq;
-using Mono.Cecil;
 
 namespace WebApiToTypeScript
 {
@@ -31,6 +31,8 @@ namespace WebApiToTypeScript
             RouteParts = Helpers.GetRouteParts(Route);
             Endpoint = Helpers.GetBaseEndpoint(RouteParts);
 
+            // TODO: Add if put, post and is class also = FromBody
+            // We specify frombody, or dont do this and force fix of controller
             QueryStringParameters = Method.Parameters
                 .Where(p => !baseRouteParts.Any(brp => brp.ParameterName == p.Name)
                     && !RouteParts.Any(rp => rp.ParameterName == p.Name)
