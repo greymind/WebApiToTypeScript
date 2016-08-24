@@ -138,8 +138,6 @@ namespace WebApiToTypeScript
 
         private void CreateQueryStringBlock(TypeScriptBlock classBlock, WebApiAction action)
         {
-            var baseTypeScriptTypes = new[] { "string", "number", "boolean" };
-
             var queryStringParameters = action.QueryStringParameters;
 
             if (!queryStringParameters.Any())
@@ -162,7 +160,7 @@ namespace WebApiToTypeScript
 
                 if (parameter.HasCustomAttributes
                     && parameter.CustomAttributes.Any(a => a.AttributeType.Name == "FromUriAttribute")
-                    && !baseTypeScriptTypes.Contains(GetTypeScriptType(parameter)))
+                    && !TypeScriptPrimitiveTypesMapping.Keys.Contains(GetTypeScriptType(parameter)))
                 {
                     block
                         .AddStatement($"let {parameterName}Params = this.{parameterName}.getQueryParams();")
