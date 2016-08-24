@@ -1,11 +1,11 @@
-﻿using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Mono.Cecil;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+using Mono.Cecil;
+using Newtonsoft.Json;
 
 namespace WebApiToTypeScript
 {
@@ -24,6 +24,9 @@ namespace WebApiToTypeScript
         private List<TypeDefinition> Enums { get; }
             = new List<TypeDefinition>();
 
+        private List<TypeDefinition> Interfaces { get; }
+            = new List<TypeDefinition>();
+
         private Dictionary<string, List<Type>> TypeScriptPrimitiveTypesMapping { get; }
             = new Dictionary<string, List<Type>>();
 
@@ -36,7 +39,7 @@ namespace WebApiToTypeScript
             var webApiApplicationModule = ModuleDefinition
                 .ReadModule(Config.WebApiModuleFileName);
 
-            AddAllTypes(webApiApplicationModule);
+            LoadAllTypes(webApiApplicationModule);
 
             var apiControllers = webApiApplicationModule.GetTypes()
                 .Where(IsControllerType());
@@ -53,15 +56,28 @@ namespace WebApiToTypeScript
 
             CreateFileForBlock(endpointBlock, Config.EndpointsOutputDirectory, Config.EndpointsFileName);
 
+            var enumsBlock = Config.GenerateEnums
+                ? new TypeScriptBlock($"{moduleOrNamespace} {Config.EnumsNamespace}")
+                : new TypeScriptBlock();
+
             if (Config.GenerateEnums)
             {
-                var enumsBlock = new TypeScriptBlock($"{moduleOrNamespace} {Config.EnumsNamespace}");
-
                 foreach (var typeDefinition in Enums)
                     CreateEnumForType(enumsBlock, typeDefinition);
-
-                CreateFileForBlock(enumsBlock, Config.EnumsOutputDirectory, Config.EnumsFileName);
             }
+
+            if (Config.GenerateInterfaces)
+            {
+                var interfacesBlock = new TypeScriptBlock($"{moduleOrNamespace} {Config.InterfacesNamespace}");
+
+                foreach (var typeDefinition in Interfaces.ToList())
+                    CreateInterfaceForType(interfacesBlock, enumsBlock, typeDefinition);
+
+                CreateFileForBlock(interfacesBlock, Config.InterfacesOutputDirectory, Config.InterfacesFileName);
+            }
+
+            if (Config.GenerateEnums)
+                CreateFileForBlock(enumsBlock, Config.EnumsOutputDirectory, Config.EnumsFileName);
 
             return true;
         }
@@ -75,8 +91,11 @@ namespace WebApiToTypeScript
             mapping["number"] = new List<Type> { typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
         }
 
-        private void AddAllTypes(ModuleDefinition webApiApplicationModule)
+        private void LoadAllTypes(ModuleDefinition webApiApplicationModule)
         {
+            var corlib = ModuleDefinition.ReadModule(typeof(object).Module.FullyQualifiedName);
+            Types.AddRange(corlib.GetTypes());
+
             Types.AddRange(webApiApplicationModule.GetTypes());
 
             var moduleDirectoryName = Path.GetDirectoryName(Config.WebApiModuleFileName);
@@ -243,8 +262,7 @@ namespace WebApiToTypeScript
 
             // TODO Support encrypted long via route {xx:encryptedLong}
 
-            var typeDefinition = Types
-                .FirstOrDefault(t => t.FullName == typeName);
+            var typeDefinition = GetTypeDefinition(typeName);
 
             if (typeDefinition?.IsEnum ?? false)
             {
@@ -257,20 +275,36 @@ namespace WebApiToTypeScript
                 return $"{Config.EnumsNamespace}.{typeDefinition.Name}";
             }
 
-            var result = TypeScriptPrimitiveTypesMapping
+            var primitiveType = GetPrimitiveType(typeName);
+
+            if (!string.IsNullOrEmpty(primitiveType))
+                return primitiveType;
+
+            if (!typeDefinition?.IsValueType ?? false)
+            {
+                if (!Config.GenerateInterfaces)
+                    return $"{IHaveQueryParams}";
+
+                if (Interfaces.All(i => i.FullName != typeDefinition.FullName))
+                    Interfaces.Add(typeDefinition);
+
+                return $"{Config.InterfacesNamespace}.{typeDefinition.Name}";
+            }
+
+            throw new Exception("We shouldn't get here?");
+        }
+
+        private TypeDefinition GetTypeDefinition(string typeName)
+        {
+            return Types
+                .FirstOrDefault(t => t.FullName == typeName);
+        }
+
+        private string GetPrimitiveType(string typeName)
+        {
+            return TypeScriptPrimitiveTypesMapping
                 .Select(m => m.Value.Any(t => t.FullName == typeName) ? m.Key : string.Empty)
                 .SingleOrDefault(name => !string.IsNullOrEmpty(name));
-
-            if (!string.IsNullOrEmpty(result))
-            {
-                return result;
-            }
-
-            if (Config.GenerateInterfaces)
-            {
-            }
-
-            return $"{IHaveQueryParams}";
         }
 
         private TypeMapping GetTypeMapping(ParameterDefinition parameter)
@@ -307,7 +341,7 @@ namespace WebApiToTypeScript
             return null;
         }
 
-        private static void CreateEnumForType(TypeScriptBlock enumsBlock, TypeDefinition typeDefinition)
+        private void CreateEnumForType(TypeScriptBlock enumsBlock, TypeDefinition typeDefinition)
         {
             var fields = typeDefinition.Fields
                 .Where(f => f.HasConstant && !f.IsSpecialName);
@@ -317,6 +351,74 @@ namespace WebApiToTypeScript
 
             foreach (var field in fields)
                 enumBlock.AddStatement($"{field.Name} = {field.Constant},");
+        }
+
+        private void CreateInterfaceForType(TypeScriptBlock interfacesBlock, 
+            TypeScriptBlock enumsBlock, TypeDefinition typeDefinition)
+        {
+            var fields = typeDefinition.Fields
+                .Where(f => f.IsPublic && !f.IsSpecialName && !f.IsStatic)
+                .Select(f => new
+                {
+                    f.Name,
+                    Type = GetTypeDefinition(f.FieldType.FullName)
+                });
+
+            var properties = typeDefinition.Properties
+                .Where(p => !p.IsSpecialName)
+                .Select(p => new
+                {
+                    p.Name,
+                    Type = GetTypeDefinition(p.PropertyType.FullName)
+                });
+
+            var things = fields.Union(properties)
+                .Where(t => t.Type != null);
+
+            if (!things.Any())
+                return;
+
+            var interfaceBlock = interfacesBlock
+                .AddAndUseBlock($"export class {typeDefinition.Name}");
+
+            foreach (var thing in things)
+            {
+                var primitiveType = GetPrimitiveType(thing.Type.FullName);
+                if (primitiveType != null)
+                {
+                    interfaceBlock.AddStatement($"{thing.Name}: {primitiveType};");
+                }
+                else
+                {
+                    if (thing.Type == null)
+                        continue;
+
+                    if (thing.Type.IsEnum && Config.GenerateEnums)
+                    {
+                        if (Enums.All(e => e.FullName != thing.Type.FullName))
+                        {
+                            Enums.Add(thing.Type);
+                            CreateEnumForType(enumsBlock, thing.Type);
+                        }
+
+                        interfaceBlock.AddStatement($"{thing.Name}: {Config.EnumsNamespace}.{thing.Type.Name};");
+                    }
+                    else if (!thing.Type.IsPrimitive)
+                    {
+                        if (Interfaces.All(i => i.FullName != thing.Type.FullName))
+                        {
+                            Interfaces.Add(thing.Type);
+                            CreateInterfaceForType(interfacesBlock, enumsBlock, thing.Type);
+                        }
+
+                        interfaceBlock.AddStatement($"{thing.Name}: {thing.Type.Name};");
+                    }
+                }
+            }
+
+            interfaceBlock
+                .AddAndUseBlock($"getQueryParams()")
+                .AddStatement($"return this;");
         }
 
         private Config GetConfig(string configFilePath)

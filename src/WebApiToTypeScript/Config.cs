@@ -14,8 +14,6 @@ namespace WebApiToTypeScript
         public string EndpointsNamespace { get; set; }
             = "Endpoints";
 
-        public bool GenerateInterfaces { get; set; }
-            = false;
 
         public bool GenerateEnums { get; set; }
             = true;
@@ -27,6 +25,17 @@ namespace WebApiToTypeScript
 
         public string EnumsNamespace { get; set; }
             = "Enums";
+
+        public bool GenerateInterfaces { get; set; }
+            = true;
+
+        public string InterfacesOutputDirectory { get; set; }
+
+        public string InterfacesFileName { get; set; }
+            = "Interfaces.ts";
+
+        public string InterfacesNamespace { get; set; }
+            = "Interfaces";
 
         public bool ScanOtherModules { get; set; }
             = true;
