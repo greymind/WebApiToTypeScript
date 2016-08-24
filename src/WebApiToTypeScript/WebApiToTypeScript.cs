@@ -72,7 +72,7 @@ namespace WebApiToTypeScript
         {
             var mapping = TypeScriptPrimitiveTypesMapping;
 
-            mapping["string"] = new List<Type> { typeof(string) };
+            mapping["string"] = new List<Type> { typeof(string), typeof(System.Guid) };
             mapping["boolean"] = new List<Type> { typeof(bool) };
             mapping["number"] = new List<Type> { typeof(int), typeof(long), typeof(float), typeof(double) };
         }
