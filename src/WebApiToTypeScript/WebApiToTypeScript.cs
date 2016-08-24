@@ -234,6 +234,10 @@ namespace WebApiToTypeScript
             if (typeMapping != null)
                 return typeMapping.TypeScriptTypeName;
 
+            typeName = StripNullable(type) ?? typeName;
+
+            // TODO Support encrypted long via route {xx:encryptedLong}
+
             var typeDefinition = Types
                 .FirstOrDefault(t => t.FullName == typeName);
 
@@ -246,15 +250,6 @@ namespace WebApiToTypeScript
                     Enums.Add(typeDefinition);
 
                 return $"{Config.EnumsNamespace}.{typeDefinition.Name}";
-            }
-
-            var genericType = type as GenericInstanceType;
-            if (genericType != null
-                && genericType.FullName.StartsWith("System.Nullable`1")
-                && genericType.HasGenericArguments
-                && genericType.GenericArguments.Count == 1)
-            {
-                typeName = genericType.GenericArguments.Single().FullName;
             }
 
             var result = TypeScriptPrimitiveTypesMapping
@@ -271,6 +266,20 @@ namespace WebApiToTypeScript
             }
 
             return $"{IHaveQueryParams}";
+        }
+
+        private string StripNullable(TypeReference type)
+        {
+            var genericType = type as GenericInstanceType;
+            if (genericType != null
+                && genericType.FullName.StartsWith("System.Nullable`1")
+                && genericType.HasGenericArguments
+                && genericType.GenericArguments.Count == 1)
+            {
+                return genericType.GenericArguments.Single().FullName;
+            }
+
+            return null;
         }
 
         private static void CreateEnumForType(TypeScriptBlock enumsBlock, TypeDefinition typeDefinition)
