@@ -43,7 +43,7 @@ namespace Endpoints {
         export class GetSomething {
             verb: string = 'GET';
         
-            constructor(public id: number, public hole?: string, public y?: number) {
+            constructor(public id: number, public hole?: string, public y?: Enums.DummyEnum) {
             }
         
             private getQueryString = (): string => {
@@ -68,7 +68,7 @@ namespace Endpoints {
         export class GetSomethingElse {
             verb: string = 'GET';
         
-            constructor(public id: number, public y?: IHaveQueryParams, public hole?: string) {
+            constructor(public id: number, public y?: Interfaces.DummyClass, public hole?: string) {
             }
         
             private getQueryString = (): string => {

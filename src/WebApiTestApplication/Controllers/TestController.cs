@@ -46,10 +46,24 @@ namespace WebApiTestApplication.Controllers
         }
     }
 
+    public enum DummyEnum
+    {
+        Hi = 1,
+        Bye = 2
+    }
+
     public class DummyClass
     {
         public string Name { get; set; }
         public DateTime Date { get; set; }
+
+        public AnotherClass C { get; set; }
+    }
+
+    public class AnotherClass
+    {
+        public int Number;
+        public string Name;
     }
 
     [RoutePrefix("api/Test/{hole}/actions")]
@@ -71,9 +85,9 @@ namespace WebApiTestApplication.Controllers
 
         [HttpGet]
         [Route("getSomething/{id}/ha")]
-        public string GetSomething(string hole, int id, int y = 7)
+        public string GetSomething(string hole, int id, DummyEnum y = DummyEnum.Bye)
         {
-            return $"value {id} {y}";
+            return $"value {id} {y.ToString()}";
         }
 
         [HttpGet]

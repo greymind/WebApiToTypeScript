@@ -7,7 +7,7 @@ class TestObject implements Endpoints.IHaveQueryParams {
     }
 }
 
-var testObject = new TestObject();
+var testObject = new Interfaces.DummyClass();
 var b = {
     getQueryParams() {
         return {
@@ -24,7 +24,7 @@ var endpoints: any[] = [
     new Endpoints.Test.GetSomethingElse(3, testObject, "cap"),
     //new Endpoints.Test.GetSomethingElse(3, "asd", "cap"),
     //new Endpoints.Test.GetSomethingElse(3, 0, "cap"),
-    new Endpoints.Test.GetSomethingElse(3, b, "cap"),
+    //new Endpoints.Test.GetSomethingElse(3, b, "cap"),
     new Endpoints.Test.Post("cap"),
     new Endpoints.Test.Put(5, "cap"),
     new Endpoints.Test.Delete(2, "cap")
