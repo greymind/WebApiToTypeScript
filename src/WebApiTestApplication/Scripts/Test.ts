@@ -1,6 +1,4 @@
-import TestEndpoint = Endpoints.TestEndpoint;
-
-class TestObject implements Endpoints.QueryParam {
+class TestObject implements Endpoints.IHaveQueryParams {
     Name = "something"
     Date = new Date().toJSON()
 
@@ -20,16 +18,16 @@ var b = {
 }
 
 var endpoints: any[] = [
-    new TestEndpoint.Get("cap"),
-    new TestEndpoint.Get1("7", "cap"),
-    new TestEndpoint.GetSomething("cap", 1, 2),
-    new TestEndpoint.GetSomethingElse(3, testObject, "cap"),
-    //new TestEndpoint.GetSomethingElse(3, "asd", "cap"),
-    //new TestEndpoint.GetSomethingElse(3, 0, "cap"),
-    new TestEndpoint.GetSomethingElse(3, b, "cap"),
-    new TestEndpoint.Post("cap"),
-    new TestEndpoint.Put(5, "cap"),
-    new TestEndpoint.Delete(2, "cap")
+    new Endpoints.Test.Get("cap"),
+    new Endpoints.Test.Get1("7", "cap"),
+    new Endpoints.Test.GetSomething(7, "cap", 2),
+    new Endpoints.Test.GetSomethingElse(3, testObject, "cap"),
+    //new Endpoints.Test.GetSomethingElse(3, "asd", "cap"),
+    //new Endpoints.Test.GetSomethingElse(3, 0, "cap"),
+    new Endpoints.Test.GetSomethingElse(3, b, "cap"),
+    new Endpoints.Test.Post("cap"),
+    new Endpoints.Test.Put(5, "cap"),
+    new Endpoints.Test.Delete(2, "cap")
 ];
 
 endpoints.forEach(e => {

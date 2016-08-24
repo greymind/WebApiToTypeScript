@@ -3,11 +3,11 @@ namespace Endpoints {
         getQueryParams(): Object
     }
 
-    export namespace TestEndpoint {
+    export namespace Test {
         export class Get {
-            verb: string = 'GET'
+            verb: string = 'GET';
         
-            constructor(public hole: string) {
+            constructor(public hole?: string) {
             }
         
             toString = (): string => {
@@ -16,15 +16,17 @@ namespace Endpoints {
         }
     
         export class Get1 {
-            verb: string = 'GET'
+            verb: string = 'GET';
         
-            constructor(public id: string, public hole: string) {
+            constructor(public id: string, public hole?: string) {
             }
         
             private getQueryString = (): string => {
-                let parameters: string[] = []
-                
-                parameters.push(`id=${this.id}`);
+                let parameters: string[] = [];
+            
+                if (this.id != null) {
+                    parameters.push(`id=${this.id}`);
+                }
             
                 if (parameters.length > 0) {
                     return '?' + parameters.join('&');
@@ -39,14 +41,13 @@ namespace Endpoints {
         }
     
         export class GetSomething {
-            verb: string = 'GET'
+            verb: string = 'GET';
         
-            constructor(public hole: string, public id: number, public y?: number) {
+            constructor(public id: number, public hole?: string, public y?: number) {
             }
         
             private getQueryString = (): string => {
-                let parameters: string[] = []
-                
+                let parameters: string[] = [];
             
                 if (this.y != null) {
                     parameters.push(`y=${this.y}`);
@@ -65,21 +66,24 @@ namespace Endpoints {
         }
     
         export class GetSomethingElse {
-            verb: string = 'GET'
+            verb: string = 'GET';
         
-            constructor(public id: number, public y: IHaveQueryParams, public hole: string) {
+            constructor(public id: number, public y?: IHaveQueryParams, public hole?: string) {
             }
         
             private getQueryString = (): string => {
-                let parameters: string[] = []
-                
-                parameters.push(`id=${this.id}`);
+                let parameters: string[] = [];
             
-                {
+                if (this.id != null) {
+                    parameters.push(`id=${this.id}`);
+                }
+            
+                if (this.y != null) {
                     let yParams = this.y.getQueryParams();
-                
                     Object.keys(yParams).forEach((key) => {
-                        parameters.push(`${key}=${yParams[key]}`);
+                        if (yParams[key] != null) {
+                            parameters.push(`${key}=${yParams[key]}`);
+                        }
                     });
                 }
             
@@ -96,9 +100,9 @@ namespace Endpoints {
         }
     
         export class Post {
-            verb: string = 'POST'
+            verb: string = 'POST';
         
-            constructor(public hole: string) {
+            constructor(public hole?: string) {
             }
         
             toString = (): string => {
@@ -107,9 +111,9 @@ namespace Endpoints {
         }
     
         export class Put {
-            verb: string = 'PUT'
+            verb: string = 'PUT';
         
-            constructor(public id: number, public hole: string) {
+            constructor(public id: number, public hole?: string) {
             }
         
             toString = (): string => {
@@ -118,15 +122,17 @@ namespace Endpoints {
         }
     
         export class Delete {
-            verb: string = 'DELETE'
+            verb: string = 'DELETE';
         
-            constructor(public id: number, public hole: string) {
+            constructor(public id: number, public hole?: string) {
             }
         
             private getQueryString = (): string => {
-                let parameters: string[] = []
-                
-                parameters.push(`id=${this.id}`);
+                let parameters: string[] = [];
+            
+                if (this.id != null) {
+                    parameters.push(`id=${this.id}`);
+                }
             
                 if (parameters.length > 0) {
                     return '?' + parameters.join('&');

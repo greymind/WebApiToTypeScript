@@ -111,6 +111,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="Scripts\Endpoints\Endpoints.ts" />
+    <TypeScriptCompile Include="Scripts\Enums\Enums.ts" />
     <TypeScriptCompile Include="Scripts\Test.ts" />
     <TypeScriptCompile Include="Scripts\typings\angularjs\angular-animate.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\angularjs\angular-component-router.d.ts" />
