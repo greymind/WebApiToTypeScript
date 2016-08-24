@@ -200,10 +200,11 @@ namespace WebApiToTypeScript
 
         private string GetTypeScriptType(ParameterDefinition parameter)
         {
-            var typeName = parameter.ParameterType.FullName;
+            var type = parameter.ParameterType;
+            var typeName = type.FullName;
 
             var typeMapping = Config.TypeMappings
-                .SingleOrDefault(t => t.WebApiTypeName == typeName
+                .SingleOrDefault(t => typeName.StartsWith(t.WebApiTypeName)
                     || (t.TreatAsAttribute
                         && parameter.HasCustomAttributes
                         && parameter.CustomAttributes.Any(a => a.AttributeType.Name == t.WebApiTypeName)));
@@ -212,7 +213,7 @@ namespace WebApiToTypeScript
                 return typeMapping.TypeScriptTypeName;
 
             var typeDefinition = Types
-                .FirstOrDefault(t => t.FullName == parameter.ParameterType.FullName);
+                .FirstOrDefault(t => t.FullName == typeName);
 
             if (typeDefinition?.IsEnum ?? false)
             {
@@ -223,6 +224,15 @@ namespace WebApiToTypeScript
                     Enums.Add(typeDefinition);
 
                 return $"{Config.EnumsNamespace}.{typeDefinition.Name}";
+            }
+
+            var genericType = type as GenericInstanceType;
+            if (genericType != null
+                && genericType.FullName.StartsWith("System.Nullable`1")
+                && genericType.HasGenericArguments
+                && genericType.GenericArguments.Count == 1)
+            {
+                typeName = genericType.GenericArguments.Single().FullName;
             }
 
             switch (typeName)
