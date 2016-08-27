@@ -110,6 +110,7 @@
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="Scripts\Angular.ts" />
     <TypeScriptCompile Include="Scripts\Endpoints\Endpoints.ts" />
     <TypeScriptCompile Include="Scripts\Enums\Enums.ts" />
     <TypeScriptCompile Include="Scripts\Interfaces\Interfaces.ts" />

@@ -7,6 +7,7 @@ using System.Web;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.Http.Metadata;
+using Newtonsoft.Json;
 
 namespace WebApiTestApplication.Controllers
 {
@@ -80,7 +81,7 @@ namespace WebApiTestApplication.Controllers
         [Route("")]
         public string Get([EncryptedInt] int id, string hole)
         {
-            return $"value {id}";
+            return $"value {hole} / {id}";
         }
 
         [HttpGet]
@@ -94,26 +95,30 @@ namespace WebApiTestApplication.Controllers
         [Route("GetSomethingElse")]
         public string GetSomethingElse(int id, [FromUri]DummyClass y, string hole)
         {
-            return $"value {id} {y.Name} {y.Date.ToShortDateString()} {hole}";
+            return $"{nameof(GetSomethingElse)}: {id} {y.Name} {y.Date.ToShortDateString()} {hole}";
         }
 
         [HttpPost]
         [Route("")]
-        public string Post(string hole, [FromBody]string value)
+        public string Post(string hole, [FromBody]DummyClass value)
         {
-            return $"thanks for the {value} in the {hole}";
+            var valueJson = JsonConvert.SerializeObject(value);
+            return $"thanks for the {valueJson} in the {hole}";
         }
 
         [HttpPut]
         [Route("{id}")]
-        public void Put(int id, [FromBody]string value, string hole)
+        public string Put(int id, [FromBody]string value, string hole)
         {
+            var valueJson = JsonConvert.SerializeObject(value);
+            return $"Putting {valueJson} for {id} in {hole}";
         }
 
         [HttpDelete]
         [Route("")]
-        public void Delete(int id, string hole)
+        public string Delete(int id, string hole)
         {
+            return $"{id} in {hole} deleted!";
         }
     }
 }

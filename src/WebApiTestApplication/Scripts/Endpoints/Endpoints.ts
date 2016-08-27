@@ -13,6 +13,14 @@ namespace Endpoints {
             toString = (): string => {
                 return `/api/Test/${this.hole}/actions/GetAll`;
             }
+        
+            call = () => {
+                let $http = angular.injector(['ng']).get('$http');
+                return $http( {
+                    method: 'GET',
+                    url: `${this.toString()}`
+                })
+            }
         }
     
         export class Get1 {
@@ -37,6 +45,14 @@ namespace Endpoints {
         
             toString = (): string => {
                 return `/api/Test/${this.hole}/actions` + this.getQueryString();
+            }
+        
+            call = () => {
+                let $http = angular.injector(['ng']).get('$http');
+                return $http( {
+                    method: 'GET',
+                    url: `${this.toString()}`
+                })
             }
         }
     
@@ -63,6 +79,14 @@ namespace Endpoints {
             toString = (): string => {
                 return `/api/Test/${this.hole}/actions/getSomething/${this.id}/ha` + this.getQueryString();
             }
+        
+            call = () => {
+                let $http = angular.injector(['ng']).get('$http');
+                return $http( {
+                    method: 'GET',
+                    url: `${this.toString()}`
+                })
+            }
         }
     
         export class GetSomethingElse {
@@ -84,7 +108,7 @@ namespace Endpoints {
                         if (yParams[key] != null) {
                             parameters.push(`${key}=${yParams[key]}`);
                         }
-                    });
+                    })
                 }
             
                 if (parameters.length > 0) {
@@ -97,6 +121,14 @@ namespace Endpoints {
             toString = (): string => {
                 return `/api/Test/${this.hole}/actions/GetSomethingElse` + this.getQueryString();
             }
+        
+            call = () => {
+                let $http = angular.injector(['ng']).get('$http');
+                return $http( {
+                    method: 'GET',
+                    url: `${this.toString()}`
+                })
+            }
         }
     
         export class Post {
@@ -108,6 +140,15 @@ namespace Endpoints {
             toString = (): string => {
                 return `/api/Test/${this.hole}/actions`;
             }
+        
+            call = (value?: Interfaces.DummyClass) => {
+                let $http = angular.injector(['ng']).get('$http');
+                return $http( {
+                    method: 'POST',
+                    url: `${this.toString()}`,
+                    data: value
+                })
+            }
         }
     
         export class Put {
@@ -118,6 +159,15 @@ namespace Endpoints {
         
             toString = (): string => {
                 return `/api/Test/${this.hole}/actions/${this.id}`;
+            }
+        
+            call = (value?: string) => {
+                let $http = angular.injector(['ng']).get('$http');
+                return $http( {
+                    method: 'PUT',
+                    url: `${this.toString()}`,
+                    data: `"${value}"`
+                })
             }
         }
     
@@ -143,6 +193,14 @@ namespace Endpoints {
         
             toString = (): string => {
                 return `/api/Test/${this.hole}/actions` + this.getQueryString();
+            }
+        
+            call = () => {
+                let $http = angular.injector(['ng']).get('$http');
+                return $http( {
+                    method: 'DELETE',
+                    url: `${this.toString()}`
+                })
             }
         }
     }
