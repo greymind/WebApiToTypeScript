@@ -56,6 +56,25 @@ namespace Endpoints {
             }
         }
     
+        export class Getty {
+            verb: string = 'GET';
+        
+            constructor(public id: string, public hole?: string) {
+            }
+        
+            toString = (): string => {
+                return `/api/Test/${this.hole}/actions/getty/${this.id}`;
+            }
+        
+            call = () => {
+                let $http = angular.injector(['ng']).get('$http');
+                return $http( {
+                    method: 'GET',
+                    url: `${this.toString()}`
+                })
+            }
+        }
+    
         export class GetSomething {
             verb: string = 'GET';
         

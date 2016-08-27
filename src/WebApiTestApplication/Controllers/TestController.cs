@@ -85,6 +85,13 @@ namespace WebApiTestApplication.Controllers
         }
 
         [HttpGet]
+        [Route("getty/{id:encryptedInt}")]
+        public string Getty(int id, string hole)
+        {
+            return $"{nameof(Getty)}: value {hole} / {id}";
+        }
+
+        [HttpGet]
         [Route("getSomething/{id}/ha")]
         public string GetSomething(string hole, int id, DummyEnum y = DummyEnum.Bye)
         {
