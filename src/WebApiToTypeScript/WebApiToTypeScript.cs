@@ -379,8 +379,9 @@ namespace WebApiToTypeScript
             var typeMapping = Config.TypeMappings
                 .SingleOrDefault(t => typeName.StartsWith(t.WebApiTypeName)
                     || (t.TreatAsAttribute
-                        && (Helpers.HasCustomAttribute(parameter, $"{t.WebApiTypeName}Attribute")
-                            || routePart.Constraints.Any(c => c == Helpers.ToCamelCase(t.WebApiTypeName)))));
+                        && (Helpers.HasCustomAttribute(parameter, $"{t.WebApiTypeName}Attribute"))
+                    || (t.TreatAsConstraint
+                        && routePart.Constraints.Any(c => c == Helpers.ToCamelCase(t.WebApiTypeName)))));
 
             return typeMapping;
         }

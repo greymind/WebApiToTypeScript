@@ -84,12 +84,12 @@ namespace WebApiTestApplication.Controllers
             return $"value {hole} / {id}";
         }
 
-        [HttpGet]
-        [Route("getty/{id:encryptedInt}")]
-        public string Getty(int id, string hole)
-        {
-            return $"{nameof(Getty)}: value {hole} / {id}";
-        }
+        //[HttpGet]
+        //[Route("getty/{id:encryptedInt}")]
+        //public string Getty(int id, string hole)
+        //{
+        //    return $"{nameof(Getty)}: value {hole} / {id}";
+        //}
 
         [HttpGet]
         [Route("getSomething/{id}/ha")]
