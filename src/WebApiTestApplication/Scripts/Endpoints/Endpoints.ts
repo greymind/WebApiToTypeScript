@@ -141,12 +141,12 @@ namespace Endpoints {
                 return `/api/Test/${this.hole}/actions`;
             }
         
-            call = (value?: Interfaces.DummyClass) => {
+            call = (value: Interfaces.DummyClass) => {
                 let $http = angular.injector(['ng']).get('$http');
                 return $http( {
                     method: 'POST',
                     url: `${this.toString()}`,
-                    data: value
+                    data: value != null ? value : null
                 })
             }
         }
@@ -161,12 +161,12 @@ namespace Endpoints {
                 return `/api/Test/${this.hole}/actions/${this.id}`;
             }
         
-            call = (value?: string) => {
+            call = (value: string) => {
                 let $http = angular.injector(['ng']).get('$http');
                 return $http( {
                     method: 'PUT',
                     url: `${this.toString()}`,
-                    data: `"${value}"`
+                    data: value != null ? `"${value}"` : null
                 })
             }
         }

@@ -152,7 +152,7 @@ namespace WebApiToTypeScript
 
             var callArguments = action.BodyParameters;
             var callArgumentStrings = callArguments
-                .Select(GetParameterStringForConstructor);
+                .Select(a => GetParameterString(a, false));
 
             var callArgumentsList = string.Join(",", callArgumentStrings);
 
@@ -168,32 +168,17 @@ namespace WebApiToTypeScript
                 foreach (var argument in callArguments)
                 {
                     var typeScriptType = GetTypeScriptType(argument);
+                    var valueFormat = $"{argument.Name}";
 
                     switch (typeScriptType)
                     {
                         case "string":
-                            callBlock
-                                .AddStatement($"data: `\"${{{argument.Name}}}\"`");
-
-                            break;
-
-                        case "number":
-                            callBlock
-                                .AddStatement($"data: `${{{argument.Name}}}`");
-
-                            break;
-
-                        case "boolean":
-                            callBlock
-                                .AddStatement($"data: `${{{argument.Name}}}`");
-
-                            break;
-
-                        default:
-                            callBlock
-                                .AddStatement($"data: {argument.Name}");
+                            valueFormat = $"`\"${{{argument.Name}}}\"`";
                             break;
                     }
+
+                    callBlock
+                        .AddStatement($"data: {argument.Name} != null ? {valueFormat} : null");
                 }
             }
         }
@@ -272,7 +257,7 @@ namespace WebApiToTypeScript
                     IsOptional = IsParameterOptional(p),
                     TypeMapping = GetTypeMapping(p),
                     Name = p.Name,
-                    String = GetParameterStringForConstructor(p)
+                    String = GetParameterString(p)
                 })
                 .OrderBy(p => p.IsOptional);
 
@@ -296,9 +281,9 @@ namespace WebApiToTypeScript
             }
         }
 
-        private string GetParameterStringForConstructor(ParameterDefinition parameter)
+        private string GetParameterString(ParameterDefinition parameter, bool withOptionals = true)
         {
-            var isOptional = IsParameterOptional(parameter);
+            var isOptional = withOptionals && IsParameterOptional(parameter);
             return $"{parameter.Name}{(isOptional ? "?" : "")}: {GetTypeScriptType(parameter)}";
         }
 
