@@ -321,8 +321,6 @@ namespace WebApiToTypeScript
 
             typeName = StripNullable(type) ?? typeName;
 
-            // TODO Support encrypted long via route {xx:encryptedLong}
-
             var typeDefinition = GetTypeDefinition(typeName);
 
             if (typeDefinition?.IsEnum ?? false)
