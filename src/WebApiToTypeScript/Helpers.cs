@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Mono.Cecil;
 
 namespace WebApiToTypeScript
 {
@@ -28,17 +29,36 @@ namespace WebApiToTypeScript
                 .Select(p => new WebApiRoutePart
                 {
                     Name = p,
-                    ParameterName = RouteParameterRegex.Match(p).Groups[1].Value
+                    ParameterName = RouteParameterRegex.Match(p).Groups[1].Value,
                 })
                 .ToList();
 
             foreach (var routePart in routeParts)
             {
                 if (!string.IsNullOrEmpty(routePart.ParameterName))
-                    routePart.ParameterName = routePart.ParameterName.Split(':').First();
+                {
+                    var routeConstraints = routePart.ParameterName.Split(':');
+                    routePart.ParameterName = routeConstraints.First();
+                    routePart.Constraints = routeConstraints.Skip(1)
+                        .ToList();
+                }
             }
 
             return routeParts;
+        }
+
+        public static bool HasCustomAttribute(ParameterDefinition parameter, string attributeName)
+        {
+            return parameter.HasCustomAttributes
+                && parameter.CustomAttributes.Any(a => a.AttributeType.Name == attributeName);
+        }
+
+        public static string ToCamelCase(string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+                return $"{value.First().ToString().ToLower()}{value.Substring(1)}";
+            else
+                return value;
         }
     }
 }

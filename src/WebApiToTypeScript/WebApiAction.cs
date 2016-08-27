@@ -1,6 +1,6 @@
-﻿using Mono.Cecil;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using Mono.Cecil;
 
 namespace WebApiToTypeScript
 {
@@ -18,11 +18,11 @@ namespace WebApiToTypeScript
         public List<WebApiRoutePart> RouteParts { get; set; }
             = new List<WebApiRoutePart>();
 
-        public List<ParameterDefinition> QueryStringParameters { get;  }
-            = new List<ParameterDefinition>();
+        public List<WebApiRoutePart> QueryStringParameters { get; }
+            = new List<WebApiRoutePart>();
 
-        public List<ParameterDefinition> BodyParameters { get;  }
-            = new List<ParameterDefinition>();
+        public List<WebApiRoutePart> BodyParameters { get; }
+            = new List<WebApiRoutePart>();
 
         public WebApiAction(List<WebApiRoutePart> baseRouteParts, MethodDefinition method, string name)
         {
@@ -39,6 +39,11 @@ namespace WebApiToTypeScript
             RouteParts = Helpers.GetRouteParts(Route);
             Endpoint = Helpers.GetBaseEndpoint(RouteParts);
 
+            GetQueryStringAndBodyRouteParts(baseRouteParts);
+        }
+
+        private void GetQueryStringAndBodyRouteParts(List<WebApiRoutePart> baseRouteParts)
+        {
             var actionParameters = Method.Parameters
                 .Where(p => !baseRouteParts.Any(brp => brp.ParameterName == p.Name)
                     && !RouteParts.Any(rp => rp.ParameterName == p.Name));
@@ -46,15 +51,40 @@ namespace WebApiToTypeScript
             var isBodyAllowed = Verbs.Contains(WebApiHttpVerb.Post)
                 || Verbs.Contains(WebApiHttpVerb.Put);
 
+            var fromBodyAttributeName = "FromBodyAttribute";
+
             foreach (var actionParameter in actionParameters)
             {
-                var isFromBody = actionParameter.HasCustomAttributes
-                    && actionParameter.CustomAttributes.Any(a => a.AttributeType.Name == "FromBodyAttribute");
+                var isFromBody = Helpers.HasCustomAttribute(actionParameter, fromBodyAttributeName);
 
                 if (isBodyAllowed && isFromBody)
-                    BodyParameters.Add(actionParameter);
+                {
+                    BodyParameters.Add(new WebApiRoutePart
+                    {
+                        Name = actionParameter.Name,
+                        ParameterName = actionParameter.Name,
+                        Parameter = actionParameter,
+                        CustomAttributes = new List<string> { fromBodyAttributeName }
+                    });
+                }
                 else
-                    QueryStringParameters.Add(actionParameter);
+                {
+                    var queryStringRoutePart = new WebApiRoutePart
+                    {
+                        Name = actionParameter.Name,
+                        ParameterName = actionParameter.Name,
+                        Parameter = actionParameter
+                    };
+
+                    if (actionParameter.HasCustomAttributes)
+                    {
+                        queryStringRoutePart.CustomAttributes = actionParameter.CustomAttributes
+                            .Select(a => a.AttributeType.Name)
+                            .ToList();
+                    }
+
+                    QueryStringParameters.Add(queryStringRoutePart);
+                }
             }
         }
 

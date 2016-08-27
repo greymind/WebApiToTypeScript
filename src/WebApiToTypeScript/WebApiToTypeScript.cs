@@ -151,6 +151,7 @@ namespace WebApiToTypeScript
             var dataDelimiter = isFormBody ? "," : string.Empty;
 
             var callArguments = action.BodyParameters;
+
             var callArgumentStrings = callArguments
                 .Select(a => GetParameterString(a, false));
 
@@ -215,8 +216,7 @@ namespace WebApiToTypeScript
                 var block = queryStringBlock
                     .AddAndUseBlock($"if (this.{parameterName} != null)");
 
-                if (parameter.HasCustomAttributes
-                    && parameter.CustomAttributes.Any(a => a.AttributeType.Name == "FromUriAttribute")
+                if (parameter.CustomAttributes.Any(a => a == "FromUriAttribute")
                     && !TypeScriptPrimitiveTypesMapping.Keys.Contains(GetTypeScriptType(parameter)))
                 {
                     block
@@ -242,22 +242,36 @@ namespace WebApiToTypeScript
         private void CreateConstructorBlock(TypeScriptBlock classBlock,
             List<WebApiRoutePart> baseRouteParts, WebApiAction action)
         {
-            var constructorParameters = action.Method.Parameters
-                .Where(p => baseRouteParts.Any(brp => brp.ParameterName == p.Name)
-                    || action.RouteParts.Any(rp => rp.ParameterName == p.Name)
-                    || action.QueryStringParameters.Any(qsp => qsp.Name == p.Name))
+            var tempConstructorParameters = action.Method.Parameters
+                .Select(p => new
+                {
+                    Parameter = p,
+                    RoutePart = baseRouteParts.SingleOrDefault(brp => brp.ParameterName == p.Name)
+                        ?? action.RouteParts.SingleOrDefault(rp => rp.ParameterName == p.Name)
+                        ?? action.QueryStringParameters.SingleOrDefault(qsp => qsp.Name == p.Name)
+                })
+                .Where(cp => cp.RoutePart != null)
                 .ToList();
+
+            var constructorParameters = new List<WebApiRoutePart>();
+            foreach (var tcp in tempConstructorParameters)
+            {
+                if (tcp.RoutePart.Parameter == null)
+                    tcp.RoutePart.Parameter = tcp.Parameter;
+
+                constructorParameters.Add(tcp.RoutePart);
+            }
 
             if (!constructorParameters.Any())
                 return;
 
             var constructorParameterMappings = constructorParameters
-                .Select(p => new
+                .Select(routePart => new
                 {
-                    IsOptional = IsParameterOptional(p),
-                    TypeMapping = GetTypeMapping(p),
-                    Name = p.Name,
-                    String = GetParameterString(p)
+                    IsOptional = IsParameterOptional(routePart.Parameter),
+                    TypeMapping = GetTypeMapping(routePart),
+                    Name = routePart.Parameter.Name,
+                    String = GetParameterString(routePart)
                 })
                 .OrderBy(p => p.IsOptional);
 
@@ -281,10 +295,12 @@ namespace WebApiToTypeScript
             }
         }
 
-        private string GetParameterString(ParameterDefinition parameter, bool withOptionals = true)
+        private string GetParameterString(WebApiRoutePart routePart, bool withOptionals = true)
         {
+            var parameter = routePart.Parameter;
             var isOptional = withOptionals && IsParameterOptional(parameter);
-            return $"{parameter.Name}{(isOptional ? "?" : "")}: {GetTypeScriptType(parameter)}";
+
+            return $"{parameter.Name}{(isOptional ? "?" : "")}: {GetTypeScriptType(routePart)}";
         }
 
         private bool IsParameterOptional(ParameterDefinition parameter)
@@ -292,12 +308,13 @@ namespace WebApiToTypeScript
             return parameter.IsOptional || !parameter.ParameterType.IsValueType || IsNullable(parameter.ParameterType);
         }
 
-        private string GetTypeScriptType(ParameterDefinition parameter)
+        private string GetTypeScriptType(WebApiRoutePart routePart)
         {
+            var parameter = routePart.Parameter;
             var type = parameter.ParameterType;
             var typeName = type.FullName;
 
-            var typeMapping = GetTypeMapping(parameter);
+            var typeMapping = GetTypeMapping(routePart);
 
             if (typeMapping != null)
                 return typeMapping.TypeScriptTypeName;
@@ -351,15 +368,19 @@ namespace WebApiToTypeScript
                 .SingleOrDefault(name => !string.IsNullOrEmpty(name));
         }
 
-        private TypeMapping GetTypeMapping(ParameterDefinition parameter)
+        private TypeMapping GetTypeMapping(WebApiRoutePart routePart)
         {
+            if (routePart.Parameter == null)
+                return null;
+
+            var parameter = routePart.Parameter;
             var typeName = parameter.ParameterType.FullName;
 
             var typeMapping = Config.TypeMappings
                 .SingleOrDefault(t => typeName.StartsWith(t.WebApiTypeName)
                     || (t.TreatAsAttribute
-                            && parameter.HasCustomAttributes
-                            && parameter.CustomAttributes.Any(a => a.AttributeType.Name == t.WebApiTypeName)));
+                        && (Helpers.HasCustomAttribute(parameter, $"{t.WebApiTypeName}Attribute")
+                            || routePart.Constraints.Any(c => c == Helpers.ToCamelCase(t.WebApiTypeName)))));
 
             return typeMapping;
         }
