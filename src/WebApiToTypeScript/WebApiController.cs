@@ -32,28 +32,16 @@ namespace WebApiToTypeScript
         private void UpdateActions(TypeDefinition apiController)
         {
             var methodNames = new HashSet<string>();
-            var httpVerbs = new [] {
-                new WebApiHttpVerb("Get"),
-                new WebApiHttpVerb("Post"),
-                new WebApiHttpVerb("Put"),
-                new WebApiHttpVerb("Delete")
-            };
 
             Actions = apiController.Methods
                 .Where(m => m.IsPublic
                     && m.HasCustomAttributes
-                    && m.CustomAttributes.Any(a => httpVerbs.Any(v => v.VerbAttribute == a.AttributeType.Name)))
+                    && m.CustomAttributes.Any(a => WebApiHttpVerb.Verbs.Any(v => v.VerbAttribute == a.AttributeType.Name)))
                 .Select(m => new WebApiAction
                 (
                     baseRouteParts: RouteParts,
                     method: m,
-                    name: GetUniqueMethodName(methodNames, m.Name),
-                    verb: httpVerbs
-                        .Single(verb => verb.VerbAttribute == m.CustomAttributes
-                            .First(a => httpVerbs.Any(v => v.VerbAttribute == a.AttributeType.Name))
-                            .AttributeType
-                            .Name)
-                        .VerbMethod
+                    name: GetUniqueMethodName(methodNames, m.Name)
                 ))
                 .ToList();
         }

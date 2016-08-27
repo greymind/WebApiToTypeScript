@@ -86,7 +86,7 @@ namespace WebApiToTypeScript
         {
             var mapping = TypeScriptPrimitiveTypesMapping;
 
-            mapping["string"] = new List<Type> { typeof(string), typeof(System.Guid) };
+            mapping["string"] = new List<Type> { typeof(string), typeof(System.Guid), typeof(DateTime) };
             mapping["boolean"] = new List<Type> { typeof(bool) };
             mapping["number"] = new List<Type> { typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
         }
@@ -127,15 +127,74 @@ namespace WebApiToTypeScript
 
             foreach (var action in actions)
             {
-                var classBlock = moduleBlock
-                     .AddAndUseBlock($"export class {action.Name}")
-                     .AddStatement($"verb: string = '{action.Verb}';");
+                foreach (var verb in action.Verbs)
+                {
+                    var classBlock = moduleBlock
+                        .AddAndUseBlock($"export class {action.Name}")
+                        .AddStatement($"verb: string = '{verb.VerbMethod}';");
 
-                CreateConstructorBlock(classBlock, webApiController.RouteParts, action);
+                    CreateConstructorBlock(classBlock, webApiController.RouteParts, action);
 
-                CreateQueryStringBlock(classBlock, action);
+                    CreateQueryStringBlock(classBlock, action);
 
-                CreateToStringBlock(classBlock, webApiController.BaseEndpoint, action);
+                    CreateToStringBlock(classBlock, webApiController.BaseEndpoint, action);
+
+                    CreateCallBlock(classBlock, action, verb);
+                }
+            }
+        }
+
+        private void CreateCallBlock(TypeScriptBlock classBlock, WebApiAction action,
+            WebApiHttpVerb verb)
+        {
+            var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
+            var dataDelimiter = isFormBody ? "," : string.Empty;
+
+            var callArguments = action.BodyParameters;
+            var callArgumentStrings = callArguments
+                .Select(GetParameterStringForConstructor);
+
+            var callArgumentsList = string.Join(",", callArgumentStrings);
+
+            var callBlock = classBlock
+                .AddAndUseBlock($"call = ({callArgumentsList}) =>")
+                .AddStatement("let $http = angular.injector(['ng']).get('$http');")
+                .AddAndUseBlock("return $http(", isFunctionBlock: true)
+                .AddStatement($"method: '{verb.VerbMethod}',")
+                .AddStatement($"url: `${{this.toString()}}`{dataDelimiter}");
+
+            if (isFormBody)
+            {
+                foreach (var argument in callArguments)
+                {
+                    var typeScriptType = GetTypeScriptType(argument);
+
+                    switch (typeScriptType)
+                    {
+                        case "string":
+                            callBlock
+                                .AddStatement($"data: `\"${{{argument.Name}}}\"`");
+
+                            break;
+
+                        case "number":
+                            callBlock
+                                .AddStatement($"data: `${{{argument.Name}}}`");
+
+                            break;
+
+                        case "boolean":
+                            callBlock
+                                .AddStatement($"data: `${{{argument.Name}}}`");
+
+                            break;
+
+                        default:
+                            callBlock
+                                .AddStatement($"data: {argument.Name}");
+                            break;
+                    }
+                }
             }
         }
 
@@ -353,7 +412,7 @@ namespace WebApiToTypeScript
                 enumBlock.AddStatement($"{field.Name} = {field.Constant},");
         }
 
-        private void CreateInterfaceForType(TypeScriptBlock interfacesBlock, 
+        private void CreateInterfaceForType(TypeScriptBlock interfacesBlock,
             TypeScriptBlock enumsBlock, TypeDefinition typeDefinition)
         {
             var fields = typeDefinition.Fields

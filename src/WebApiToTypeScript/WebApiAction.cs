@@ -11,34 +11,51 @@ namespace WebApiToTypeScript
         public string Endpoint { get; set; }
 
         public MethodDefinition Method { get; set; }
-        public string Verb { get; set; }
+
+        public List<WebApiHttpVerb> Verbs { get; set; }
+            = new List<WebApiHttpVerb>();
 
         public List<WebApiRoutePart> RouteParts { get; set; }
             = new List<WebApiRoutePart>();
 
-        public List<ParameterDefinition> QueryStringParameters { get; set; }
+        public List<ParameterDefinition> QueryStringParameters { get;  }
             = new List<ParameterDefinition>();
 
-        public WebApiAction(List<WebApiRoutePart> baseRouteParts, MethodDefinition method, string name,
-            string verb)
+        public List<ParameterDefinition> BodyParameters { get;  }
+            = new List<ParameterDefinition>();
+
+        public WebApiAction(List<WebApiRoutePart> baseRouteParts, MethodDefinition method, string name)
         {
             Method = method;
             Name = name;
-            Verb = verb;
+
+            Verbs = Method.CustomAttributes
+                .Select(a => WebApiHttpVerb.Verbs.SingleOrDefault(v => v.VerbAttribute == a.AttributeType.Name))
+                .Where(a => a != null)
+                .ToList();
 
             Route = GetMethodRoute(Method) ?? string.Empty;
 
             RouteParts = Helpers.GetRouteParts(Route);
             Endpoint = Helpers.GetBaseEndpoint(RouteParts);
 
-            // TODO: Add if put, post and is class also = FromBody
-            // We specify frombody, or dont do this and force fix of controller
-            QueryStringParameters = Method.Parameters
+            var actionParameters = Method.Parameters
                 .Where(p => !baseRouteParts.Any(brp => brp.ParameterName == p.Name)
-                    && !RouteParts.Any(rp => rp.ParameterName == p.Name)
-                    && !(p.HasCustomAttributes
-                        && p.CustomAttributes.Any(a => a.AttributeType.Name == "FromBodyAttribute")))
-                .ToList();
+                    && !RouteParts.Any(rp => rp.ParameterName == p.Name));
+
+            var isBodyAllowed = Verbs.Contains(WebApiHttpVerb.Post)
+                || Verbs.Contains(WebApiHttpVerb.Put);
+
+            foreach (var actionParameter in actionParameters)
+            {
+                var isFromBody = actionParameter.HasCustomAttributes
+                    && actionParameter.CustomAttributes.Any(a => a.AttributeType.Name == "FromBodyAttribute");
+
+                if (isBodyAllowed && isFromBody)
+                    BodyParameters.Add(actionParameter);
+                else
+                    QueryStringParameters.Add(actionParameter);
+            }
         }
 
         private string GetMethodRoute(MethodDefinition method)
