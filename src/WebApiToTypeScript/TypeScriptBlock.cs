@@ -115,7 +115,7 @@ namespace WebApiToTypeScript
                 AppendNewLineIfApplicable(nextChild, child, isThisTheLastChild, stringBuilder);
             }
 
-            stringBuilder.AppendLine(IsFunctionBlock ? "});" : "}");
+            stringBuilder.AppendLine(IsFunctionBlock ? "})" : "}");
 
             return stringBuilder.ToString();
         }
