@@ -13,16 +13,12 @@ namespace WebApiToTypeScript
     {
         private const string IHaveQueryParams = nameof(IHaveQueryParams);
 
-        private readonly TypeService typeService
-            = new TypeService();
+        private TypeService typeService;
 
         [Required]
         public string ConfigFilePath { get; set; }
 
         public Config Config { get; set; }
-
-        private List<TypeDefinition> Types { get; }
-            = new List<TypeDefinition>();
 
         private List<TypeDefinition> Enums { get; }
             = new List<TypeDefinition>();
@@ -34,13 +30,10 @@ namespace WebApiToTypeScript
         {
             Config = GetConfig(ConfigFilePath);
 
-            var webApiApplicationModule = ModuleDefinition
-                .ReadModule(Config.WebApiModuleFileName);
+            typeService = new TypeService(Config.WebApiModuleFileName);
+            typeService.LoadAllTypes();
 
-            LoadAllTypes(webApiApplicationModule);
-
-            var apiControllers = webApiApplicationModule.GetTypes()
-                .Where(IsControllerType());
+            var apiControllers = typeService.GetControllers();
 
             var moduleOrNamespace = Config.WriteNamespaceAsModule ? "module" : "namespace";
 
@@ -78,28 +71,6 @@ namespace WebApiToTypeScript
                 CreateFileForBlock(enumsBlock, Config.EnumsOutputDirectory, Config.EnumsFileName);
 
             return true;
-        }
-
-        private void LoadAllTypes(ModuleDefinition webApiApplicationModule)
-        {
-            var corlib = ModuleDefinition.ReadModule(typeof(object).Module.FullyQualifiedName);
-            Types.AddRange(corlib.GetTypes());
-
-            Types.AddRange(webApiApplicationModule.GetTypes());
-
-            var moduleDirectoryName = Path.GetDirectoryName(Config.WebApiModuleFileName);
-
-            foreach (var reference in webApiApplicationModule.AssemblyReferences)
-            {
-                var fileName = $"{reference.Name}.dll";
-                var path = Path.Combine(moduleDirectoryName, fileName);
-
-                if (!File.Exists(path))
-                    continue;
-
-                var moduleDefinition = ModuleDefinition.ReadModule(path);
-                Types.AddRange(moduleDefinition.GetTypes());
-            }
         }
 
         private void WriteEndpointClass(TypeScriptBlock endpointBlock,
@@ -310,7 +281,7 @@ namespace WebApiToTypeScript
 
             typeName = StripNullable(type) ?? typeName;
 
-            var typeDefinition = GetTypeDefinition(typeName);
+            var typeDefinition = typeService.GetTypeDefinition(typeName);
 
             if (typeDefinition?.IsEnum ?? false)
             {
@@ -340,12 +311,6 @@ namespace WebApiToTypeScript
             }
 
             throw new Exception("We shouldn't get here?");
-        }
-
-        private TypeDefinition GetTypeDefinition(string typeName)
-        {
-            return Types
-                .FirstOrDefault(t => t.FullName == typeName);
         }
 
         private TypeMapping GetTypeMapping(WebApiRoutePart routePart)
@@ -407,7 +372,7 @@ namespace WebApiToTypeScript
                 .Select(f => new
                 {
                     f.Name,
-                    Type = GetTypeDefinition(f.FieldType.FullName)
+                    Type = typeService.GetTypeDefinition(f.FieldType.FullName)
                 });
 
             var properties = typeDefinition.Properties
@@ -415,7 +380,7 @@ namespace WebApiToTypeScript
                 .Select(p => new
                 {
                     p.Name,
-                    Type = GetTypeDefinition(p.PropertyType.FullName)
+                    Type = typeService.GetTypeDefinition(p.PropertyType.FullName)
                 });
 
             var things = fields.Union(properties)
@@ -472,28 +437,6 @@ namespace WebApiToTypeScript
             var configFileContent = File.ReadAllText(configFilePath);
 
             return JsonConvert.DeserializeObject<Config>(configFileContent);
-        }
-
-        private Func<TypeDefinition, bool> IsControllerType()
-        {
-            var apiControllerType = "System.Web.Http.ApiController";
-
-            return t => t.IsClass
-                && !t.IsAbstract
-                && t.Name.EndsWith("Controller")
-                && GetBaseTypes(t).Any(bt => bt.FullName == apiControllerType);
-        }
-
-        private IEnumerable<TypeReference> GetBaseTypes(TypeDefinition type)
-        {
-            var baseType = type.BaseType;
-            while (baseType != null)
-            {
-                yield return baseType;
-
-                var baseTypeDefinition = baseType as TypeDefinition;
-                baseType = baseTypeDefinition?.BaseType;
-            }
         }
 
         private void CreateFileForBlock(TypeScriptBlock typeScriptBlock, string outputDirectory, string fileName)
