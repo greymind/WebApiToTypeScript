@@ -13,6 +13,9 @@ namespace WebApiToTypeScript
     {
         private const string IHaveQueryParams = nameof(IHaveQueryParams);
 
+        private readonly TypeService typeService
+            = new TypeService();
+
         [Required]
         public string ConfigFilePath { get; set; }
 
@@ -27,14 +30,9 @@ namespace WebApiToTypeScript
         private List<TypeDefinition> Interfaces { get; }
             = new List<TypeDefinition>();
 
-        private Dictionary<string, List<Type>> TypeScriptPrimitiveTypesMapping { get; }
-            = new Dictionary<string, List<Type>>();
-
         public override bool Execute()
         {
             Config = GetConfig(ConfigFilePath);
-
-            LoadTypeScriptPrimitiveTypesMapping();
 
             var webApiApplicationModule = ModuleDefinition
                 .ReadModule(Config.WebApiModuleFileName);
@@ -80,15 +78,6 @@ namespace WebApiToTypeScript
                 CreateFileForBlock(enumsBlock, Config.EnumsOutputDirectory, Config.EnumsFileName);
 
             return true;
-        }
-
-        private void LoadTypeScriptPrimitiveTypesMapping()
-        {
-            var mapping = TypeScriptPrimitiveTypesMapping;
-
-            mapping["string"] = new List<Type> { typeof(string), typeof(System.Guid), typeof(DateTime) };
-            mapping["boolean"] = new List<Type> { typeof(bool) };
-            mapping["number"] = new List<Type> { typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
         }
 
         private void LoadAllTypes(ModuleDefinition webApiApplicationModule)
@@ -217,7 +206,7 @@ namespace WebApiToTypeScript
                     .AddAndUseBlock($"if (this.{parameterName} != null)");
 
                 if (parameter.CustomAttributes.Any(a => a == "FromUriAttribute")
-                    && !TypeScriptPrimitiveTypesMapping.Keys.Contains(GetTypeScriptType(parameter)))
+                    && !typeService.IsPrimitiveType(GetTypeScriptType(parameter)))
                 {
                     block
                         .AddStatement($"let {parameterName}Params = this.{parameterName}.getQueryParams();")
@@ -334,7 +323,7 @@ namespace WebApiToTypeScript
                 return $"{Config.EnumsNamespace}.{typeDefinition.Name}";
             }
 
-            var primitiveType = GetPrimitiveType(typeName);
+            var primitiveType = typeService.GetPrimitiveType(typeName);
 
             if (!string.IsNullOrEmpty(primitiveType))
                 return primitiveType;
@@ -357,13 +346,6 @@ namespace WebApiToTypeScript
         {
             return Types
                 .FirstOrDefault(t => t.FullName == typeName);
-        }
-
-        private string GetPrimitiveType(string typeName)
-        {
-            return TypeScriptPrimitiveTypesMapping
-                .Select(m => m.Value.Any(t => t.FullName == typeName) ? m.Key : string.Empty)
-                .SingleOrDefault(name => !string.IsNullOrEmpty(name));
         }
 
         private TypeMapping GetTypeMapping(WebApiRoutePart routePart)
@@ -447,7 +429,7 @@ namespace WebApiToTypeScript
 
             foreach (var thing in things)
             {
-                var primitiveType = GetPrimitiveType(thing.Type.FullName);
+                var primitiveType = typeService.GetPrimitiveType(thing.Type.FullName);
                 if (primitiveType != null)
                 {
                     interfaceBlock.AddStatement($"{thing.Name}: {primitiveType};");
