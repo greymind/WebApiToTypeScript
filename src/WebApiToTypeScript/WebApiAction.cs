@@ -64,6 +64,14 @@ namespace WebApiToTypeScript
                 var isFromUri = Helpers.HasCustomAttribute(actionParameter, fromUriAttributeName);
                 var isPrimitive = actionParameter.ParameterType.IsPrimitive;
 
+                if (!isPrimitive)
+                {
+                    var typeService = new TypeService();
+                    var nullableType = typeService.StripNullable(actionParameter.ParameterType);
+                    var isNullable = nullableType != null;
+                    isPrimitive = isNullable && typeService.GetPrimitiveTypeScriptType(nullableType) != null;
+                }
+
                 if (isBodyAllowed 
                     && ((isThereAnythingFromBody && isFromBody)
                         || (!isThereAnythingFromBody && !isFromUri && !isPrimitive)))

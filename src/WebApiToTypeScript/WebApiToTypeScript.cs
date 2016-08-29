@@ -13,7 +13,8 @@ namespace WebApiToTypeScript
     {
         private const string IHaveQueryParams = nameof(IHaveQueryParams);
 
-        private TypeService typeService;
+        private readonly TypeService typeService
+            = new TypeService();
 
         [Required]
         public string ConfigFilePath { get; set; }
@@ -30,10 +31,9 @@ namespace WebApiToTypeScript
         {
             Config = GetConfig(ConfigFilePath);
 
-            typeService = new TypeService(Config.WebApiModuleFileName);
-            typeService.LoadAllTypes();
+            typeService.LoadAllTypes(Config.WebApiModuleFileName);
 
-            var apiControllers = typeService.GetControllers();
+            var apiControllers = typeService.GetControllers(Config.WebApiModuleFileName);
 
             var moduleOrNamespace = Config.WriteNamespaceAsModule ? "module" : "namespace";
 
@@ -294,7 +294,7 @@ namespace WebApiToTypeScript
             {
                 var tsTypeName = typeMapping.TypeScriptTypeName;
                 result.TypeName = tsTypeName;
-                result.IsPrimitive = typeService.IsPrimitiveType(result.TypeName);
+                result.IsPrimitive = typeService.IsPrimitiveTypeScriptType(result.TypeName);
                 result.IsEnum = tsTypeName.StartsWith($"{Config.EnumsNamespace}")
                     || result.IsPrimitive;
 
@@ -329,7 +329,7 @@ namespace WebApiToTypeScript
                 return result;
             }
 
-            var primitiveType = typeService.GetPrimitiveType(typeName);
+            var primitiveType = typeService.GetPrimitiveTypeScriptType(typeName);
 
             if (!string.IsNullOrEmpty(primitiveType))
             {
@@ -439,7 +439,7 @@ namespace WebApiToTypeScript
                 var thingType = thing.CSharpType.TypeDefinition;
                 var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
 
-                var primitiveType = typeService.GetPrimitiveType(thingType.FullName);
+                var primitiveType = typeService.GetPrimitiveTypeScriptType(thingType.FullName);
                 if (primitiveType != null)
                 {
                     constructorParameters.Add($"{thing.Name}?: {primitiveType}{collectionString}");
