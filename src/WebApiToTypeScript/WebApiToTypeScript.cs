@@ -119,7 +119,7 @@ namespace WebApiToTypeScript
                 .Select(a => GetParameterString(a, false))
                 .ToList();
 
-            var callArgumentsList = string.Join(",", callArgumentStrings);
+            var callArgumentsList = string.Join(", ", callArgumentStrings);
 
             var dataDelimiter = isFormBody && callArgumentStrings.Any() ? "," : string.Empty;
 
@@ -421,8 +421,6 @@ namespace WebApiToTypeScript
                 .Where(t => t.CSharpType.TypeDefinition != null)
                 .ToList();
 
-            // TODO Handle IEnumerable, BaseType, Collections, Interfaces (base things, generic T)
-
             var baseClass = typeDefinition.BaseType as TypeDefinition;
             var isBaseClassNotObject = baseClass != null && baseClass.FullName != "System.Object";
 
@@ -436,6 +434,8 @@ namespace WebApiToTypeScript
             var interfaceBlock = interfacesBlock
                 .AddAndUseBlock($"export class {typeDefinition.Name}{extendsString}");
 
+            var constructorParameters = new List<string>();
+
             foreach (var thing in things)
             {
                 var thingType = thing.CSharpType.TypeDefinition;
@@ -444,7 +444,7 @@ namespace WebApiToTypeScript
                 var primitiveType = typeService.GetPrimitiveType(thingType.FullName);
                 if (primitiveType != null)
                 {
-                    interfaceBlock.AddStatement($"{thing.Name}: {primitiveType}{collectionString};");
+                    constructorParameters.Add($"{thing.Name}?: {primitiveType}{collectionString}");
                 }
                 else
                 {
@@ -456,20 +456,32 @@ namespace WebApiToTypeScript
                             CreateEnumForType(enumsBlock, thingType);
                         }
 
-                        interfaceBlock.AddStatement($"{thing.Name}: {Config.EnumsNamespace}.{thingType.Name}{collectionString};");
+                        constructorParameters.Add($"{thing.Name}?: {Config.EnumsNamespace}.{thingType.Name}{collectionString}");
                     }
                     else if (!thingType.IsPrimitive)
                     {
                         CreateInterfaceForTypeIfNeeded(interfacesBlock, enumsBlock, thingType);
 
-                        interfaceBlock.AddStatement($"{thing.Name}: {thingType.Name}{collectionString};");
+                        constructorParameters.Add($"{thing.Name}?: {thingType.Name}{collectionString}");
                     }
                 }
             }
 
+            var constructorParameterStrings = constructorParameters
+                .Select(p => $"public {p}");
+
+            var constructorParametersList =
+                string.Join(", ", constructorParameterStrings);
+
+            var constructorBlock = interfaceBlock
+                .AddAndUseBlock($"constructor({constructorParametersList})");
+
+            if (isBaseClassNotObject)
+                constructorBlock.AddStatement("super();");
+
             interfaceBlock
-                .AddAndUseBlock($"getQueryParams()")
-                .AddStatement($"return this;");
+                .AddAndUseBlock("getQueryParams()")
+                .AddStatement("return this;");
         }
 
         private void CreateInterfaceForTypeIfNeeded(TypeScriptBlock interfacesBlock, TypeScriptBlock enumsBlock,
