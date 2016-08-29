@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Mono.Cecil;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Mono.Cecil;
 
 namespace WebApiToTypeScript
 {
@@ -95,6 +95,20 @@ namespace WebApiToTypeScript
                 .FirstOrDefault(t => t.FullName == typeName);
         }
 
+        public CSharpType GetCSharpType(TypeReference type)
+        {
+            var result = new CSharpType();
+
+            var nullableType = StripNullable(type);
+
+            var collectionType = StripCollection(type);
+            result.IsCollection = collectionType != null;
+
+            result.TypeDefinition = GetTypeDefinition(nullableType ?? collectionType ?? type.FullName);
+
+            return result;
+        }
+
         public string GetPrimitiveType(string typeName)
         {
             return PrimitiveTypesMapping
@@ -106,6 +120,47 @@ namespace WebApiToTypeScript
         {
             return PrimitiveTypesMapping.Keys
                 .Contains(typeName);
+        }
+
+        public string StripNullable(TypeReference type)
+        {
+            var genericType = type as GenericInstanceType;
+            if (genericType != null
+                && genericType.FullName.StartsWith("System.Nullable`1")
+                && genericType.HasGenericArguments
+                && genericType.GenericArguments.Count == 1)
+            {
+                return genericType.GenericArguments.Single().FullName;
+            }
+
+            return null;
+        }
+
+        public string StripCollection(TypeReference type)
+        {
+            if (type.IsArray)
+            {
+                return type.GetElementType().FullName;
+            }
+
+            var genericCollectionTypes = new[]
+            {
+                "System.Collections.Generic.IList`1",
+                "System.Collections.Generic.List`1",
+                "System.Collections.Generic.IEnumerable`1",
+                "System.Collections.Generic.Enumerable`1"
+            };
+
+            var genericType = type as GenericInstanceType;
+            if (genericType != null
+                && genericCollectionTypes.Any(gct => genericType.FullName.StartsWith(gct))
+                && genericType.HasGenericArguments
+                && genericType.GenericArguments.Count == 1)
+            {
+                return genericType.GenericArguments.Single().FullName;
+            }
+
+            return null;
         }
     }
 }

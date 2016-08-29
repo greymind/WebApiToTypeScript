@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Mono.Cecil;
+using System.Collections.Generic;
 using System.Linq;
-using Mono.Cecil;
 
 namespace WebApiToTypeScript
 {
@@ -46,18 +46,26 @@ namespace WebApiToTypeScript
         {
             var actionParameters = Method.Parameters
                 .Where(p => !baseRouteParts.Any(brp => brp.ParameterName == p.Name)
-                    && !RouteParts.Any(rp => rp.ParameterName == p.Name));
+                    && !RouteParts.Any(rp => rp.ParameterName == p.Name))
+                .ToList();
 
             var isBodyAllowed = Verbs.Contains(WebApiHttpVerb.Post)
                 || Verbs.Contains(WebApiHttpVerb.Put);
 
             var fromBodyAttributeName = "FromBodyAttribute";
+            var fromUriAttributeName = "FromUriAttribute";
+
+            var isThereAnythingFromBody = actionParameters
+                .Any(ap => Helpers.HasCustomAttribute(ap, fromBodyAttributeName));
 
             foreach (var actionParameter in actionParameters)
             {
                 var isFromBody = Helpers.HasCustomAttribute(actionParameter, fromBodyAttributeName);
+                var isFromUri = Helpers.HasCustomAttribute(actionParameter, fromUriAttributeName);
+                var isPrimitive = actionParameter.ParameterType.IsPrimitive;
 
-                if (isBodyAllowed && isFromBody)
+                if (isBodyAllowed 
+                    && ((isThereAnythingFromBody && isFromBody) || (!isThereAnythingFromBody && !isFromUri && !isPrimitive)))
                 {
                     BodyParameters.Add(new WebApiRoutePart
                     {

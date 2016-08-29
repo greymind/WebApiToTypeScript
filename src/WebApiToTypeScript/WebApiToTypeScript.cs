@@ -268,9 +268,11 @@ namespace WebApiToTypeScript
         {
             var parameter = routePart.Parameter;
             var isOptional = withOptionals && IsParameterOptional(parameter);
-            var typeScriptTypeName = GetTypeScriptType(routePart).TypeName;
+            var typeScriptType = GetTypeScriptType(routePart);
 
-            return $"{parameter.Name}{(isOptional ? "?" : "")}: {typeScriptTypeName}";
+            var collectionString = typeScriptType.IsCollection ? "[]" : string.Empty;
+
+            return $"{parameter.Name}{(isOptional ? "?" : "")}: {typeScriptType.TypeName}{collectionString}";
         }
 
         private bool IsParameterOptional(ParameterDefinition parameter)
@@ -299,10 +301,11 @@ namespace WebApiToTypeScript
                 return result;
             }
 
-            typeName = StripNullable(type) ?? typeName;
+            typeName = typeService.StripNullable(type) ?? typeName;
 
-            // TODO Handle collections
-            var isCollection = StripIfCollection(type, ref typeName);
+            var collectionType = typeService.StripCollection(type);
+            result.IsCollection = collectionType != null;
+            typeName = collectionType ?? typeName;
 
             var typeDefinition = typeService.GetTypeDefinition(typeName);
 
@@ -312,8 +315,6 @@ namespace WebApiToTypeScript
                 {
                     result.TypeName = "number";
                     result.IsPrimitive = true;
-
-                    return result;
                 }
                 else
                 {
@@ -351,42 +352,11 @@ namespace WebApiToTypeScript
 
                     result.TypeName = $"{Config.InterfacesNamespace}.{typeDefinition.Name}";
                 }
+
                 return result;
             }
 
             throw new NotSupportedException("Maybe it is a generic class, or a yet unsupported collection, or chain thereof?");
-        }
-
-        private string FormatTypeName(string typeName, bool isCollection)
-        {
-            var collectionString = isCollection ? "[]" : string.Empty;
-            return $"{typeName}{collectionString}";
-        }
-
-        private bool StripIfCollection(TypeReference type, ref string typeName)
-        {
-            if (type.IsArray)
-            {
-                typeName = type.GetElementType().FullName;
-                return true;
-            }
-
-            var genericCollectionTypes = new[]
-            {
-                "System.Collections.Generic.IList`1"
-            };
-
-            var genericType = type as GenericInstanceType;
-            if (genericType != null
-                && genericCollectionTypes.Any(gct => genericType.FullName.StartsWith(gct))
-                && genericType.HasGenericArguments
-                && genericType.GenericArguments.Count == 1)
-            {
-                typeName = genericType.GenericArguments.Single().FullName;
-                return true;
-            }
-
-            return false;
         }
 
         private TypeMapping GetTypeMapping(WebApiRoutePart routePart)
@@ -414,20 +384,6 @@ namespace WebApiToTypeScript
                    && genericType.FullName.StartsWith("System.Nullable`1");
         }
 
-        private string StripNullable(TypeReference type)
-        {
-            var genericType = type as GenericInstanceType;
-            if (genericType != null
-                && genericType.FullName.StartsWith("System.Nullable`1")
-                && genericType.HasGenericArguments
-                && genericType.GenericArguments.Count == 1)
-            {
-                return genericType.GenericArguments.Single().FullName;
-            }
-
-            return null;
-        }
-
         private void CreateEnumForType(TypeScriptBlock enumsBlock, TypeDefinition typeDefinition)
         {
             var fields = typeDefinition.Fields
@@ -448,19 +404,22 @@ namespace WebApiToTypeScript
                 .Select(f => new
                 {
                     f.Name,
-                    Type = typeService.GetTypeDefinition(f.FieldType.FullName)
+                    CSharpType = typeService.GetCSharpType(f.FieldType)
                 });
 
             var properties = typeDefinition.Properties
-                .Where(p => !p.IsSpecialName)
+                .Where(p => !p.IsSpecialName && p.SetMethod != null)
                 .Select(p => new
                 {
                     p.Name,
-                    Type = typeService.GetTypeDefinition(p.PropertyType.FullName)
+                    CSharpType = typeService.GetCSharpType(p.PropertyType)
                 });
 
             var things = fields.Union(properties)
-                .Where(t => t.Type != null);
+                .Where(t => t.CSharpType.TypeDefinition != null)
+                .ToList();
+
+            // TODO Handle IEnumerable, BaseType, Collections, Interfaces (base things, generic T)
 
             if (!things.Any())
                 return;
@@ -470,35 +429,35 @@ namespace WebApiToTypeScript
 
             foreach (var thing in things)
             {
-                var primitiveType = typeService.GetPrimitiveType(thing.Type.FullName);
+                var thingType = thing.CSharpType.TypeDefinition;
+                var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
+
+                var primitiveType = typeService.GetPrimitiveType(thingType.FullName);
                 if (primitiveType != null)
                 {
-                    interfaceBlock.AddStatement($"{thing.Name}: {primitiveType};");
+                    interfaceBlock.AddStatement($"{thing.Name}: {primitiveType}{collectionString};");
                 }
                 else
                 {
-                    if (thing.Type == null)
-                        continue;
-
-                    if (thing.Type.IsEnum && Config.GenerateEnums)
+                    if (thingType.IsEnum && Config.GenerateEnums)
                     {
-                        if (Enums.All(e => e.FullName != thing.Type.FullName))
+                        if (Enums.All(e => e.FullName != thingType.FullName))
                         {
-                            Enums.Add(thing.Type);
-                            CreateEnumForType(enumsBlock, thing.Type);
+                            Enums.Add(thingType);
+                            CreateEnumForType(enumsBlock, thingType);
                         }
 
-                        interfaceBlock.AddStatement($"{thing.Name}: {Config.EnumsNamespace}.{thing.Type.Name};");
+                        interfaceBlock.AddStatement($"{thing.Name}: {Config.EnumsNamespace}.{thingType.Name}{collectionString};");
                     }
-                    else if (!thing.Type.IsPrimitive)
+                    else if (!thingType.IsPrimitive)
                     {
-                        if (Interfaces.All(i => i.FullName != thing.Type.FullName))
+                        if (Interfaces.All(i => i.FullName != thingType.FullName))
                         {
-                            Interfaces.Add(thing.Type);
-                            CreateInterfaceForType(interfacesBlock, enumsBlock, thing.Type);
+                            Interfaces.Add(thingType);
+                            CreateInterfaceForType(interfacesBlock, enumsBlock, thingType);
                         }
 
-                        interfaceBlock.AddStatement($"{thing.Name}: {thing.Type.Name};");
+                        interfaceBlock.AddStatement($"{thing.Name}: {thingType.Name}{collectionString};");
                     }
                 }
             }
