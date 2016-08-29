@@ -201,6 +201,8 @@ namespace WebApiToTypeScript
                 }
             }
 
+            // TODO encodeUriComponent?
+
             queryStringBlock
                 .AddAndUseBlock("if (parameters.length > 0)")
                 .AddStatement("return '?' + parameters.join('&');")
@@ -421,11 +423,18 @@ namespace WebApiToTypeScript
 
             // TODO Handle IEnumerable, BaseType, Collections, Interfaces (base things, generic T)
 
-            if (!things.Any())
-                return;
+            var baseClass = typeDefinition.BaseType as TypeDefinition;
+            var isBaseClassNotObject = baseClass != null && baseClass.FullName != "System.Object";
+
+            var extendsString = isBaseClassNotObject
+                ? $" extends {baseClass.Name}"
+                : string.Empty;
+
+            if (isBaseClassNotObject)
+                CreateInterfaceForTypeIfNeeded(interfacesBlock, enumsBlock, baseClass);
 
             var interfaceBlock = interfacesBlock
-                .AddAndUseBlock($"export class {typeDefinition.Name}");
+                .AddAndUseBlock($"export class {typeDefinition.Name}{extendsString}");
 
             foreach (var thing in things)
             {
@@ -451,11 +460,7 @@ namespace WebApiToTypeScript
                     }
                     else if (!thingType.IsPrimitive)
                     {
-                        if (Interfaces.All(i => i.FullName != thingType.FullName))
-                        {
-                            Interfaces.Add(thingType);
-                            CreateInterfaceForType(interfacesBlock, enumsBlock, thingType);
-                        }
+                        CreateInterfaceForTypeIfNeeded(interfacesBlock, enumsBlock, thingType);
 
                         interfaceBlock.AddStatement($"{thing.Name}: {thingType.Name}{collectionString};");
                     }
@@ -465,6 +470,16 @@ namespace WebApiToTypeScript
             interfaceBlock
                 .AddAndUseBlock($"getQueryParams()")
                 .AddStatement($"return this;");
+        }
+
+        private void CreateInterfaceForTypeIfNeeded(TypeScriptBlock interfacesBlock, TypeScriptBlock enumsBlock,
+            TypeDefinition thingType)
+        {
+            if (Interfaces.All(i => i.FullName != thingType.FullName))
+            {
+                Interfaces.Add(thingType);
+                CreateInterfaceForType(interfacesBlock, enumsBlock, thingType);
+            }
         }
 
         private Config GetConfig(string configFilePath)
