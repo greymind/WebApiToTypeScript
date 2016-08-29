@@ -95,7 +95,7 @@ namespace WebApiToTypeScript
 
                     var classBlock = moduleBlock
                         .AddAndUseBlock($"export class {action.Name}{verbPostfix}")
-                        .AddStatement($"verb: string = '{verb.VerbMethod}';");
+                        .AddStatement($"verb = '{verb.VerbMethod}';");
 
                     CreateConstructorBlock(classBlock, webApiController.RouteParts, action);
 
@@ -112,21 +112,23 @@ namespace WebApiToTypeScript
             WebApiHttpVerb verb)
         {
             var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
-            var dataDelimiter = isFormBody ? "," : string.Empty;
 
             var callArguments = action.BodyParameters;
 
             var callArgumentStrings = callArguments
-                .Select(a => GetParameterString(a, false));
+                .Select(a => GetParameterString(a, false))
+                .ToList();
 
             var callArgumentsList = string.Join(",", callArgumentStrings);
+
+            var dataDelimiter = isFormBody && callArgumentStrings.Any() ? "," : string.Empty;
 
             var callBlock = classBlock
                 .AddAndUseBlock($"call = ({callArgumentsList}) =>")
                 .AddStatement("const httpService = angular.injector(['ng']).get<ng.IHttpService>('$http');")
                 .AddAndUseBlock("return httpService(", isFunctionBlock: true, terminateWithSemicolon: true)
                 .AddStatement($"method: '{verb.VerbMethod}',")
-                .AddStatement($"url: `${{this.toString()}}`{dataDelimiter}");
+                .AddStatement($"url: this.toString(){dataDelimiter}");
 
             if (!isFormBody)
                 return;
@@ -181,9 +183,6 @@ namespace WebApiToTypeScript
 
                 var block = queryStringBlock
                     .AddAndUseBlock($"if (this.{argumentName} != null)");
-
-                // TODO We don't need to check this right?
-                var isFromUri = routePart.CustomAttributes.Any(a => a == "FromUriAttribute");
 
                 var argumentType = GetTypeScriptType(routePart);
 
