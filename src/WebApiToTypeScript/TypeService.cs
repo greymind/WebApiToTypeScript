@@ -8,18 +8,14 @@ namespace WebApiToTypeScript
 {
     public class TypeService
     {
-        private string WebApiModuleFilePath { get; }
-
         private Dictionary<string, List<Type>> PrimitiveTypesMapping { get; }
             = new Dictionary<string, List<Type>>();
 
         private List<TypeDefinition> Types { get; }
             = new List<TypeDefinition>();
 
-        public TypeService(string webApiModuleFilePath)
+        public TypeService()
         {
-            WebApiModuleFilePath = webApiModuleFilePath;
-
             LoadPrimitiveTypesMapping();
         }
 
@@ -32,17 +28,17 @@ namespace WebApiToTypeScript
             mapping["number"] = new List<Type> { typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
         }
 
-        public void LoadAllTypes()
+        public void LoadAllTypes(string webApiModuleFilePath)
         {
             var webApiApplicationModule = ModuleDefinition
-                .ReadModule(WebApiModuleFilePath);
+                .ReadModule(webApiModuleFilePath);
 
             var corlib = ModuleDefinition.ReadModule(typeof(object).Module.FullyQualifiedName);
             Types.AddRange(corlib.GetTypes());
 
             Types.AddRange(webApiApplicationModule.GetTypes());
 
-            var moduleDirectoryName = Path.GetDirectoryName(WebApiModuleFilePath);
+            var moduleDirectoryName = Path.GetDirectoryName(webApiModuleFilePath);
 
             foreach (var reference in webApiApplicationModule.AssemblyReferences)
             {
@@ -57,10 +53,10 @@ namespace WebApiToTypeScript
             }
         }
 
-        public List<TypeDefinition> GetControllers()
+        public List<TypeDefinition> GetControllers(string webApiModuleFilePath)
         {
             var webApiApplicationModule = ModuleDefinition
-                .ReadModule(WebApiModuleFilePath);
+                .ReadModule(webApiModuleFilePath);
 
             return webApiApplicationModule.GetTypes()
                 .Where(IsControllerType)
@@ -109,14 +105,14 @@ namespace WebApiToTypeScript
             return result;
         }
 
-        public string GetPrimitiveType(string typeName)
+        public string GetPrimitiveTypeScriptType(string typeName)
         {
             return PrimitiveTypesMapping
                 .Select(m => m.Value.Any(t => t.FullName == typeName) ? m.Key : string.Empty)
                 .SingleOrDefault(name => !string.IsNullOrEmpty(name));
         }
 
-        public bool IsPrimitiveType(string typeName)
+        public bool IsPrimitiveTypeScriptType(string typeName)
         {
             return PrimitiveTypesMapping.Keys
                 .Contains(typeName);
