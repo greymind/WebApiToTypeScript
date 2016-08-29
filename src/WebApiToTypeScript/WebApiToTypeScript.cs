@@ -197,11 +197,9 @@ namespace WebApiToTypeScript
                         .AddStatement($"let {argumentName}Params = this.{argumentName}.getQueryParams();")
                         .AddAndUseBlock($"Object.keys({argumentName}Params).forEach((key) =>", isFunctionBlock: true, terminateWithSemicolon: true)
                         .AddAndUseBlock($"if ({argumentName}Params[key] != null)")
-                        .AddStatement($"parameters.push(`${{key}}=${{{argumentName}Params[key]}}`);");
+                        .AddStatement($"parameters.push(`${{key}}=${{encodeURIComponent({argumentName}Params[key])}}`);");
                 }
             }
-
-            // TODO encodeUriComponent?
 
             queryStringBlock
                 .AddAndUseBlock("if (parameters.length > 0)")
