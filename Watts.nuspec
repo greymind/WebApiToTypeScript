@@ -9,8 +9,9 @@
     <projectUrl>https://github.com/greymind/WebApiToTypeScript</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A tool for code generating TypeScript endpoints for your ASP.NET Web API controllers</description>
+    <summary>A tool for code generating TypeScript endpoints for your ASP.NET Web API controllers</summary>
     <releaseNotes>Initial release</releaseNotes>
-    <copyright>Copyright (c) Balakrishnan (Balki) Ranganathan 2016</copyright>
+    <copyright>Copyright (c) 2016 Balakrishnan (Balki) Ranganathan</copyright>
     <tags>WebAPI TypeScript Endpoint Enum Interface Code Generation Balki Greymind Watts</tags>
   </metadata>
   <files>
