@@ -188,8 +188,16 @@ namespace WebApiToTypeScript
 
                 if (argumentType.IsPrimitive || argumentType.IsEnum)
                 {
-                    block
-                        .AddStatement($"parameters.push(`{argumentName}=${{this.{argumentName}}}`);");
+                    if (argumentType.IsCollection)
+                    {
+                        block
+                            .AddStatement($"parameters.push(`{argumentName}=${{this.{argumentName}.join(',')}}`);");
+                    }
+                    else
+                    {
+                        block
+                            .AddStatement($"parameters.push(`{argumentName}=${{encodeURIComponent(this.{argumentName}.toString())}}`);");
+                    }
                 }
                 else
                 {
@@ -197,7 +205,7 @@ namespace WebApiToTypeScript
                         .AddStatement($"let {argumentName}Params = this.{argumentName}.getQueryParams();")
                         .AddAndUseBlock($"Object.keys({argumentName}Params).forEach((key) =>", isFunctionBlock: true, terminateWithSemicolon: true)
                         .AddAndUseBlock($"if ({argumentName}Params[key] != null)")
-                        .AddStatement($"parameters.push(`${{key}}=${{encodeURIComponent({argumentName}Params[key])}}`);");
+                        .AddStatement($"parameters.push(`${{key}}=${{encodeURIComponent({argumentName}Params[key].toString())}}`);");
                 }
             }
 
