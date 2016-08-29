@@ -65,7 +65,8 @@ namespace WebApiToTypeScript
                 var isPrimitive = actionParameter.ParameterType.IsPrimitive;
 
                 if (isBodyAllowed 
-                    && ((isThereAnythingFromBody && isFromBody) || (!isThereAnythingFromBody && !isFromUri && !isPrimitive)))
+                    && ((isThereAnythingFromBody && isFromBody)
+                        || (!isThereAnythingFromBody && !isFromUri && !isPrimitive)))
                 {
                     BodyParameters.Add(new WebApiRoutePart
                     {
