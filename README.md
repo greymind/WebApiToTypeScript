@@ -1,6 +1,12 @@
 # Web API To TypeScript
 A tool for code generating TypeScript endpoints for your ASP.NET Web API controllers and their actions
 
+## Getting the tool from NuGet
+[https://www.nuget.org/packages/WebApiToTypeScript/](https://www.nuget.org/packages/WebApiToTypeScript/)
+```
+Install-Package WebApiToTypeScript
+```
+
 ## Using as standalone tool
 Just run the executable with the config file as the argument
 ```
