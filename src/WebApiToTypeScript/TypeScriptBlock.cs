@@ -36,33 +36,35 @@ namespace WebApiToTypeScript
         public TypeScriptBlock Parent { get; set; }
 
         public bool IsFunctionBlock { get; set; }
+        public bool TerminateWithSemicolon { get; set; }
 
         public TypeScriptBlock(string outer = "")
         {
             Outer = outer;
         }
 
-        public TypeScriptBlock AddBlock(string outer = null, bool isFunctionBlock = false)
+        public TypeScriptBlock AddBlock(string outer = null, bool isFunctionBlock = false, bool terminateWithSemicolon = false)
         {
-            var child = CreateChild(outer, isFunctionBlock);
+            var child = CreateChild(outer, isFunctionBlock, terminateWithSemicolon);
 
             return this;
         }
 
-        public TypeScriptBlock AddAndUseBlock(string outer = null, bool isFunctionBlock = false)
+        public TypeScriptBlock AddAndUseBlock(string outer = null, bool isFunctionBlock = false, bool terminateWithSemicolon = false)
         {
-            var child = CreateChild(outer, isFunctionBlock);
+            var child = CreateChild(outer, isFunctionBlock, terminateWithSemicolon);
 
             return child;
         }
 
-        private TypeScriptBlock CreateChild(string outer, bool isFunctionBlock)
+        private TypeScriptBlock CreateChild(string outer, bool isFunctionBlock, bool terminateWithSemicolon = false)
         {
             var child = new TypeScriptBlock
             {
                 Outer = outer,
                 Parent = this,
-                IsFunctionBlock = isFunctionBlock
+                IsFunctionBlock = isFunctionBlock,
+                TerminateWithSemicolon = terminateWithSemicolon
             };
 
             Children.Add(child);
@@ -96,9 +98,14 @@ namespace WebApiToTypeScript
             };
 
             if (!string.IsNullOrEmpty(Outer))
-                stringBuilder.AppendLine($"{Outer} {{");
+            {
+                var outerPaddingString = Outer.EndsWith("(") ? string.Empty : " ";
+                stringBuilder.AppendLine($"{Outer}{outerPaddingString}{{");
+            }
             else
+            {
                 stringBuilder.AppendLine($"{{");
+            }
 
             for (var c = 0; c < Children.Count; c++)
             {
@@ -115,7 +122,10 @@ namespace WebApiToTypeScript
                 AppendNewLineIfApplicable(nextChild, child, isThisTheLastChild, stringBuilder);
             }
 
-            stringBuilder.AppendLine(IsFunctionBlock ? "})" : "}");
+            var blockEndString = IsFunctionBlock ? "})" : "}";
+            var terminationString = TerminateWithSemicolon ? ";" : string.Empty;
+
+            stringBuilder.AppendLine($"{blockEndString}{terminationString}");
 
             return stringBuilder.ToString();
         }
