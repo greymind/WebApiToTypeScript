@@ -67,6 +67,7 @@
     <Compile Include="IndentAwareStringBuilder.cs" />
     <Compile Include="TypeMapping.cs" />
     <Compile Include="TypeScriptBlock.cs" />
+    <Compile Include="TypeScriptType.cs" />
     <Compile Include="TypeService.cs" />
     <Compile Include="WebApiAction.cs" />
     <Compile Include="WebApiController.cs" />

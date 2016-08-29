@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.Build.Framework;
+﻿using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace WebApiToTypeScript
 {
@@ -89,8 +89,12 @@ namespace WebApiToTypeScript
             {
                 foreach (var verb in action.Verbs)
                 {
+                    var verbPostfix = action.Verbs.Count > 1
+                        ? verb == WebApiHttpVerb.Post ? "New" : "Existing"
+                        : string.Empty;
+
                     var classBlock = moduleBlock
-                        .AddAndUseBlock($"export class {action.Name}")
+                        .AddAndUseBlock($"export class {action.Name}{verbPostfix}")
                         .AddStatement($"verb: string = '{verb.VerbMethod}';");
 
                     CreateConstructorBlock(classBlock, webApiController.RouteParts, action);
@@ -119,28 +123,30 @@ namespace WebApiToTypeScript
 
             var callBlock = classBlock
                 .AddAndUseBlock($"call = ({callArgumentsList}) =>")
-                .AddStatement("let $http = angular.injector(['ng']).get('$http');")
-                .AddAndUseBlock("return $http(", isFunctionBlock: true)
+                .AddStatement("const httpService = angular.injector(['ng']).get<ng.IHttpService>('$http');")
+                .AddAndUseBlock("return httpService(", isFunctionBlock: true, terminateWithSemicolon: true)
                 .AddStatement($"method: '{verb.VerbMethod}',")
                 .AddStatement($"url: `${{this.toString()}}`{dataDelimiter}");
 
-            if (isFormBody)
+            if (!isFormBody)
+                return;
+
+            foreach (var argument in callArguments)
             {
-                foreach (var argument in callArguments)
+                var typeScriptType = GetTypeScriptType(argument)
+                    .TypeName;
+
+                var valueFormat = $"{argument.Name}";
+
+                switch (typeScriptType)
                 {
-                    var typeScriptType = GetTypeScriptType(argument);
-                    var valueFormat = $"{argument.Name}";
-
-                    switch (typeScriptType)
-                    {
-                        case "string":
-                            valueFormat = $"`\"${{{argument.Name}}}\"`";
-                            break;
-                    }
-
-                    callBlock
-                        .AddStatement($"data: {argument.Name} != null ? {valueFormat} : null");
+                    case "string":
+                        valueFormat = $"`\"${{{argument.Name}}}\"`";
+                        break;
                 }
+
+                callBlock
+                    .AddStatement($"data: {argument.Name} != null ? {valueFormat} : null");
             }
         }
 
@@ -169,26 +175,30 @@ namespace WebApiToTypeScript
                 .AddAndUseBlock("private getQueryString = (): string =>")
                 .AddStatement("let parameters: string[] = [];");
 
-            foreach (var parameter in queryStringParameters)
+            foreach (var routePart in queryStringParameters)
             {
-                var parameterName = parameter.Name;
+                var argumentName = routePart.Name;
 
                 var block = queryStringBlock
-                    .AddAndUseBlock($"if (this.{parameterName} != null)");
+                    .AddAndUseBlock($"if (this.{argumentName} != null)");
 
-                if (parameter.CustomAttributes.Any(a => a == "FromUriAttribute")
-                    && !typeService.IsPrimitiveType(GetTypeScriptType(parameter)))
+                // TODO We don't need to check this right?
+                var isFromUri = routePart.CustomAttributes.Any(a => a == "FromUriAttribute");
+
+                var argumentType = GetTypeScriptType(routePart);
+
+                if (argumentType.IsPrimitive || argumentType.IsEnum)
                 {
                     block
-                        .AddStatement($"let {parameterName}Params = this.{parameterName}.getQueryParams();")
-                        .AddAndUseBlock($"Object.keys({parameterName}Params).forEach((key) =>", isFunctionBlock: true)
-                        .AddAndUseBlock($"if ({parameterName}Params[key] != null)")
-                        .AddStatement($"parameters.push(`${{key}}=${{{parameterName}Params[key]}}`);");
+                        .AddStatement($"parameters.push(`{argumentName}=${{this.{argumentName}}}`);");
                 }
                 else
                 {
                     block
-                        .AddStatement($"parameters.push(`{parameterName}=${{this.{parameterName}}}`);");
+                        .AddStatement($"let {argumentName}Params = this.{argumentName}.getQueryParams();")
+                        .AddAndUseBlock($"Object.keys({argumentName}Params).forEach((key) =>", isFunctionBlock: true, terminateWithSemicolon: true)
+                        .AddAndUseBlock($"if ({argumentName}Params[key] != null)")
+                        .AddStatement($"parameters.push(`${{key}}=${{{argumentName}Params[key]}}`);");
                 }
             }
 
@@ -259,8 +269,9 @@ namespace WebApiToTypeScript
         {
             var parameter = routePart.Parameter;
             var isOptional = withOptionals && IsParameterOptional(parameter);
+            var typeScriptTypeName = GetTypeScriptType(routePart).TypeName;
 
-            return $"{parameter.Name}{(isOptional ? "?" : "")}: {GetTypeScriptType(routePart)}";
+            return $"{parameter.Name}{(isOptional ? "?" : "")}: {typeScriptTypeName}";
         }
 
         private bool IsParameterOptional(ParameterDefinition parameter)
@@ -268,8 +279,10 @@ namespace WebApiToTypeScript
             return parameter.IsOptional || !parameter.ParameterType.IsValueType || IsNullable(parameter.ParameterType);
         }
 
-        private string GetTypeScriptType(WebApiRoutePart routePart)
+        private TypeScriptType GetTypeScriptType(WebApiRoutePart routePart)
         {
+            var result = new TypeScriptType();
+
             var parameter = routePart.Parameter;
             var type = parameter.ParameterType;
             var typeName = type.FullName;
@@ -277,40 +290,104 @@ namespace WebApiToTypeScript
             var typeMapping = GetTypeMapping(routePart);
 
             if (typeMapping != null)
-                return typeMapping.TypeScriptTypeName;
+            {
+                var tsTypeName = typeMapping.TypeScriptTypeName;
+                result.TypeName = tsTypeName;
+                result.IsPrimitive = typeService.IsPrimitiveType(result.TypeName);
+                result.IsEnum = tsTypeName.StartsWith($"{Config.EnumsNamespace}")
+                    || result.IsPrimitive;
+
+                return result;
+            }
 
             typeName = StripNullable(type) ?? typeName;
+
+            // TODO Handle collections
+            var isCollection = StripIfCollection(type, ref typeName);
 
             var typeDefinition = typeService.GetTypeDefinition(typeName);
 
             if (typeDefinition?.IsEnum ?? false)
             {
                 if (!Config.GenerateEnums)
-                    return "number";
+                {
+                    result.TypeName = "number";
+                    result.IsPrimitive = true;
 
-                if (Enums.All(e => e.FullName != typeDefinition.FullName))
-                    Enums.Add(typeDefinition);
+                    return result;
+                }
+                else
+                {
+                    if (Enums.All(e => e.FullName != typeDefinition.FullName))
+                        Enums.Add(typeDefinition);
 
-                return $"{Config.EnumsNamespace}.{typeDefinition.Name}";
+                    result.TypeName = $"{Config.EnumsNamespace}.{typeDefinition.Name}";
+                    result.IsPrimitive = false;
+                }
+
+                result.IsEnum = true;
+                return result;
             }
 
             var primitiveType = typeService.GetPrimitiveType(typeName);
 
             if (!string.IsNullOrEmpty(primitiveType))
-                return primitiveType;
+            {
+                result.TypeName = primitiveType;
+                result.IsPrimitive = true;
+
+                return result;
+            }
 
             if (!typeDefinition?.IsValueType ?? false)
             {
                 if (!Config.GenerateInterfaces)
-                    return $"{IHaveQueryParams}";
+                {
+                    result.TypeName = $"{IHaveQueryParams}";
+                }
+                else
+                {
+                    if (Interfaces.All(i => i.FullName != typeDefinition.FullName))
+                        Interfaces.Add(typeDefinition);
 
-                if (Interfaces.All(i => i.FullName != typeDefinition.FullName))
-                    Interfaces.Add(typeDefinition);
-
-                return $"{Config.InterfacesNamespace}.{typeDefinition.Name}";
+                    result.TypeName = $"{Config.InterfacesNamespace}.{typeDefinition.Name}";
+                }
+                return result;
             }
 
-            throw new Exception("We shouldn't get here?");
+            throw new NotSupportedException("Maybe it is a generic class, or a yet unsupported collection, or chain thereof?");
+        }
+
+        private string FormatTypeName(string typeName, bool isCollection)
+        {
+            var collectionString = isCollection ? "[]" : string.Empty;
+            return $"{typeName}{collectionString}";
+        }
+
+        private bool StripIfCollection(TypeReference type, ref string typeName)
+        {
+            if (type.IsArray)
+            {
+                typeName = type.GetElementType().FullName;
+                return true;
+            }
+
+            var genericCollectionTypes = new[]
+            {
+                "System.Collections.Generic.IList`1"
+            };
+
+            var genericType = type as GenericInstanceType;
+            if (genericType != null
+                && genericCollectionTypes.Any(gct => genericType.FullName.StartsWith(gct))
+                && genericType.HasGenericArguments
+                && genericType.GenericArguments.Count == 1)
+            {
+                typeName = genericType.GenericArguments.Single().FullName;
+                return true;
+            }
+
+            return false;
         }
 
         private TypeMapping GetTypeMapping(WebApiRoutePart routePart)
