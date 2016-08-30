@@ -125,7 +125,7 @@ namespace WebApiToTypeScript
 
             var callBlock = classBlock
                 .AddAndUseBlock($"call = ({callArgumentsList}) =>")
-                .AddStatement("const httpService = angular.injector(['ng']).get<ng.IHttpService>('$http');")
+                .AddStatement("var httpService = angular.injector(['ng']).get<ng.IHttpService>('$http');")
                 .AddAndUseBlock("return httpService(", isFunctionBlock: true, terminateWithSemicolon: true)
                 .AddStatement($"method: '{verb.VerbMethod}',")
                 .AddStatement($"url: this.toString(){dataDelimiter}");
@@ -175,7 +175,7 @@ namespace WebApiToTypeScript
 
             var queryStringBlock = classBlock
                 .AddAndUseBlock("private getQueryString = (): string =>")
-                .AddStatement("let parameters: string[] = [];");
+                .AddStatement("var parameters: string[] = [];");
 
             foreach (var routePart in queryStringParameters)
             {
@@ -202,7 +202,7 @@ namespace WebApiToTypeScript
                 else
                 {
                     block
-                        .AddStatement($"let {argumentName}Params = this.{argumentName}.getQueryParams();")
+                        .AddStatement($"var {argumentName}Params = this.{argumentName}.getQueryParams();")
                         .AddAndUseBlock($"Object.keys({argumentName}Params).forEach((key) =>", isFunctionBlock: true, terminateWithSemicolon: true)
                         .AddAndUseBlock($"if ({argumentName}Params[key] != null)")
                         .AddStatement($"parameters.push(`${{key}}=${{encodeURIComponent({argumentName}Params[key].toString())}}`);");
