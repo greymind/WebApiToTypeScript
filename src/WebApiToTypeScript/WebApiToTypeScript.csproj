@@ -66,6 +66,8 @@
     <Compile Include="CSharpType.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="IndentAwareStringBuilder.cs" />
+    <Compile Include="InterfaceNode.cs" />
+    <Compile Include="MemberWithCSharpType.cs" />
     <Compile Include="TypeMapping.cs" />
     <Compile Include="TypeScriptBlock.cs" />
     <Compile Include="TypeScriptType.cs" />
