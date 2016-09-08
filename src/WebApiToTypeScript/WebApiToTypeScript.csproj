@@ -62,22 +62,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Config.cs" />
-    <Compile Include="CSharpType.cs" />
+    <Compile Include="Config\Config.cs" />
+    <Compile Include="Types\CSharpType.cs" />
     <Compile Include="Enums\EnumsService.cs" />
     <Compile Include="Helpers.cs" />
-    <Compile Include="IndentAwareStringBuilder.cs" />
+    <Compile Include="Block\IndentAwareStringBuilder.cs" />
     <Compile Include="Interfaces\InterfaceNode.cs" />
     <Compile Include="Interfaces\InterfaceService.cs" />
-    <Compile Include="MemberWithCSharpType.cs" />
-    <Compile Include="TypeMapping.cs" />
-    <Compile Include="TypeScriptBlock.cs" />
-    <Compile Include="TypeScriptType.cs" />
-    <Compile Include="TypeService.cs" />
-    <Compile Include="WebApiAction.cs" />
-    <Compile Include="WebApiController.cs" />
-    <Compile Include="WebApiHttpVerb.cs" />
-    <Compile Include="WebApiRoutePart.cs" />
+    <Compile Include="Types\MemberWithCSharpType.cs" />
+    <Compile Include="Config\TypeMapping.cs" />
+    <Compile Include="Block\TypeScriptBlock.cs" />
+    <Compile Include="Types\TypeScriptType.cs" />
+    <Compile Include="Types\TypeService.cs" />
+    <Compile Include="WebApi\WebApiAction.cs" />
+    <Compile Include="WebApi\WebApiController.cs" />
+    <Compile Include="WebApi\WebApiHttpVerb.cs" />
+    <Compile Include="WebApi\WebApiRoutePart.cs" />
     <Compile Include="WebApiToTypeScript.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

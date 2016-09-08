@@ -1,4 +1,4 @@
-﻿namespace WebApiToTypeScript
+﻿namespace WebApiToTypeScript.WebApi
 {
     public class WebApiHttpVerb
     {

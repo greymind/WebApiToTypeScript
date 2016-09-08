@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace WebApiToTypeScript
+namespace WebApiToTypeScript.WebApi
 {
     public class WebApiController
     {

@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil;
 
-namespace WebApiToTypeScript
+namespace WebApiToTypeScript.Types
 {
     public class CSharpType
     {

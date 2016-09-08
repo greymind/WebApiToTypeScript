@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace WebApiToTypeScript
+namespace WebApiToTypeScript.Block
 {
     public interface ITypeScriptCode
     {

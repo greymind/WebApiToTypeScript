@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace WebApiToTypeScript
+namespace WebApiToTypeScript.Config
 {
     public class Config
     {

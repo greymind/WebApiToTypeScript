@@ -1,13 +1,15 @@
 ﻿using Mono.Cecil;
 using System.Collections.Generic;
 using System.Linq;
+using WebApiToTypeScript.Block;
 using WebApiToTypeScript.Enums;
+using WebApiToTypeScript.Types;
 
 namespace WebApiToTypeScript.Interfaces
 {
     public class InterfaceService
     {
-        private Config Config { get; }
+        private Config.Config Config { get; }
 
         private readonly TypeService typeService;
         private readonly EnumsService enumsService;
@@ -16,7 +18,7 @@ namespace WebApiToTypeScript.Interfaces
             = new InterfaceNode();
 
         public InterfaceService(
-            Config config,
+            Config.Config config,
             TypeService typeService,
             EnumsService enumsService)
         {

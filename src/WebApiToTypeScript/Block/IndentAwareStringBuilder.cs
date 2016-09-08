@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace WebApiToTypeScript
+namespace WebApiToTypeScript.Block
 {
     public class IndentAwareStringBuilder
     {

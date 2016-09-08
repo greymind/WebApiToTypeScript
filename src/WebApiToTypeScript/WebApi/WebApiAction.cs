@@ -1,8 +1,9 @@
 ﻿using Mono.Cecil;
 using System.Collections.Generic;
 using System.Linq;
+using WebApiToTypeScript.Types;
 
-namespace WebApiToTypeScript
+namespace WebApiToTypeScript.WebApi
 {
     public class WebApiAction
     {

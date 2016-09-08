@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using Mono.Cecil;
+﻿using Mono.Cecil;
+using System.Collections.Generic;
 
-namespace WebApiToTypeScript
+namespace WebApiToTypeScript.WebApi
 {
     public class WebApiRoutePart
     {

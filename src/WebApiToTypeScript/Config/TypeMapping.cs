@@ -1,4 +1,4 @@
-﻿namespace WebApiToTypeScript
+﻿namespace WebApiToTypeScript.Config
 {
     public class TypeMapping
     {

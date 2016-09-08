@@ -1,4 +1,4 @@
-﻿namespace WebApiToTypeScript
+﻿namespace WebApiToTypeScript.Types
 {
     public class MemberWithCSharpType
     {

@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil;
 using System.Collections.Generic;
 
-namespace WebApiToTypeScript
+namespace WebApiToTypeScript.Interfaces
 {
     public class InterfaceNode
     {

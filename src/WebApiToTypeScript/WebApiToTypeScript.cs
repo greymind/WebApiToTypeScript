@@ -6,8 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using WebApiToTypeScript.Block;
+using WebApiToTypeScript.Config;
 using WebApiToTypeScript.Enums;
 using WebApiToTypeScript.Interfaces;
+using WebApiToTypeScript.Types;
+using WebApiToTypeScript.WebApi;
 
 namespace WebApiToTypeScript
 {
@@ -24,7 +28,7 @@ namespace WebApiToTypeScript
         [Required]
         public string ConfigFilePath { get; set; }
 
-        public Config Config { get; set; }
+        public Config.Config Config { get; set; }
 
         public override bool Execute()
         {
@@ -52,10 +56,11 @@ namespace WebApiToTypeScript
                 ? new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EnumsNamespace}")
                 : new TypeScriptBlock();
 
+            var interfacesBlock = 
+                new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}");
 
             if (Config.GenerateInterfaces)
             {
-                var interfacesBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}");
                 interfaceService.WriteInterfacesToBlock(interfacesBlock);
 
                 CreateFileForBlock(interfacesBlock, Config.InterfacesOutputDirectory, Config.InterfacesFileName);
@@ -64,6 +69,7 @@ namespace WebApiToTypeScript
             if (Config.GenerateEnums)
             {
                 enumsService.WriteEnumsToBlock(enumsBlock);
+
                 CreateFileForBlock(enumsBlock, Config.EnumsOutputDirectory, Config.EnumsFileName);
             }
 
@@ -387,11 +393,11 @@ namespace WebApiToTypeScript
                    && genericType.FullName.StartsWith("System.Nullable`1");
         }
 
-        private Config GetConfig(string configFilePath)
+        private Config.Config GetConfig(string configFilePath)
         {
             var configFileContent = File.ReadAllText(configFilePath);
 
-            return JsonConvert.DeserializeObject<Config>(configFileContent);
+            return JsonConvert.DeserializeObject<Config.Config>(configFileContent);
         }
 
         private void CreateFileForBlock(TypeScriptBlock typeScriptBlock, string outputDirectory, string fileName)
