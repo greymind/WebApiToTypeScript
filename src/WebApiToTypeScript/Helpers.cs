@@ -12,6 +12,11 @@ namespace WebApiToTypeScript
         private static readonly Regex RouteParameterRegex
             = new Regex("{(.*)}");
 
+        public static string ToCamelCaseFromPascalCase(string inPascalCase)
+        {
+            return $"{inPascalCase[0].ToString().ToLower()}{inPascalCase.Substring(1)}";
+        }
+
         public static string GetBaseEndpoint(List<WebApiRoutePart> routeParts)
         {
             var baseEndpointParts = routeParts

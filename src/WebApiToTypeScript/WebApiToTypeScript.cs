@@ -41,16 +41,30 @@ namespace WebApiToTypeScript
 
             var apiControllers = typeService.GetControllers(Config.WebApiModuleFileName);
 
-
             var endpointBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}")
                 .AddAndUseBlock($"export interface {IHaveQueryParams}")
                 .AddStatement("getQueryParams(): Object")
                 .Parent;
 
+            var serviceBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}")
+                .AddAndUseBlock($"export class AngularEndpointsService")
+                .AddStatement($"static $inject = ['$http'];")
+                .AddStatement($"static $http: ng.IHttpService;")
+                .AddAndUseBlock($"constructor($http: ng.IHttpService)")
+                .AddStatement($"AngularEndpointsService.$http = $http;")
+                .Parent
+                .Parent;
+
             foreach (var apiController in apiControllers)
-                WriteEndpointClass(endpointBlock, apiController);
+            {
+                var webApiController = new WebApiController(apiController);
+
+                WriteEndpointClass(endpointBlock, webApiController);
+                WriteServiceObject(serviceBlock, webApiController);
+            }
 
             CreateFileForBlock(endpointBlock, Config.EndpointsOutputDirectory, Config.EndpointsFileName);
+            CreateFileForBlock(serviceBlock, Config.ServiceOutputDirectory, Config.ServiceFileName);
 
             var enumsBlock = Config.GenerateEnums
                 ? new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EnumsNamespace}")
@@ -76,15 +90,15 @@ namespace WebApiToTypeScript
             return true;
         }
 
-        private void WriteEndpointClass(TypeScriptBlock endpointBlock,
-            TypeDefinition apiController)
+        private void WriteServiceObject(TypeScriptBlock serviceBlock, WebApiController webApiController)
         {
-            var webApiController = new WebApiController(apiController);
+            
+        }
 
-            var moduleOrNamespace = Config.WriteNamespaceAsModule ? "module" : "namespace";
-
+        private void WriteEndpointClass(TypeScriptBlock endpointBlock, WebApiController webApiController)
+        {
             var moduleBlock = endpointBlock
-                .AddAndUseBlock($"export {moduleOrNamespace} {webApiController.Name}");
+                .AddAndUseBlock($"export {Config.NamespaceOrModuleName} {webApiController.Name}");
 
             var actions = webApiController.Actions;
 
