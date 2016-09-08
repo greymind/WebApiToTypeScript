@@ -43,6 +43,9 @@ namespace WebApiToTypeScript
         public bool WriteNamespaceAsModule { get; set; }
             = false;
 
+        public string NamespaceOrModuleName
+            => WriteNamespaceAsModule ? "module" : "namespace";
+
         public List<TypeMapping> TypeMappings { get; set; }
             = new List<TypeMapping>();
     }
