@@ -64,6 +64,7 @@
   <ItemGroup>
     <Compile Include="Config.cs" />
     <Compile Include="CSharpType.cs" />
+    <Compile Include="Enums\EnumsService.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="IndentAwareStringBuilder.cs" />
     <Compile Include="Interfaces\InterfaceNode.cs" />

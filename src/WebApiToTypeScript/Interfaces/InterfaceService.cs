@@ -1,15 +1,16 @@
 ﻿using Mono.Cecil;
 using System.Collections.Generic;
 using System.Linq;
+using WebApiToTypeScript.Enums;
 
 namespace WebApiToTypeScript.Interfaces
 {
     public class InterfaceService
     {
-        private readonly Config Config;
-        private readonly TypeService typeService;
+        private Config Config { get; }
 
-        private List<TypeDefinition> Enums;
+        private readonly TypeService typeService;
+        private readonly EnumsService enumsService;
 
         private InterfaceNode InterfaceNode { get; }
             = new InterfaceNode();
@@ -17,18 +18,17 @@ namespace WebApiToTypeScript.Interfaces
         public InterfaceService(
             Config config,
             TypeService typeService,
-            List<TypeDefinition> enums)
+            EnumsService enumsService)
         {
             Config = config;
+
             this.typeService = typeService;
-            Enums = enums;
+            this.enumsService = enumsService;
         }
 
 
-        public TypeScriptBlock CreateInterfacesNode()
+        public TypeScriptBlock WriteInterfacesToBlock(TypeScriptBlock interfacesBlock)
         {
-            var interfacesBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}");
-
             WriteInterfaces(interfacesBlock, InterfaceNode);
 
             return interfacesBlock;
@@ -60,8 +60,7 @@ namespace WebApiToTypeScript.Interfaces
 
                 if (thingType.IsEnum && Config.GenerateEnums)
                 {
-                    if (Enums.All(e => e.FullName != thingType.FullName))
-                        Enums.Add(thingType);
+                    enumsService.AddEnum(thingType);
                 }
                 else if (!thingType.IsPrimitive)
                 {

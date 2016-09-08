@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using WebApiToTypeScript.Enums;
 using WebApiToTypeScript.Interfaces;
 
 namespace WebApiToTypeScript
@@ -18,21 +19,21 @@ namespace WebApiToTypeScript
             = new TypeService();
 
         private InterfaceService interfaceService;
+        private EnumsService enumsService;
 
         [Required]
         public string ConfigFilePath { get; set; }
 
         public Config Config { get; set; }
 
-        private List<TypeDefinition> Enums { get; }
-            = new List<TypeDefinition>();
-
         public override bool Execute()
         {
             Config = GetConfig(ConfigFilePath);
 
             typeService.LoadAllTypes(Config.WebApiModuleFileName);
-            interfaceService = new InterfaceService(Config, typeService, Enums);
+
+            enumsService = new EnumsService();
+            interfaceService = new InterfaceService(Config, typeService, enumsService);
 
             var apiControllers = typeService.GetControllers(Config.WebApiModuleFileName);
 
@@ -54,16 +55,15 @@ namespace WebApiToTypeScript
 
             if (Config.GenerateInterfaces)
             {
-                var interfacesBlock = interfaceService.CreateInterfacesNode();
+                var interfacesBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}");
+                interfaceService.WriteInterfacesToBlock(interfacesBlock);
 
                 CreateFileForBlock(interfacesBlock, Config.InterfacesOutputDirectory, Config.InterfacesFileName);
             }
 
             if (Config.GenerateEnums)
             {
-                foreach (var typeDefinition in Enums)
-                    CreateEnumForType(enumsBlock, typeDefinition);
-
+                enumsService.WriteEnumsToBlock(enumsBlock);
                 CreateFileForBlock(enumsBlock, Config.EnumsOutputDirectory, Config.EnumsFileName);
             }
 
@@ -323,8 +323,7 @@ namespace WebApiToTypeScript
                 }
                 else
                 {
-                    if (Enums.All(e => e.FullName != typeDefinition.FullName))
-                        Enums.Add(typeDefinition);
+                    enumsService.AddEnum(typeDefinition);
 
                     result.TypeName = $"{Config.EnumsNamespace}.{typeDefinition.Name}";
                     result.IsPrimitive = false;
@@ -386,18 +385,6 @@ namespace WebApiToTypeScript
             var genericType = type as GenericInstanceType;
             return genericType != null
                    && genericType.FullName.StartsWith("System.Nullable`1");
-        }
-
-        private void CreateEnumForType(TypeScriptBlock enumsBlock, TypeDefinition typeDefinition)
-        {
-            var fields = typeDefinition.Fields
-                .Where(f => f.HasConstant && !f.IsSpecialName);
-
-            var enumBlock = enumsBlock
-                .AddAndUseBlock($"export enum {typeDefinition.Name}");
-
-            foreach (var field in fields)
-                enumBlock.AddStatement($"{field.Name} = {field.Constant},");
         }
 
         private Config GetConfig(string configFilePath)
