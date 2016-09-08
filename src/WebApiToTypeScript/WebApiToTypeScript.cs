@@ -352,7 +352,7 @@ namespace WebApiToTypeScript
                 }
                 else
                 {
-                    interfaceService.AddInterface(typeDefinition);
+                    interfaceService.AddInterfaceNode(typeDefinition);
 
                     result.TypeName = $"{Config.InterfacesNamespace}.{typeDefinition.Name}";
                 }

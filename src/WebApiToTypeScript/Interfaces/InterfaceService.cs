@@ -11,16 +11,12 @@ namespace WebApiToTypeScript.Interfaces
 
         private List<TypeDefinition> Enums;
 
-        private List<TypeDefinition> Interfaces { get; }
-            = new List<TypeDefinition>();
-
         private InterfaceNode InterfaceNode { get; }
             = new InterfaceNode();
 
-
         public InterfaceService(
-            Config config, 
-            TypeService typeService, 
+            Config config,
+            TypeService typeService,
             List<TypeDefinition> enums)
         {
             Config = config;
@@ -28,22 +24,52 @@ namespace WebApiToTypeScript.Interfaces
             Enums = enums;
         }
 
-        public void AddInterface(TypeDefinition typeDefinition)
-        {
-            if (Interfaces.All(i => i.FullName != typeDefinition.FullName))
-                Interfaces.Add(typeDefinition);
-        }
 
         public TypeScriptBlock CreateInterfacesNode()
         {
             var interfacesBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}");
 
-            foreach (var typeDefinition in Interfaces)
-                AddInterfaceNode(typeDefinition);
-
             WriteInterfaces(interfacesBlock, InterfaceNode);
 
             return interfacesBlock;
+        }
+
+        public InterfaceNode AddInterfaceNode(TypeDefinition typeDefinition)
+        {
+            var interfaceNode = SearchForInterfaceNode(InterfaceNode, typeDefinition);
+
+            if (interfaceNode != null)
+                return interfaceNode;
+
+            var baseClass = typeDefinition.BaseType as TypeDefinition;
+            var isBaseClassNotObject = baseClass != null && baseClass.FullName != "System.Object";
+
+            var baseInterfaceNode = InterfaceNode;
+            if (isBaseClassNotObject)
+                baseInterfaceNode = AddInterfaceNode(baseClass);
+
+            var things = GetMembers(typeDefinition);
+
+            foreach (var thing in things)
+            {
+                var thingType = thing.CSharpType.TypeDefinition;
+
+                var primitiveType = typeService.GetPrimitiveTypeScriptType(thingType.FullName);
+                if (primitiveType != null)
+                    continue;
+
+                if (thingType.IsEnum && Config.GenerateEnums)
+                {
+                    if (Enums.All(e => e.FullName != thingType.FullName))
+                        Enums.Add(thingType);
+                }
+                else if (!thingType.IsPrimitive)
+                {
+                    AddInterfaceNode(thingType);
+                }
+            }
+
+            return AddInterfaceNode(typeDefinition, baseInterfaceNode);
         }
 
         private void WriteInterfaces(TypeScriptBlock interfacesBlock, InterfaceNode interfaceNode)
@@ -144,44 +170,6 @@ namespace WebApiToTypeScript.Interfaces
             return interfaceNode.DerivedInterfaces
                 .Select(derivedInterfaceNode => SearchForInterfaceNode(derivedInterfaceNode, typeDefinition))
                 .FirstOrDefault(resultNode => resultNode != null);
-        }
-
-        private InterfaceNode AddInterfaceNode(TypeDefinition typeDefinition)
-        {
-            var interfaceNode = SearchForInterfaceNode(InterfaceNode, typeDefinition);
-
-            if (interfaceNode != null)
-                return interfaceNode;
-
-            var baseClass = typeDefinition.BaseType as TypeDefinition;
-            var isBaseClassNotObject = baseClass != null && baseClass.FullName != "System.Object";
-
-            var baseInterfaceNode = InterfaceNode;
-            if (isBaseClassNotObject)
-                baseInterfaceNode = AddInterfaceNode(baseClass);
-
-            var things = GetMembers(typeDefinition);
-
-            foreach (var thing in things)
-            {
-                var thingType = thing.CSharpType.TypeDefinition;
-
-                var primitiveType = typeService.GetPrimitiveTypeScriptType(thingType.FullName);
-                if (primitiveType != null)
-                    continue;
-
-                if (thingType.IsEnum && Config.GenerateEnums)
-                {
-                    if (Enums.All(e => e.FullName != thingType.FullName))
-                        Enums.Add(thingType);
-                }
-                else if (!thingType.IsPrimitive)
-                {
-                    AddInterfaceNode(thingType);
-                }
-            }
-
-            return AddInterfaceNode(typeDefinition, baseInterfaceNode);
         }
 
         private InterfaceNode AddInterfaceNode(TypeDefinition typeDefinition, InterfaceNode baseInterfaceNode)
