@@ -133,19 +133,10 @@ namespace WebApiToTypeScript
                     var isLastActionAndVerb = a == actions.Count - 1
                         && v == action.Verbs.Count - 1;
 
-                    var constructorParameterMappings = GetConstructorParameterMappings(action);
-
-                    var constructorParameterStrings = constructorParameterMappings
-                        .Select(p => p.String);
-
-                    var constructorParametersList =
-                        string.Join(", ", constructorParameterStrings);
-
-                    var constructorParameterNames = constructorParameterMappings
-                        .Select(p => p.Name);
-
-                    var constructorParameterNamesList =
-                        string.Join(", ", constructorParameterNames);
+                    var constructorParametersList = GetConstructorParametersList(action);
+                    var constructorParameterNamesList = GetConstructorParameterNamesList(action);
+                    var callArgumentsList = GetCallArgumentsList(action, verb);
+                    var callArgumentValues = GetCallArgumentValues(action, verb);
 
                     var interfaceFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.I{actionName}";
                     var endpointFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.{actionName}";
@@ -157,15 +148,80 @@ namespace WebApiToTypeScript
                             isFunctionBlock: false,
                             terminationString: !isLastActionAndVerb ? "," : string.Empty
                         )
-                        .AddStatement($"var x = new {endpointFullName}({constructorParameterNamesList});")
-                        .AddAndUseBlock("var y =")
-                        .AddAndUseBlock("call()")
-                        .AddStatement($"return {AngularEndpointsService}.call(this, null);")
+                        .AddStatement($"var endpoint = new {endpointFullName}({constructorParameterNamesList});")
+                        .AddAndUseBlock("var callHook =")
+                        .AddAndUseBlock($"call({callArgumentsList})")
+                        .AddStatement($"return {AngularEndpointsService}.call(this, {callArgumentValues});")
                         .Parent
                         .Parent
-                        .AddStatement("return _.extend(x, y);");
+                        .AddStatement("return _.extend(endpoint, callHook);");
                 }
             }
+        }
+
+        private string GetCallArgumentValues(WebApiAction action, WebApiHttpVerb verb)
+        {
+            var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
+
+            var callArgumentValueStrings = action.BodyParameters
+                .Select(argument =>
+                {
+                    var typeScriptType = GetTypeScriptType(argument)
+                    .TypeName;
+
+                    var valueFormat = $"{argument.Name}";
+
+                    switch (typeScriptType)
+                    {
+                        case "string":
+                            valueFormat = $"`\"${{{argument.Name}}}\"`";
+                            break;
+                    }
+
+                    return $"{argument.Name} != null ? {valueFormat} : null";
+                })
+                .ToList();
+
+            var callArgumentValuesList = string.Join(", ", callArgumentValueStrings);
+
+            return (!isFormBody || string.IsNullOrEmpty(callArgumentValuesList))
+                 ? "null"
+                 : callArgumentValuesList;
+        }
+
+        private string GetCallArgumentsList(WebApiAction action, WebApiHttpVerb verb)
+        {
+            var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
+            if (!isFormBody)
+                return string.Empty;
+
+            var callArgumentStrings = action.BodyParameters
+                .Select(a => GetParameterString(a, false))
+                .ToList();
+
+            var callArgumentsList = string.Join(", ", callArgumentStrings);
+
+            return callArgumentsList;
+        }
+
+        private string GetConstructorParameterNamesList(WebApiAction action)
+        {
+            var constructorParameterNames = GetConstructorParameterMappings(action)
+                .Select(p => p.Name);
+
+            return string.Join(", ", constructorParameterNames);
+        }
+
+        private string GetConstructorParametersList(WebApiAction action)
+        {
+            var constructorParameterMappings = GetConstructorParameterMappings(action);
+
+            var constructorParameterStrings = constructorParameterMappings
+                .Select(p => p.String);
+
+            var constructorParametersList =
+                string.Join(", ", constructorParameterStrings);
+            return constructorParametersList;
         }
 
         private void WriteEndpointClassToBlock(TypeScriptBlock endpointBlock, WebApiController webApiController)
@@ -184,37 +240,40 @@ namespace WebApiToTypeScript
                     var interfaceBlock = controllerBlock
                         .AddAndUseBlock($"export interface I{actionName} extends {IEndpoint}");
 
-                    var constructorParameterMappings = GetConstructorParameterMappings(action);
-                    foreach (var constructorParameterMapping in constructorParameterMappings)
-                    {
-                        interfaceBlock
-                            .AddStatement($"{constructorParameterMapping.String};");
-                    }
-
-                    var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
-
-                    var callArguments = action.BodyParameters;
-
-                    var callArgumentStrings = callArguments
-                        .Select(a => GetParameterString(a, false))
-                        .ToList();
-
-                    var callArgumentsList = string.Join(", ", callArgumentStrings);
-
-                    interfaceBlock
-                        .AddStatement($"call({callArgumentsList});");
+                    WriteInterfaceToBlock(interfaceBlock, action);
 
                     var classBlock = controllerBlock
                         .AddAndUseBlock($"export class {actionName} implements {IEndpoint}")
                         .AddStatement($"verb = '{verb.VerbMethod}';");
 
-                    CreateConstructorBlock(classBlock, action);
+                    WriteConstructorToBlock(classBlock, action);
 
-                    CreateQueryStringBlock(classBlock, action);
+                    WriteGetQueryStringToBlock(classBlock, action);
 
-                    CreateToStringBlock(classBlock, action);
+                    WriteToStringToBlock(classBlock, action);
                 }
             }
+        }
+
+        private void WriteInterfaceToBlock(TypeScriptBlock interfaceBlock, WebApiAction action)
+        {
+            var constructorParameterMappings = GetConstructorParameterMappings(action);
+            foreach (var constructorParameterMapping in constructorParameterMappings)
+            {
+                interfaceBlock
+                    .AddStatement($"{constructorParameterMapping.String};");
+            }
+
+            var callArguments = action.BodyParameters;
+
+            var callArgumentStrings = callArguments
+                .Select(a => GetParameterString(a, false))
+                .ToList();
+
+            var callArgumentsList = string.Join(", ", callArgumentStrings);
+
+            interfaceBlock
+                .AddStatement($"call({callArgumentsList});");
         }
 
         private void CreateCallBlock(TypeScriptBlock classBlock, WebApiAction action,
@@ -261,7 +320,7 @@ namespace WebApiToTypeScript
             }
         }
 
-        private void CreateToStringBlock(TypeScriptBlock classBlock, WebApiAction action)
+        private void WriteToStringToBlock(TypeScriptBlock classBlock, WebApiAction action)
         {
             var toStringBlock = classBlock
                 .AddAndUseBlock("toString = (): string =>");
@@ -274,7 +333,7 @@ namespace WebApiToTypeScript
                 .AddStatement($"return `{action.Controller.BaseEndpoint}{action.Endpoint}`{queryString};");
         }
 
-        private void CreateQueryStringBlock(TypeScriptBlock classBlock, WebApiAction action)
+        private void WriteGetQueryStringToBlock(TypeScriptBlock classBlock, WebApiAction action)
         {
             var queryStringParameters = action.QueryStringParameters;
 
@@ -324,7 +383,7 @@ namespace WebApiToTypeScript
                 .AddStatement("return '';");
         }
 
-        private void CreateConstructorBlock(TypeScriptBlock classBlock, WebApiAction action)
+        private void WriteConstructorToBlock(TypeScriptBlock classBlock, WebApiAction action)
         {
             var constructorParameterMappings = GetConstructorParameterMappings(action);
 
