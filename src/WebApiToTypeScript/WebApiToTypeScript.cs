@@ -18,6 +18,7 @@ namespace WebApiToTypeScript
     public class WebApiToTypeScript : AppDomainIsolatedTask
     {
         private const string IHaveQueryParams = nameof(IHaveQueryParams);
+        private const string IEndpoint = nameof(IEndpoint);
 
         private readonly TypeService typeService
             = new TypeService();
@@ -41,19 +42,9 @@ namespace WebApiToTypeScript
 
             var apiControllers = typeService.GetControllers(Config.WebApiModuleFileName);
 
-            var endpointBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}")
-                .AddAndUseBlock($"export interface {IHaveQueryParams}")
-                .AddStatement("getQueryParams(): Object")
-                .Parent;
+            var endpointBlock = CreateEndpointBlock();
 
-            var serviceBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}")
-                .AddAndUseBlock($"export class AngularEndpointsService")
-                .AddStatement($"static $inject = ['$http'];")
-                .AddStatement($"static $http: ng.IHttpService;")
-                .AddAndUseBlock($"constructor($http: ng.IHttpService)")
-                .AddStatement($"AngularEndpointsService.$http = $http;")
-                .Parent
-                .Parent;
+            var serviceBlock = CreateServiceBlock();
 
             foreach (var apiController in apiControllers)
             {
@@ -90,6 +81,37 @@ namespace WebApiToTypeScript
             return true;
         }
 
+        private TypeScriptBlock CreateEndpointBlock()
+        {
+            return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}")
+                .AddAndUseBlock($"export interface {IEndpoint}")
+                .AddStatement("verb: string")
+                .AddStatement("toString(): string")
+                .Parent
+                .AddAndUseBlock($"export interface {IHaveQueryParams}")
+                .AddStatement("getQueryParams(): Object")
+                .Parent;
+        }
+
+        private TypeScriptBlock CreateServiceBlock()
+        {
+            return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}")
+                .AddAndUseBlock("export class AngularEndpointsService")
+                .AddStatement("static $inject = ['$http'];")
+                .AddStatement("static $http: ng.IHttpService;")
+                .AddAndUseBlock("constructor($http: ng.IHttpService)")
+                .AddStatement("AngularEndpointsService.$http = $http;")
+                .Parent
+                .AddAndUseBlock("static call(endpoint: IEndpoint, data)")
+                .AddAndUseBlock("return AngularEndpointsService.$http(", isFunctionBlock: true, terminateWithSemicolon: true)
+                .AddStatement("method: endpoint.verb,")
+                .AddStatement("url: endpoint.toString(),")
+                .AddStatement("data: data")
+                .Parent
+                .Parent
+                .Parent;
+        }
+
         private void WriteServiceObject(TypeScriptBlock serviceBlock, WebApiController webApiController)
         {
             
@@ -106,19 +128,17 @@ namespace WebApiToTypeScript
             {
                 foreach (var verb in action.Verbs)
                 {
-                    var verbPostfix = action.Verbs.Count > 1
-                        ? verb == WebApiHttpVerb.Post ? "New" : "Existing"
-                        : string.Empty;
+                    var actionName = action.GetActionNameForVerb(verb);
 
                     var classBlock = moduleBlock
-                        .AddAndUseBlock($"export class {action.Name}{verbPostfix}")
+                        .AddAndUseBlock($"export class {actionName}")
                         .AddStatement($"verb = '{verb.VerbMethod}';");
 
-                    CreateConstructorBlock(classBlock, webApiController.RouteParts, action);
+                    CreateConstructorBlock(classBlock, action);
 
                     CreateQueryStringBlock(classBlock, action);
 
-                    CreateToStringBlock(classBlock, webApiController.BaseEndpoint, action);
+                    CreateToStringBlock(classBlock, action);
 
                     CreateCallBlock(classBlock, action, verb);
                 }
@@ -169,8 +189,7 @@ namespace WebApiToTypeScript
             }
         }
 
-        private void CreateToStringBlock(TypeScriptBlock classBlock,
-            string baseEndpoint, WebApiAction action)
+        private void CreateToStringBlock(TypeScriptBlock classBlock, WebApiAction action)
         {
             var toStringBlock = classBlock
                 .AddAndUseBlock("toString = (): string =>");
@@ -180,7 +199,7 @@ namespace WebApiToTypeScript
                 : string.Empty;
 
             toStringBlock
-                .AddStatement($"return `{baseEndpoint}{action.Endpoint}`{queryString};");
+                .AddStatement($"return `{action.Controller.BaseEndpoint}{action.Endpoint}`{queryString};");
         }
 
         private void CreateQueryStringBlock(TypeScriptBlock classBlock, WebApiAction action)
@@ -233,14 +252,13 @@ namespace WebApiToTypeScript
                 .AddStatement("return '';");
         }
 
-        private void CreateConstructorBlock(TypeScriptBlock classBlock,
-            List<WebApiRoutePart> baseRouteParts, WebApiAction action)
+        private void CreateConstructorBlock(TypeScriptBlock classBlock, WebApiAction action)
         {
             var tempConstructorParameters = action.Method.Parameters
                 .Select(p => new
                 {
                     Parameter = p,
-                    RoutePart = baseRouteParts.SingleOrDefault(brp => brp.ParameterName == p.Name)
+                    RoutePart = action.Controller.RouteParts.SingleOrDefault(brp => brp.ParameterName == p.Name)
                         ?? action.RouteParts.SingleOrDefault(rp => rp.ParameterName == p.Name)
                         ?? action.QueryStringParameters.SingleOrDefault(qsp => qsp.Name == p.Name)
                 })

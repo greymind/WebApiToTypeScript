@@ -26,10 +26,10 @@ namespace WebApiToTypeScript.WebApi
             RouteParts = Helpers.GetRouteParts(BaseRoute);
             BaseEndpoint = Helpers.GetBaseEndpoint(RouteParts);
 
-            UpdateActions(apiController);
+            BuildActions(apiController);
         }
 
-        private void UpdateActions(TypeDefinition apiController)
+        private void BuildActions(TypeDefinition apiController)
         {
             var methodNames = new HashSet<string>();
 
@@ -39,7 +39,7 @@ namespace WebApiToTypeScript.WebApi
                     && m.CustomAttributes.Any(a => WebApiHttpVerb.Verbs.Any(v => v.VerbAttribute == a.AttributeType.Name)))
                 .Select(m => new WebApiAction
                 (
-                    baseRouteParts: RouteParts,
+                    controller: this,
                     method: m,
                     name: GetUniqueMethodName(methodNames, m.Name)
                 ))

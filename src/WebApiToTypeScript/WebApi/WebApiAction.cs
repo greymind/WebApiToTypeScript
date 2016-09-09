@@ -11,6 +11,8 @@ namespace WebApiToTypeScript.WebApi
         public string Route { get; set; }
         public string Endpoint { get; set; }
 
+        public WebApiController Controller { get; set; }
+
         public MethodDefinition Method { get; set; }
 
         public List<WebApiHttpVerb> Verbs { get; set; }
@@ -25,8 +27,10 @@ namespace WebApiToTypeScript.WebApi
         public List<WebApiRoutePart> BodyParameters { get; }
             = new List<WebApiRoutePart>();
 
-        public WebApiAction(List<WebApiRoutePart> baseRouteParts, MethodDefinition method, string name)
+        public WebApiAction(WebApiController controller, MethodDefinition method, string name)
         {
+            Controller = controller;
+
             Method = method;
             Name = name;
 
@@ -40,14 +44,23 @@ namespace WebApiToTypeScript.WebApi
             RouteParts = Helpers.GetRouteParts(Route);
             Endpoint = Helpers.GetBaseEndpoint(RouteParts);
 
-            GetQueryStringAndBodyRouteParts(baseRouteParts);
+            BuildQueryStringAndBodyRouteParts();
         }
 
-        private void GetQueryStringAndBodyRouteParts(List<WebApiRoutePart> baseRouteParts)
+        public string GetActionNameForVerb(WebApiHttpVerb verb)
+        {
+            var verbPostfix = Verbs.Count > 1
+                ? verb == WebApiHttpVerb.Post ? "New" : "Existing"
+                : string.Empty;
+
+            return $"{Name}{verbPostfix}";
+        }
+
+        private void BuildQueryStringAndBodyRouteParts()
         {
             var actionParameters = Method.Parameters
-                .Where(p => !baseRouteParts.Any(brp => brp.ParameterName == p.Name)
-                    && !RouteParts.Any(rp => rp.ParameterName == p.Name))
+                .Where(p => Controller.RouteParts.All(brp => brp.ParameterName != p.Name)
+                    && RouteParts.All(rp => rp.ParameterName != p.Name))
                 .ToList();
 
             var isBodyAllowed = Verbs.Contains(WebApiHttpVerb.Post)
