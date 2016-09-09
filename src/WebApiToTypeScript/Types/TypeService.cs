@@ -63,6 +63,20 @@ namespace WebApiToTypeScript.Types
                 .ToList();
         }
 
+        public bool IsNullable(TypeReference type)
+        {
+            var genericType = type as GenericInstanceType;
+            return genericType != null
+                   && genericType.FullName.StartsWith("System.Nullable`1");
+        }
+
+        public bool IsParameterOptional(ParameterDefinition parameter)
+        {
+            return parameter.IsOptional
+                || !parameter.ParameterType.IsValueType
+                || IsNullable(parameter.ParameterType);
+        }
+
         private bool IsControllerType(TypeDefinition type)
         {
             var apiControllerType = "System.Web.Http.ApiController";

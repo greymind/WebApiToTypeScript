@@ -1,11 +1,12 @@
 ﻿using Mono.Cecil;
 using System.Collections.Generic;
 using System.Linq;
+using WebApiToTypeScript.Interfaces;
 using WebApiToTypeScript.Types;
 
 namespace WebApiToTypeScript.WebApi
 {
-    public class WebApiAction
+    public class WebApiAction : ServiceAware
     {
         public string Name { get; set; }
         public string Route { get; set; }
@@ -54,6 +55,102 @@ namespace WebApiToTypeScript.WebApi
                 : string.Empty;
 
             return $"{Name}{verbPostfix}";
+        }
+
+        public string GetCallArgumentValue(WebApiHttpVerb verb)
+        {
+            var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
+
+            var callArgumentValueString = BodyParameters
+                .Select(routePart =>
+                {
+                    var typeScriptType = routePart.GetTypeScriptType()
+                        .TypeName;
+
+                    var valueFormat = $"{routePart.Name}";
+
+                    switch (typeScriptType)
+                    {
+                        case "string":
+                            valueFormat = $"`\"${{{routePart.Name}}}\"`";
+                            break;
+                    }
+
+                    return $"{routePart.Name} != null ? {valueFormat} : null";
+                })
+                .SingleOrDefault();
+
+            return (!isFormBody || string.IsNullOrEmpty(callArgumentValueString))
+                 ? "null"
+                 : callArgumentValueString;
+        }
+
+        public string GetCallArgumentDefinition(WebApiHttpVerb verb)
+        {
+            var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
+
+            if (!isFormBody)
+                return string.Empty;
+
+            return BodyParameters
+                .Select(a => a.GetParameterString(false))
+                .SingleOrDefault();
+        }
+
+        public string GetConstructorParameterNamesList()
+        {
+            var constructorParameterNames = GetConstructorParameterMappings()
+                .Select(p => p.Name);
+
+            return string.Join(", ", constructorParameterNames);
+        }
+
+        public string GetConstructorParametersList()
+        {
+            var constructorParameterMappings = GetConstructorParameterMappings();
+
+            var constructorParameterStrings = constructorParameterMappings
+                .Select(p => p.String);
+
+            var constructorParametersList =
+                string.Join(", ", constructorParameterStrings);
+
+            return constructorParametersList;
+        }
+
+        public IOrderedEnumerable<ConstructorParameterMapping> GetConstructorParameterMappings()
+        {
+            var tempConstructorParameters = Method.Parameters
+                .Select(p => new
+                {
+                    Parameter = p,
+                    RoutePart = Controller.RouteParts.SingleOrDefault(brp => brp.ParameterName == p.Name)
+                        ?? RouteParts.SingleOrDefault(rp => rp.ParameterName == p.Name)
+                        ?? QueryStringParameters.SingleOrDefault(qsp => qsp.Name == p.Name)
+                })
+                .Where(cp => cp.RoutePart != null)
+                .ToList();
+
+            var constructorParameters = new List<WebApiRoutePart>();
+            foreach (var tcp in tempConstructorParameters)
+            {
+                if (tcp.RoutePart.Parameter == null)
+                    tcp.RoutePart.Parameter = tcp.Parameter;
+
+                constructorParameters.Add(tcp.RoutePart);
+            }
+
+            var constructorParameterMappings = constructorParameters
+                .Select(routePart => new ConstructorParameterMapping
+                {
+                    IsOptional = TypeService.IsParameterOptional(routePart.Parameter),
+                    TypeMapping = routePart.GetTypeMapping(),
+                    Name = routePart.Parameter.Name,
+                    String = routePart.GetParameterString()
+                })
+                .OrderBy(p => p.IsOptional);
+
+            return constructorParameterMappings;
         }
 
         private void BuildQueryStringAndBodyRouteParts()

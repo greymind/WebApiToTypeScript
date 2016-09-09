@@ -1,13 +1,10 @@
 ﻿using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Mono.Cecil;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using WebApiToTypeScript.Block;
-using WebApiToTypeScript.Config;
 using WebApiToTypeScript.Enums;
 using WebApiToTypeScript.Interfaces;
 using WebApiToTypeScript.Types;
@@ -17,31 +14,31 @@ namespace WebApiToTypeScript
 {
     public class WebApiToTypeScript : AppDomainIsolatedTask
     {
-        private const string IHaveQueryParams = nameof(IHaveQueryParams);
-        private const string IEndpoint = nameof(IEndpoint);
-        private const string AngularEndpointsService = nameof(AngularEndpointsService);
+        public const string IHaveQueryParams = nameof(IHaveQueryParams);
+        public const string IEndpoint = nameof(IEndpoint);
+        public const string AngularEndpointsService = nameof(AngularEndpointsService);
 
-        private readonly TypeService typeService
+        public static readonly TypeService TypeService
             = new TypeService();
 
-        private InterfaceService interfaceService;
-        private EnumsService enumsService;
+        public static InterfaceService InterfaceService;
+        public static EnumsService EnumsService;
 
         [Required]
         public string ConfigFilePath { get; set; }
 
-        public Config.Config Config { get; set; }
+        public static Config.Config Config { get; set; }
 
         public override bool Execute()
         {
             Config = GetConfig(ConfigFilePath);
 
-            typeService.LoadAllTypes(Config.WebApiModuleFileName);
+            TypeService.LoadAllTypes(Config.WebApiModuleFileName);
 
-            enumsService = new EnumsService();
-            interfaceService = new InterfaceService(Config, typeService, enumsService);
+            EnumsService = new EnumsService();
+            InterfaceService = new InterfaceService();
 
-            var apiControllers = typeService.GetControllers(Config.WebApiModuleFileName);
+            var apiControllers = TypeService.GetControllers(Config.WebApiModuleFileName);
 
             var endpointBlock = CreateEndpointBlock();
 
@@ -67,14 +64,14 @@ namespace WebApiToTypeScript
 
             if (Config.GenerateInterfaces)
             {
-                interfaceService.WriteInterfacesToBlock(interfacesBlock);
+                InterfaceService.WriteInterfacesToBlock(interfacesBlock);
 
                 CreateFileForBlock(interfacesBlock, Config.InterfacesOutputDirectory, Config.InterfacesFileName);
             }
 
             if (Config.GenerateEnums)
             {
-                enumsService.WriteEnumsToBlock(enumsBlock);
+                EnumsService.WriteEnumsToBlock(enumsBlock);
 
                 CreateFileForBlock(enumsBlock, Config.EnumsOutputDirectory, Config.EnumsFileName);
             }
@@ -133,11 +130,11 @@ namespace WebApiToTypeScript
                     var isLastActionAndVerb = a == actions.Count - 1
                         && v == action.Verbs.Count - 1;
 
-                    var constructorParametersList = GetConstructorParametersList(action);
-                    var constructorParameterNamesList = GetConstructorParameterNamesList(action);
+                    var constructorParametersList = action.GetConstructorParametersList();
+                    var constructorParameterNamesList = action.GetConstructorParameterNamesList();
 
-                    var callArgumentDefinition = GetCallArgumentDefinition(action, verb);
-                    var callArgumentValue = GetCallArgumentValue(action, verb);
+                    var callArgumentDefinition = action.GetCallArgumentDefinition(verb);
+                    var callArgumentValue = action.GetCallArgumentValue(verb);
 
                     var interfaceFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.I{actionName}";
                     var endpointFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.{actionName}";
@@ -158,66 +155,6 @@ namespace WebApiToTypeScript
                         .AddStatement("return _.extend(endpoint, callHook);");
                 }
             }
-        }
-
-        private string GetCallArgumentValue(WebApiAction action, WebApiHttpVerb verb)
-        {
-            var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
-
-            var callArgumentValueString = action.BodyParameters
-                .Select(argument =>
-                {
-                    var typeScriptType = GetTypeScriptType(argument)
-                        .TypeName;
-
-                    var valueFormat = $"{argument.Name}";
-
-                    switch (typeScriptType)
-                    {
-                        case "string":
-                            valueFormat = $"`\"${{{argument.Name}}}\"`";
-                            break;
-                    }
-
-                    return $"{argument.Name} != null ? {valueFormat} : null";
-                })
-                .SingleOrDefault();
-
-            return (!isFormBody || string.IsNullOrEmpty(callArgumentValueString))
-                 ? "null"
-                 : callArgumentValueString;
-        }
-
-        private string GetCallArgumentDefinition(WebApiAction action, WebApiHttpVerb verb)
-        {
-            var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
-
-            if (!isFormBody)
-                return string.Empty;
-
-            return action.BodyParameters
-                .Select(a => GetParameterString(a, false))
-                .SingleOrDefault();
-        }
-
-        private string GetConstructorParameterNamesList(WebApiAction action)
-        {
-            var constructorParameterNames = GetConstructorParameterMappings(action)
-                .Select(p => p.Name);
-
-            return string.Join(", ", constructorParameterNames);
-        }
-
-        private string GetConstructorParametersList(WebApiAction action)
-        {
-            var constructorParameterMappings = GetConstructorParameterMappings(action);
-
-            var constructorParameterStrings = constructorParameterMappings
-                .Select(p => p.String);
-
-            var constructorParametersList =
-                string.Join(", ", constructorParameterStrings);
-            return constructorParametersList;
         }
 
         private void WriteEndpointClassToBlock(TypeScriptBlock endpointBlock, WebApiController webApiController)
@@ -253,7 +190,7 @@ namespace WebApiToTypeScript
 
         private void WriteInterfaceToBlock(TypeScriptBlock interfaceBlock, WebApiAction action)
         {
-            var constructorParameterMappings = GetConstructorParameterMappings(action);
+            var constructorParameterMappings = action.GetConstructorParameterMappings();
             foreach (var constructorParameterMapping in constructorParameterMappings)
             {
                 interfaceBlock
@@ -263,7 +200,7 @@ namespace WebApiToTypeScript
             var callArguments = action.BodyParameters;
 
             var callArgumentStrings = callArguments
-                .Select(a => GetParameterString(a, false))
+                .Select(a => a.GetParameterString(false))
                 .ToList();
 
             var callArgumentsList = string.Join(", ", callArgumentStrings);
@@ -303,7 +240,7 @@ namespace WebApiToTypeScript
                 var block = queryStringBlock
                     .AddAndUseBlock($"if (this.{argumentName} != null)");
 
-                var argumentType = GetTypeScriptType(routePart);
+                var argumentType = routePart.GetTypeScriptType();
 
                 if (argumentType.IsPrimitive || argumentType.IsEnum)
                 {
@@ -337,7 +274,7 @@ namespace WebApiToTypeScript
 
         private void WriteConstructorToBlock(TypeScriptBlock classBlock, WebApiAction action)
         {
-            var constructorParameterMappings = GetConstructorParameterMappings(action);
+            var constructorParameterMappings = action.GetConstructorParameterMappings();
 
             if (!constructorParameterMappings.Any())
                 return;
@@ -360,159 +297,6 @@ namespace WebApiToTypeScript
                         .AddStatement($"this.{mapping.Name} = new {mapping.TypeMapping.TypeScriptTypeName}();");
                 }
             }
-        }
-
-        private IOrderedEnumerable<ConstructorParameterMapping> GetConstructorParameterMappings(WebApiAction action)
-        {
-            var tempConstructorParameters = action.Method.Parameters
-                .Select(p => new
-                {
-                    Parameter = p,
-                    RoutePart = action.Controller.RouteParts.SingleOrDefault(brp => brp.ParameterName == p.Name)
-                        ?? action.RouteParts.SingleOrDefault(rp => rp.ParameterName == p.Name)
-                        ?? action.QueryStringParameters.SingleOrDefault(qsp => qsp.Name == p.Name)
-                })
-                .Where(cp => cp.RoutePart != null)
-                .ToList();
-
-            var constructorParameters = new List<WebApiRoutePart>();
-            foreach (var tcp in tempConstructorParameters)
-            {
-                if (tcp.RoutePart.Parameter == null)
-                    tcp.RoutePart.Parameter = tcp.Parameter;
-
-                constructorParameters.Add(tcp.RoutePart);
-            }
-
-            var constructorParameterMappings = constructorParameters
-                .Select(routePart => new ConstructorParameterMapping
-                {
-                    IsOptional = IsParameterOptional(routePart.Parameter),
-                    TypeMapping = GetTypeMapping(routePart),
-                    Name = routePart.Parameter.Name,
-                    String = GetParameterString(routePart)
-                })
-                .OrderBy(p => p.IsOptional);
-
-            return constructorParameterMappings;
-        }
-
-        private string GetParameterString(WebApiRoutePart routePart, bool withOptionals = true)
-        {
-            var parameter = routePart.Parameter;
-            var isOptional = withOptionals && IsParameterOptional(parameter);
-            var typeScriptType = GetTypeScriptType(routePart);
-
-            var collectionString = typeScriptType.IsCollection ? "[]" : string.Empty;
-
-            return $"{parameter.Name}{(isOptional ? "?" : "")}: {typeScriptType.TypeName}{collectionString}";
-        }
-
-        private bool IsParameterOptional(ParameterDefinition parameter)
-        {
-            return parameter.IsOptional || !parameter.ParameterType.IsValueType || IsNullable(parameter.ParameterType);
-        }
-
-        private TypeScriptType GetTypeScriptType(WebApiRoutePart routePart)
-        {
-            var result = new TypeScriptType();
-
-            var parameter = routePart.Parameter;
-            var type = parameter.ParameterType;
-            var typeName = type.FullName;
-
-            var typeMapping = GetTypeMapping(routePart);
-
-            if (typeMapping != null)
-            {
-                var tsTypeName = typeMapping.TypeScriptTypeName;
-                result.TypeName = tsTypeName;
-                result.IsPrimitive = typeService.IsPrimitiveTypeScriptType(result.TypeName);
-                result.IsEnum = tsTypeName.StartsWith($"{Config.EnumsNamespace}")
-                    || result.IsPrimitive;
-
-                return result;
-            }
-
-            typeName = typeService.StripNullable(type) ?? typeName;
-
-            var collectionType = typeService.StripCollection(type);
-            result.IsCollection = collectionType != null;
-            typeName = collectionType ?? typeName;
-
-            var typeDefinition = typeService.GetTypeDefinition(typeName);
-
-            if (typeDefinition?.IsEnum ?? false)
-            {
-                if (!Config.GenerateEnums)
-                {
-                    result.TypeName = "number";
-                    result.IsPrimitive = true;
-                }
-                else
-                {
-                    enumsService.AddEnum(typeDefinition);
-
-                    result.TypeName = $"{Config.EnumsNamespace}.{typeDefinition.Name}";
-                    result.IsPrimitive = false;
-                }
-
-                result.IsEnum = true;
-                return result;
-            }
-
-            var primitiveType = typeService.GetPrimitiveTypeScriptType(typeName);
-
-            if (!string.IsNullOrEmpty(primitiveType))
-            {
-                result.TypeName = primitiveType;
-                result.IsPrimitive = true;
-
-                return result;
-            }
-
-            if (!typeDefinition?.IsValueType ?? false)
-            {
-                if (!Config.GenerateInterfaces)
-                {
-                    result.TypeName = $"{IHaveQueryParams}";
-                }
-                else
-                {
-                    interfaceService.AddInterfaceNode(typeDefinition);
-
-                    result.TypeName = $"{Config.InterfacesNamespace}.{typeDefinition.Name}";
-                }
-
-                return result;
-            }
-
-            throw new NotSupportedException("Maybe it is a generic class, or a yet unsupported collection, or chain thereof?");
-        }
-
-        private TypeMapping GetTypeMapping(WebApiRoutePart routePart)
-        {
-            if (routePart.Parameter == null)
-                return null;
-
-            var parameter = routePart.Parameter;
-            var typeName = parameter.ParameterType.FullName;
-
-            var typeMapping = Config.TypeMappings
-                .SingleOrDefault(t => typeName.StartsWith(t.WebApiTypeName)
-                    || (t.TreatAsAttribute
-                        && (Helpers.HasCustomAttribute(parameter, $"{t.WebApiTypeName}Attribute"))
-                    || (t.TreatAsConstraint
-                        && routePart.Constraints.Any(c => c == Helpers.ToCamelCase(t.WebApiTypeName)))));
-
-            return typeMapping;
-        }
-
-        private bool IsNullable(TypeReference type)
-        {
-            var genericType = type as GenericInstanceType;
-            return genericType != null
-                   && genericType.FullName.StartsWith("System.Nullable`1");
         }
 
         private Config.Config GetConfig(string configFilePath)

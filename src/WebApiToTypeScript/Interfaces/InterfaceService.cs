@@ -2,32 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using WebApiToTypeScript.Block;
-using WebApiToTypeScript.Enums;
 using WebApiToTypeScript.Types;
 
 namespace WebApiToTypeScript.Interfaces
 {
-    public class InterfaceService
+    public class InterfaceService : ServiceAware
     {
-        private Config.Config Config { get; }
-
-        private readonly TypeService typeService;
-        private readonly EnumsService enumsService;
-
         private InterfaceNode InterfaceNode { get; }
             = new InterfaceNode();
-
-        public InterfaceService(
-            Config.Config config,
-            TypeService typeService,
-            EnumsService enumsService)
-        {
-            Config = config;
-
-            this.typeService = typeService;
-            this.enumsService = enumsService;
-        }
-
 
         public TypeScriptBlock WriteInterfacesToBlock(TypeScriptBlock interfacesBlock)
         {
@@ -56,13 +38,13 @@ namespace WebApiToTypeScript.Interfaces
             {
                 var thingType = thing.CSharpType.TypeDefinition;
 
-                var primitiveType = typeService.GetPrimitiveTypeScriptType(thingType.FullName);
+                var primitiveType = TypeService.GetPrimitiveTypeScriptType(thingType.FullName);
                 if (primitiveType != null)
                     continue;
 
                 if (thingType.IsEnum && Config.GenerateEnums)
                 {
-                    enumsService.AddEnum(thingType);
+                    EnumsService.AddEnum(thingType);
                 }
                 else if (!thingType.IsPrimitive)
                 {
@@ -97,7 +79,7 @@ namespace WebApiToTypeScript.Interfaces
                     var thingType = thing.CSharpType.TypeDefinition;
                     var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
 
-                    var primitiveType = typeService.GetPrimitiveTypeScriptType(thingType.FullName);
+                    var primitiveType = TypeService.GetPrimitiveTypeScriptType(thingType.FullName);
                     if (primitiveType != null)
                     {
                         constructorParameters.Add($"{thing.Name}?: {primitiveType}{collectionString}");
@@ -144,7 +126,7 @@ namespace WebApiToTypeScript.Interfaces
                 .Select(p => new MemberWithCSharpType
                 {
                     Name = p.Name,
-                    CSharpType = typeService.GetCSharpType(p.FieldType)
+                    CSharpType = TypeService.GetCSharpType(p.FieldType)
                 });
 
             var properties = typeDefinition.Properties
@@ -152,7 +134,7 @@ namespace WebApiToTypeScript.Interfaces
                 .Select(p => new MemberWithCSharpType
                 {
                     Name = p.Name,
-                    CSharpType = typeService.GetCSharpType(p.PropertyType)
+                    CSharpType = TypeService.GetCSharpType(p.PropertyType)
                 });
 
             return fields.Union(properties)
