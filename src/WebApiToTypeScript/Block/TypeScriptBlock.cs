@@ -36,35 +36,37 @@ namespace WebApiToTypeScript.Block
         public TypeScriptBlock Parent { get; set; }
 
         public bool IsFunctionBlock { get; set; }
-        public bool TerminateWithSemicolon { get; set; }
+
+        public string TerminationString { get; set; }
+            = string.Empty;
 
         public TypeScriptBlock(string outer = "")
         {
             Outer = outer;
         }
 
-        public TypeScriptBlock AddBlock(string outer = null, bool isFunctionBlock = false, bool terminateWithSemicolon = false)
+        public TypeScriptBlock AddBlock(string outer = null, bool isFunctionBlock = false, string terminationString = "")
         {
-            var child = CreateChild(outer, isFunctionBlock, terminateWithSemicolon);
+            var child = CreateChild(outer, isFunctionBlock, terminationString);
 
             return this;
         }
 
-        public TypeScriptBlock AddAndUseBlock(string outer = null, bool isFunctionBlock = false, bool terminateWithSemicolon = false)
+        public TypeScriptBlock AddAndUseBlock(string outer = null, bool isFunctionBlock = false, string terminationString = "")
         {
-            var child = CreateChild(outer, isFunctionBlock, terminateWithSemicolon);
+            var child = CreateChild(outer, isFunctionBlock, terminationString);
 
             return child;
         }
 
-        private TypeScriptBlock CreateChild(string outer, bool isFunctionBlock, bool terminateWithSemicolon = false)
+        private TypeScriptBlock CreateChild(string outer, bool isFunctionBlock, string terminationString = "")
         {
             var child = new TypeScriptBlock
             {
                 Outer = outer,
                 Parent = this,
                 IsFunctionBlock = isFunctionBlock,
-                TerminateWithSemicolon = terminateWithSemicolon
+                TerminationString = terminationString
             };
 
             Children.Add(child);
@@ -123,9 +125,8 @@ namespace WebApiToTypeScript.Block
             }
 
             var blockEndString = IsFunctionBlock ? "})" : "}";
-            var terminationString = TerminateWithSemicolon ? ";" : string.Empty;
 
-            stringBuilder.AppendLine($"{blockEndString}{terminationString}");
+            stringBuilder.AppendLine($"{blockEndString}{TerminationString}");
 
             return stringBuilder.ToString();
         }

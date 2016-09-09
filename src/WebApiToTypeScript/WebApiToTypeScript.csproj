@@ -63,6 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\Config.cs" />
+    <Compile Include="Types\ConstructorParameterMapping.cs" />
     <Compile Include="Types\CSharpType.cs" />
     <Compile Include="Enums\EnumsService.cs" />
     <Compile Include="Helpers.cs" />
