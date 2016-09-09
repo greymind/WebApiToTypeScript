@@ -1,7 +1,8 @@
 using WebApiToTypeScript.Enums;
+using WebApiToTypeScript.Interfaces;
 using WebApiToTypeScript.Types;
 
-namespace WebApiToTypeScript.Interfaces
+namespace WebApiToTypeScript
 {
     public abstract class ServiceAware
     {

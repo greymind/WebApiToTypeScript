@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using WebApiToTypeScript.Block;
-using WebApiToTypeScript.Interfaces;
 using WebApiToTypeScript.WebApi;
 
 namespace WebApiToTypeScript.Endpoints
@@ -11,8 +10,8 @@ namespace WebApiToTypeScript.Endpoints
         {
             return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}")
                 .AddAndUseBlock($"export interface {IEndpoint}")
-                .AddStatement("verb: string")
-                .AddStatement("toString(): string")
+                .AddStatement("verb: string;")
+                .AddStatement("toString(): string;")
                 .Parent
                 .AddAndUseBlock($"export interface {IHaveQueryParams}")
                 .AddStatement("getQueryParams(): Object")
@@ -68,7 +67,7 @@ namespace WebApiToTypeScript.Endpoints
             var callArgumentsList = string.Join(", ", callArgumentStrings);
 
             interfaceBlock
-                .AddStatement($"call({callArgumentsList});");
+                .AddStatement($"call<TView>({callArgumentsList}): ng.IPromise<TView>;");
         }
 
         private void WriteToStringToBlock(TypeScriptBlock classBlock, WebApiAction action)

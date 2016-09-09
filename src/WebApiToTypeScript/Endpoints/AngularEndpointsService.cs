@@ -1,5 +1,4 @@
 ﻿using WebApiToTypeScript.Block;
-using WebApiToTypeScript.Interfaces;
 using WebApiToTypeScript.WebApi;
 
 namespace WebApiToTypeScript.Endpoints
@@ -15,12 +14,13 @@ namespace WebApiToTypeScript.Endpoints
                 .AddAndUseBlock("constructor($http: ng.IHttpService)")
                 .AddStatement($"{Config.ServiceName}.$http = $http;")
                 .Parent
-                .AddAndUseBlock("static call(endpoint: IEndpoint, data)")
-                .AddAndUseBlock($"return {Config.ServiceName}.$http(", isFunctionBlock: true, terminationString: ";")
+                .AddAndUseBlock("static call<TView>(endpoint: IEndpoint, data)")
+                .AddAndUseBlock($"var call = {Config.ServiceName}.$http<TView>(", isFunctionBlock: true, terminationString: ";")
                 .AddStatement("method: endpoint.verb,")
                 .AddStatement("url: endpoint.toString(),")
                 .AddStatement("data: data")
                 .Parent
+                .AddStatement("return call.then(response => response.data);")
                 .Parent
                 .Parent;
         }
@@ -63,8 +63,8 @@ namespace WebApiToTypeScript.Endpoints
                         )
                         .AddStatement($"var endpoint = new {endpointFullName}({constructorParameterNamesList});")
                         .AddAndUseBlock("var callHook =")
-                        .AddAndUseBlock($"call({callArgumentDefinition})")
-                        .AddStatement($"return {Config.ServiceName}.call(this, {callArgumentValue});")
+                        .AddAndUseBlock($"call<TView>({callArgumentDefinition})")
+                        .AddStatement($"return {Config.ServiceName}.call<TView>(this, {callArgumentValue});")
                         .Parent
                         .Parent
                         .AddStatement("return _.extend(endpoint, callHook);");
