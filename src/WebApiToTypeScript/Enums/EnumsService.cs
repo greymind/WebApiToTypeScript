@@ -2,13 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using WebApiToTypeScript.Block;
+using WebApiToTypeScript.Interfaces;
 
 namespace WebApiToTypeScript.Enums
 {
-    public class EnumsService
+    public class EnumsService : ServiceAware
     {
         private List<TypeDefinition> Enums { get; }
             = new List<TypeDefinition>();
+
+        public TypeScriptBlock CreateEnumsBlock()
+        {
+            return Config.GenerateEnums
+                ? new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EnumsNamespace}")
+                : new TypeScriptBlock();
+        }
 
         public void AddEnum(TypeDefinition thingType)
         {

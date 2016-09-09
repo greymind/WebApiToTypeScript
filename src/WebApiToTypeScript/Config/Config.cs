@@ -29,6 +29,9 @@ namespace WebApiToTypeScript.Config
         public string ServiceNamespace { get; set; }
             = "Endpoints";
 
+        public string ServiceName { get; set; }
+            = "AngularEndpointsService";
+
 
         public bool GenerateEnums { get; set; }
             = true;

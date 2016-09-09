@@ -5,6 +5,9 @@ namespace WebApiToTypeScript.Interfaces
 {
     public abstract class ServiceAware
     {
+        protected string IHaveQueryParams = WebApiToTypeScript.IHaveQueryParams;
+        protected string IEndpoint = WebApiToTypeScript.IEndpoint;
+
         protected TypeService TypeService
             => WebApiToTypeScript.TypeService;
 

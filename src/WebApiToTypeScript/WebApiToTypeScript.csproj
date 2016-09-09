@@ -63,6 +63,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\Config.cs" />
+    <Compile Include="Endpoints\AngularEndpointsService.cs" />
+    <Compile Include="Endpoints\EndpointsService.cs" />
     <Compile Include="Interfaces\ServiceAware.cs" />
     <Compile Include="Types\ConstructorParameterMapping.cs" />
     <Compile Include="Types\CSharpType.cs" />

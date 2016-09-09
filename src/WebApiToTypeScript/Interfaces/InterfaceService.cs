@@ -11,6 +11,11 @@ namespace WebApiToTypeScript.Interfaces
         private InterfaceNode InterfaceNode { get; }
             = new InterfaceNode();
 
+        public TypeScriptBlock CreateInterfacesBlock()
+        {
+            return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}");
+        }
+
         public TypeScriptBlock WriteInterfacesToBlock(TypeScriptBlock interfacesBlock)
         {
             WriteInterfaces(interfacesBlock, InterfaceNode);
