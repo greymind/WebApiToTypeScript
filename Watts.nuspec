@@ -12,7 +12,7 @@
     <summary>A tool for code generating TypeScript endpoints for your ASP.NET Web API controllers</summary>
     <releaseNotes>Generate angular service for proper call and $http scope management</releaseNotes>
     <copyright>Copyright (c) 2016 Balakrishnan (Balki) Ranganathan</copyright>
-    <tags>WebAPI TypeScript Endpoint Enum Interface Code Generation Balki Greymind Watts</tags>
+    <tags>WebAPI TypeScript Endpoint Enum Interface Code Generation Angular Service Balki Greymind Watts</tags>
   </metadata>
   <files>
     <file src="src\Watts\bin\Debug\**\*.dll" target="tools" />
