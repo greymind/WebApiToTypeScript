@@ -22,20 +22,40 @@ Ensure the DLL is part of the build process, so you have access to it. Easiest w
 </Target>
 ```
 
+## Using Angular Endpoints Service
+You'll need to register the Endpoints service to your app and inject it as is typical in Angular
+```
+angular.module('framework').service('AngularEndpointsService', Framework.Endpoints.AngularEndpointsService);
+```
+
 ## Config
 ```
 {
   "WebApiModuleFileName": "string",
+  
   "EndpointsOutputDirectory": "string",
   "EndpointsFileName": "string",
   "EndpointsNamespace": "string",
-  "WriteNamespaceAsModule": "boolean",
-  "GenerateInterfaces": "boolean",
-  "ScanOtherModules": "boolean",
+
+  "GenerateService": "boolean",
+  "ServiceOutputDirectory": "string",
+  "ServiceFileName": "string",
+  "ServiceNamespace": "string",
+  "ServicesName": "string",
+
   "GenerateEnums": "boolean",
   "EnumsOutputDirectory": "string",
   "EnumsFileName": "string",
   "EnumsNamespace": "string",
+
+  "GenerateInterfaces": "boolean",
+  "InterfacesOutputDirectory": "string",
+  "InterfacesFileName": "string",
+  "InterfacesNamespace": "string",
+
+  "ScanOtherModules": "boolean",
+  "WriteNamespaceAsModule": "boolean",
+
   "TypeMappings": [
     {
       "WebApiTypeName": "string",
