@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>WebApiToTypeScript</id>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <authors>Balakrishnan (Balki) Ranganathan</authors>
     <owners>Balakrishnan (Balki) Ranganathan</owners>
     <licenseUrl>https://raw.githubusercontent.com/greymind/WebApiToTypeScript/master/LICENSE</licenseUrl>
@@ -10,7 +10,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A tool for code generating TypeScript endpoints for your ASP.NET Web API controllers</description>
     <summary>A tool for code generating TypeScript endpoints for your ASP.NET Web API controllers</summary>
-    <releaseNotes>Generate base classes before derived classes due to TypeScript bug that requires ordering :(</releaseNotes>
+    <releaseNotes>Generate angular service for proper call and $http scope management</releaseNotes>
     <copyright>Copyright (c) 2016 Balakrishnan (Balki) Ranganathan</copyright>
     <tags>WebAPI TypeScript Endpoint Enum Interface Code Generation Balki Greymind Watts</tags>
   </metadata>
