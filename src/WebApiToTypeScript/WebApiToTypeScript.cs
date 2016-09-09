@@ -135,8 +135,9 @@ namespace WebApiToTypeScript
 
                     var constructorParametersList = GetConstructorParametersList(action);
                     var constructorParameterNamesList = GetConstructorParameterNamesList(action);
-                    var callArgumentsList = GetCallArgumentsList(action, verb);
-                    var callArgumentValues = GetCallArgumentValues(action, verb);
+
+                    var callArgumentDefinition = GetCallArgumentDefinition(action, verb);
+                    var callArgumentValue = GetCallArgumentValue(action, verb);
 
                     var interfaceFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.I{actionName}";
                     var endpointFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.{actionName}";
@@ -150,8 +151,8 @@ namespace WebApiToTypeScript
                         )
                         .AddStatement($"var endpoint = new {endpointFullName}({constructorParameterNamesList});")
                         .AddAndUseBlock("var callHook =")
-                        .AddAndUseBlock($"call({callArgumentsList})")
-                        .AddStatement($"return {AngularEndpointsService}.call(this, {callArgumentValues});")
+                        .AddAndUseBlock($"call({callArgumentDefinition})")
+                        .AddStatement($"return {AngularEndpointsService}.call(this, {callArgumentValue});")
                         .Parent
                         .Parent
                         .AddStatement("return _.extend(endpoint, callHook);");
@@ -159,15 +160,15 @@ namespace WebApiToTypeScript
             }
         }
 
-        private string GetCallArgumentValues(WebApiAction action, WebApiHttpVerb verb)
+        private string GetCallArgumentValue(WebApiAction action, WebApiHttpVerb verb)
         {
             var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
 
-            var callArgumentValueStrings = action.BodyParameters
+            var callArgumentValueString = action.BodyParameters
                 .Select(argument =>
                 {
                     var typeScriptType = GetTypeScriptType(argument)
-                    .TypeName;
+                        .TypeName;
 
                     var valueFormat = $"{argument.Name}";
 
@@ -180,28 +181,23 @@ namespace WebApiToTypeScript
 
                     return $"{argument.Name} != null ? {valueFormat} : null";
                 })
-                .ToList();
+                .SingleOrDefault();
 
-            var callArgumentValuesList = string.Join(", ", callArgumentValueStrings);
-
-            return (!isFormBody || string.IsNullOrEmpty(callArgumentValuesList))
+            return (!isFormBody || string.IsNullOrEmpty(callArgumentValueString))
                  ? "null"
-                 : callArgumentValuesList;
+                 : callArgumentValueString;
         }
 
-        private string GetCallArgumentsList(WebApiAction action, WebApiHttpVerb verb)
+        private string GetCallArgumentDefinition(WebApiAction action, WebApiHttpVerb verb)
         {
             var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
+
             if (!isFormBody)
                 return string.Empty;
 
-            var callArgumentStrings = action.BodyParameters
+            return action.BodyParameters
                 .Select(a => GetParameterString(a, false))
-                .ToList();
-
-            var callArgumentsList = string.Join(", ", callArgumentStrings);
-
-            return callArgumentsList;
+                .SingleOrDefault();
         }
 
         private string GetConstructorParameterNamesList(WebApiAction action)
@@ -274,50 +270,6 @@ namespace WebApiToTypeScript
 
             interfaceBlock
                 .AddStatement($"call({callArgumentsList});");
-        }
-
-        private void CreateCallBlock(TypeScriptBlock classBlock, WebApiAction action,
-            WebApiHttpVerb verb)
-        {
-            var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
-
-            var callArguments = action.BodyParameters;
-
-            var callArgumentStrings = callArguments
-                .Select(a => GetParameterString(a, false))
-                .ToList();
-
-            var callArgumentsList = string.Join(", ", callArgumentStrings);
-
-            var dataDelimiter = isFormBody && callArgumentStrings.Any() ? "," : string.Empty;
-
-            var callBlock = classBlock
-                .AddAndUseBlock($"call = ({callArgumentsList}) =>")
-                .AddStatement("var httpService = angular.injector(['ng']).get<ng.IHttpService>('$http');")
-                .AddAndUseBlock("return httpService(", isFunctionBlock: true, terminationString: ";")
-                .AddStatement($"method: '{verb.VerbMethod}',")
-                .AddStatement($"url: this.toString(){dataDelimiter}");
-
-            if (!isFormBody)
-                return;
-
-            foreach (var argument in callArguments)
-            {
-                var typeScriptType = GetTypeScriptType(argument)
-                    .TypeName;
-
-                var valueFormat = $"{argument.Name}";
-
-                switch (typeScriptType)
-                {
-                    case "string":
-                        valueFormat = $"`\"${{{argument.Name}}}\"`";
-                        break;
-                }
-
-                callBlock
-                    .AddStatement($"data: {argument.Name} != null ? {valueFormat} : null");
-            }
         }
 
         private void WriteToStringToBlock(TypeScriptBlock classBlock, WebApiAction action)
