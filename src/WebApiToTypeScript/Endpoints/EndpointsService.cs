@@ -10,7 +10,7 @@ namespace WebApiToTypeScript.Endpoints
         {
             return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}")
                 .AddAndUseBlock($"export interface {IEndpoint}")
-                .AddStatement("verb: string;")
+                .AddStatement("_verb: string;")
                 .AddStatement("toString(): string;")
                 .Parent
                 .AddAndUseBlock($"export interface {IHaveQueryParams}")
@@ -32,15 +32,27 @@ namespace WebApiToTypeScript.Endpoints
                     var actionName = action.GetActionNameForVerb(verb);
 
                     var interfaceBlock = controllerBlock
-                        .AddAndUseBlock($"export interface I{actionName} extends {IEndpoint}");
+                        .AddAndUseBlock($"export interface I{actionName}");
 
                     WriteInterfaceToBlock(interfaceBlock, action);
 
-                    var classBlock = controllerBlock
-                        .AddAndUseBlock($"export class {actionName} implements {IEndpoint}")
-                        .AddStatement($"verb = '{verb.VerbMethod}';");
+                    var interfaceWithCallBlock = controllerBlock
+                        .AddAndUseBlock($"export interface I{actionName}WithCall extends I{actionName}, {IEndpoint}");
 
-                    WriteConstructorToBlock(classBlock, action);
+                    WriteInterfaceWithCallToBlock(interfaceWithCallBlock, action);
+
+                    var classBlock = controllerBlock
+                        .AddAndUseBlock($"export class {actionName} implements I{actionName}, {IEndpoint}")
+                        .AddStatement($"_verb = '{verb.VerbMethod}';");
+
+                    var constructorParameterMappings = action.GetConstructorParameterMappings();
+                    foreach (var constructorParameterMapping in constructorParameterMappings)
+                    {
+                        classBlock
+                            .AddStatement($"{constructorParameterMapping.String};");
+                    }
+
+                    WriteConstructorToBlock(classBlock, action, verb);
 
                     WriteGetQueryStringToBlock(classBlock, action);
 
@@ -55,18 +67,21 @@ namespace WebApiToTypeScript.Endpoints
             foreach (var constructorParameterMapping in constructorParameterMappings)
             {
                 interfaceBlock
-                    .AddStatement($"{constructorParameterMapping.String};");
+                    .AddStatement($"{constructorParameterMapping.StringWithOptionals};");
             }
+        }
 
+        private void WriteInterfaceWithCallToBlock(TypeScriptBlock interfaceWithCallBlock, WebApiAction action)
+        {
             var callArguments = action.BodyParameters;
 
             var callArgumentStrings = callArguments
                 .Select(a => a.GetParameterString(false))
-                .ToList();
+                .SingleOrDefault();
 
             var callArgumentsList = string.Join(", ", callArgumentStrings);
 
-            interfaceBlock
+            interfaceWithCallBlock
                 .AddStatement($"call<TView>({callArgumentsList}): ng.IPromise<TView>;");
         }
 
@@ -133,24 +148,20 @@ namespace WebApiToTypeScript.Endpoints
                 .AddStatement("return '';");
         }
 
-        private void WriteConstructorToBlock(TypeScriptBlock classBlock, WebApiAction action)
+        private void WriteConstructorToBlock(TypeScriptBlock classBlock, WebApiAction action, WebApiHttpVerb verb)
         {
-            var constructorParameterMappings = action.GetConstructorParameterMappings();
-
-            if (!constructorParameterMappings.Any())
-                return;
-
-            var constructorParameterStrings = constructorParameterMappings
-                .Select(p => $"public {p.String}");
-
-            var constructorParametersList =
-                string.Join(", ", constructorParameterStrings);
+            var actionName = action.GetActionNameForVerb(verb);
 
             var constructorBlock = classBlock
-                .AddAndUseBlock($"constructor({constructorParametersList})");
+                .AddAndUseBlock($"constructor(args: I{actionName})");
+
+            var constructorParameterMappings = action.GetConstructorParameterMappings();
 
             foreach (var mapping in constructorParameterMappings)
             {
+                constructorBlock
+                    .AddStatement($"this.{mapping.Name} = args.{mapping.Name};");
+
                 if (mapping.TypeMapping?.AutoInitialize ?? false)
                 {
                     constructorBlock

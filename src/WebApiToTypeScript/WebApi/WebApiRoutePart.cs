@@ -15,6 +15,9 @@ namespace WebApiToTypeScript.WebApi
         public string ParameterName { get; set; }
         public ParameterDefinition Parameter { get; set; }
 
+        public bool IsOptional { get; set; }
+            = true;
+
         public List<string> Constraints { get; set; }
             = new List<string>();
 
@@ -100,13 +103,12 @@ namespace WebApiToTypeScript.WebApi
 
         public string GetParameterString(bool withOptionals = true)
         {
-            var parameter = Parameter;
-            var isOptional = withOptionals && TypeService.IsParameterOptional(parameter);
+            var isOptional = IsOptional && withOptionals && TypeService.IsParameterOptional(Parameter);
             var typeScriptType = GetTypeScriptType();
 
             var collectionString = typeScriptType.IsCollection ? "[]" : string.Empty;
 
-            return $"{parameter.Name}{(isOptional ? "?" : "")}: {typeScriptType.TypeName}{collectionString}";
+            return $"{Parameter.Name}{(isOptional ? "?" : "")}: {typeScriptType.TypeName}{collectionString}";
         }
 
         public TypeMapping GetTypeMapping()

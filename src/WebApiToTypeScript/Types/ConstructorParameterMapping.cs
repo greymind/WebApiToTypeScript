@@ -7,6 +7,7 @@ namespace WebApiToTypeScript.Types
         public bool IsOptional { get; set; }
         public TypeMapping TypeMapping { get; set; }
         public string Name { get; set; }
+        public string StringWithOptionals { get; set; }
         public string String { get; set; }
     }
 }

@@ -110,7 +110,7 @@ namespace WebApiToTypeScript.WebApi
             var constructorParameterMappings = GetConstructorParameterMappings();
 
             var constructorParameterStrings = constructorParameterMappings
-                .Select(p => p.String);
+                .Select(p => p.StringWithOptionals);
 
             var constructorParametersList =
                 string.Join(", ", constructorParameterStrings);
@@ -146,7 +146,8 @@ namespace WebApiToTypeScript.WebApi
                     IsOptional = TypeService.IsParameterOptional(routePart.Parameter),
                     TypeMapping = routePart.GetTypeMapping(),
                     Name = routePart.Parameter.Name,
-                    String = routePart.GetParameterString()
+                    StringWithOptionals = routePart.GetParameterString(),
+                    String = routePart.GetParameterString(withOptionals: false)
                 })
                 .OrderBy(p => p.IsOptional);
 

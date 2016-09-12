@@ -36,6 +36,7 @@ namespace WebApiToTypeScript
                 {
                     Name = p,
                     ParameterName = RouteParameterRegex.Match(p).Groups[1].Value,
+                    IsOptional = false
                 })
                 .ToList();
 

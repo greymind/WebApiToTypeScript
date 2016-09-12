@@ -16,7 +16,7 @@ namespace WebApiToTypeScript.Endpoints
                 .Parent
                 .AddAndUseBlock("static call<TView>(endpoint: IEndpoint, data)")
                 .AddAndUseBlock($"var call = {Config.ServiceName}.$http<TView>(", isFunctionBlock: true, terminationString: ";")
-                .AddStatement("method: endpoint.verb,")
+                .AddStatement("method: endpoint._verb,")
                 .AddStatement("url: endpoint.toString(),")
                 .AddStatement("data: data")
                 .Parent
@@ -52,22 +52,20 @@ namespace WebApiToTypeScript.Endpoints
                     var callArgumentValue = action.GetCallArgumentValue(verb);
 
                     var interfaceFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.I{actionName}";
+                    var interfaceWithCallFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.I{actionName}WithCall";
                     var endpointFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.{actionName}";
 
                     controllerBlock
                         .AddAndUseBlock
                         (
-                            outer: $"{actionName}: ({constructorParametersList}): {interfaceFullName} =>",
+                            outer: $"{actionName}: (args: {interfaceFullName}): {interfaceWithCallFullName} =>",
                             isFunctionBlock: false,
                             terminationString: !isLastActionAndVerb ? "," : string.Empty
                         )
-                        .AddStatement($"var endpoint = new {endpointFullName}({constructorParameterNamesList});")
-                        .AddAndUseBlock("var callHook =")
+                        .AddStatement($"var endpoint = new {endpointFullName}(args);")
+                        .AddAndUseBlock("return _.extendOwn(endpoint,", isFunctionBlock: true, terminationString: ";")
                         .AddAndUseBlock($"call<TView>({callArgumentDefinition})")
-                        .AddStatement($"return {Config.ServiceName}.call<TView>(this, {callArgumentValue});")
-                        .Parent
-                        .Parent
-                        .AddStatement("return _.extend(endpoint, callHook);");
+                        .AddStatement($"return {Config.ServiceName}.call<TView>(this, {callArgumentValue});");
                 }
             }
         }
