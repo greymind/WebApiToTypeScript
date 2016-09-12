@@ -1,0 +1,34 @@
+﻿{
+    "WebApiModuleFileName": "../../../WebApiTestApplication/bin/WebApiTestApplication.dll",
+
+    "EndpointsOutputDirectory": "../../../WebApiTestApplication/Scripts/Endpoints",
+    "EndpointsFileName": "Endpoints.ts",
+    "EndpointsNamespace": "Endpoints",
+
+    "GenerateService": true,
+    "ServiceOutputDirectory": "../../../WebApiTestApplication/Scripts/Endpoints",
+    "ServiceFileName": "Service.ts",
+    "ServiceNamespace": "Endpoints",
+
+    "GenerateEnums": true,
+    "EnumsOutputDirectory": "../../../WebApiTestApplication/Scripts/Enums",
+    "EnumsFileName": "Enums.ts",
+    "EnumsNamespace": "Enums",
+
+    "GenerateInterfaces": true,
+    "InterfacesOutputDirectory": "../../../WebApiTestApplication/Scripts/Interfaces",
+    "InterfacesFileName": "Interfaces.ts",
+    "InterfacesNamespace": "Interfaces",
+
+    "ScanOtherModules": true,
+    "WriteNamespaceAsModule": false,
+
+    "TypeMappings": [
+        {
+            "WebApiTypeName": "EncryptedInt",
+            "TypeScriptTypeName": "string",
+            "TreatAsAttribute": true,
+            "TreatAsConstraint": true
+        }
+    ]
+}

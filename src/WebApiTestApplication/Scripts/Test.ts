@@ -10,34 +10,18 @@ c.Name = "bappy";
 c.Number = 25;
 testObject.C = c;
 
-new Endpoints.Test.Get("cap")
-    .call()
-    .then(responsePrinter);
+new Endpoints.Test.Get("cap");
 
-new Endpoints.Test.Get1("77", "cap")
-    .call()
-    .then(responsePrinter);
+new Endpoints.Test.Get1("77", "cap");
 
-new Endpoints.Test.GetSomething(7, "cap", 2)
-    .call()
-    .then(responsePrinter);
+new Endpoints.Test.GetSomething(7, "cap", 2);
 
-new Endpoints.Test.GetSomethingElse(3, testObject, "cap")
-    .call()
-    .then(responsePrinter);
+new Endpoints.Test.GetSomethingElse(3, testObject, "cap");
 
-new Endpoints.Test.Post("cap")
-    .call(null)
-    .then(responsePrinter);
+new Endpoints.Test.Post("cap");
 
-new Endpoints.Test.Post("cap")
-    .call(testObject)
-    .then(responsePrinter);
+new Endpoints.Test.Post("cap");
 
-new Endpoints.Test.Put(5, "cap")
-    .call("data")
-    .then(responsePrinter);
+new Endpoints.Test.Put(5, "cap");
 
-new Endpoints.Test.Delete(2, "cap")
-    .call()
-    .then(responsePrinter);
+new Endpoints.Test.Delete(2, "cap");

@@ -112,6 +112,7 @@
   <ItemGroup>
     <TypeScriptCompile Include="Scripts\Angular.ts" />
     <TypeScriptCompile Include="Scripts\Endpoints\Endpoints.ts" />
+    <TypeScriptCompile Include="Scripts\Endpoints\Service.ts" />
     <TypeScriptCompile Include="Scripts\Enums\Enums.ts" />
     <TypeScriptCompile Include="Scripts\Interfaces\Interfaces.ts" />
     <TypeScriptCompile Include="Scripts\Test.ts" />
@@ -124,6 +125,7 @@
     <TypeScriptCompile Include="Scripts\typings\angularjs\angular-sanitize.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\angularjs\angular.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />
+    <TypeScriptCompile Include="Scripts\typings\underscore\underscore.d.ts" />
   </ItemGroup>
   <ItemGroup />
   <PropertyGroup>

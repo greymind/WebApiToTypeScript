@@ -1,17 +1,16 @@
 namespace Interfaces {
-    export class DummyClass {
-        Name: string;
-        Date: string;
-        C: AnotherClass;
+    export class AnotherClass {
+        constructor(public Number?: number, public Name?: string) {
+        }
     
         getQueryParams() {
             return this;
         }
     }
 
-    export class AnotherClass {
-        Number: number;
-        Name: string;
+    export class DummyClass {
+        constructor(public Name?: string, public Date?: string, public C?: AnotherClass) {
+        }
     
         getQueryParams() {
             return this;
