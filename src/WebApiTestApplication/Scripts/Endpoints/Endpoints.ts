@@ -1,6 +1,6 @@
 namespace Endpoints {
     export interface IEndpoint {
-        verb: string;
+        _verb: string;
         toString(): string;
     }
 
@@ -9,15 +9,20 @@ namespace Endpoints {
     }
 
     export namespace Test {
-        export interface IGet extends IEndpoint {
-            hole?: string;
+        export interface IGet {
+            hole: string;
+        }
+    
+        export interface IGetWithCall extends IGet, IEndpoint {
             call<TView>(): ng.IPromise<TView>;
         }
     
-        export class Get implements IEndpoint {
-            verb = 'GET';
+        export class Get implements IGet, IEndpoint {
+            _verb = 'GET';
+            hole: string;
         
-            constructor(public hole?: string) {
+            constructor(args: IGet) {
+                this.hole = args.hole;
             }
         
             toString = (): string => {
@@ -25,16 +30,23 @@ namespace Endpoints {
             }
         }
     
-        export interface IGet1 extends IEndpoint {
+        export interface IGet1 {
             id: string;
-            hole?: string;
+            hole: string;
+        }
+    
+        export interface IGet1WithCall extends IGet1, IEndpoint {
             call<TView>(): ng.IPromise<TView>;
         }
     
-        export class Get1 implements IEndpoint {
-            verb = 'GET';
+        export class Get1 implements IGet1, IEndpoint {
+            _verb = 'GET';
+            id: string;
+            hole: string;
         
-            constructor(public id: string, public hole?: string) {
+            constructor(args: IGet1) {
+                this.id = args.id;
+                this.hole = args.hole;
             }
         
             private getQueryString = (): string => {
@@ -56,17 +68,26 @@ namespace Endpoints {
             }
         }
     
-        export interface IGetSomething extends IEndpoint {
+        export interface IGetSomething {
             id: number;
-            hole?: string;
+            hole: string;
             y?: Enums.DummyEnum;
+        }
+    
+        export interface IGetSomethingWithCall extends IGetSomething, IEndpoint {
             call<TView>(): ng.IPromise<TView>;
         }
     
-        export class GetSomething implements IEndpoint {
-            verb = 'GET';
+        export class GetSomething implements IGetSomething, IEndpoint {
+            _verb = 'GET';
+            id: number;
+            hole: string;
+            y: Enums.DummyEnum;
         
-            constructor(public id: number, public hole?: string, public y?: Enums.DummyEnum) {
+            constructor(args: IGetSomething) {
+                this.id = args.id;
+                this.hole = args.hole;
+                this.y = args.y;
             }
         
             private getQueryString = (): string => {
@@ -88,17 +109,26 @@ namespace Endpoints {
             }
         }
     
-        export interface IGetSomethingElse extends IEndpoint {
+        export interface IGetSomethingElse {
             id: number;
             y?: Interfaces.DummyClass;
-            hole?: string;
+            hole: string;
+        }
+    
+        export interface IGetSomethingElseWithCall extends IGetSomethingElse, IEndpoint {
             call<TView>(): ng.IPromise<TView>;
         }
     
-        export class GetSomethingElse implements IEndpoint {
-            verb = 'GET';
+        export class GetSomethingElse implements IGetSomethingElse, IEndpoint {
+            _verb = 'GET';
+            id: number;
+            y: Interfaces.DummyClass;
+            hole: string;
         
-            constructor(public id: number, public y?: Interfaces.DummyClass, public hole?: string) {
+            constructor(args: IGetSomethingElse) {
+                this.id = args.id;
+                this.y = args.y;
+                this.hole = args.hole;
             }
         
             private getQueryString = (): string => {
@@ -129,15 +159,20 @@ namespace Endpoints {
             }
         }
     
-        export interface IPost extends IEndpoint {
-            hole?: string;
+        export interface IPost {
+            hole: string;
+        }
+    
+        export interface IPostWithCall extends IPost, IEndpoint {
             call<TView>(value: Interfaces.DummyClass): ng.IPromise<TView>;
         }
     
-        export class Post implements IEndpoint {
-            verb = 'POST';
+        export class Post implements IPost, IEndpoint {
+            _verb = 'POST';
+            hole: string;
         
-            constructor(public hole?: string) {
+            constructor(args: IPost) {
+                this.hole = args.hole;
             }
         
             toString = (): string => {
@@ -145,16 +180,23 @@ namespace Endpoints {
             }
         }
     
-        export interface IPut extends IEndpoint {
+        export interface IPut {
             id: number;
-            hole?: string;
+            hole: string;
+        }
+    
+        export interface IPutWithCall extends IPut, IEndpoint {
             call<TView>(value: string): ng.IPromise<TView>;
         }
     
-        export class Put implements IEndpoint {
-            verb = 'PUT';
+        export class Put implements IPut, IEndpoint {
+            _verb = 'PUT';
+            id: number;
+            hole: string;
         
-            constructor(public id: number, public hole?: string) {
+            constructor(args: IPut) {
+                this.id = args.id;
+                this.hole = args.hole;
             }
         
             toString = (): string => {
@@ -162,16 +204,23 @@ namespace Endpoints {
             }
         }
     
-        export interface IDelete extends IEndpoint {
+        export interface IDelete {
             id: number;
-            hole?: string;
+            hole: string;
+        }
+    
+        export interface IDeleteWithCall extends IDelete, IEndpoint {
             call<TView>(): ng.IPromise<TView>;
         }
     
-        export class Delete implements IEndpoint {
-            verb = 'DELETE';
+        export class Delete implements IDelete, IEndpoint {
+            _verb = 'DELETE';
+            id: number;
+            hole: string;
         
-            constructor(public id: number, public hole?: string) {
+            constructor(args: IDelete) {
+                this.id = args.id;
+                this.hole = args.hole;
             }
         
             private getQueryString = (): string => {

@@ -20,35 +20,58 @@ class TestController {
 
         testObject.C = c;
 
-        endpointsService.Test.Get("cap")
+        endpointsService.Test.Get({
+            hole: "cap"
+        })
             .call()
             .then(responsePrinter);
 
-        endpointsService.Test.Get1("77", "cap")
+        endpointsService.Test.Get1({
+            hole: "cap",
+            id: "777"
+        })
             .call()
             .then(responsePrinter);
 
-        endpointsService.Test.GetSomething(7, "cap", 2)
+        endpointsService.Test.GetSomething({
+            hole: "cap",
+            id: 7,
+            y: Enums.DummyEnum.Bye
+        })
             .call()
             .then(responsePrinter);
 
-        endpointsService.Test.GetSomethingElse(3, testObject, "cap")
+        endpointsService.Test.GetSomethingElse({
+            hole: "cap",
+            id: 3,
+            y: testObject
+        })
             .call()
             .then(responsePrinter);
 
-        endpointsService.Test.Post("cap")
+        endpointsService.Test.Post({
+            hole: "cap"
+        })
             .call(null)
             .then(responsePrinter);
 
-        endpointsService.Test.Post("cap")
+        endpointsService.Test.Post({
+            hole: "cap"
+        })
             .call(testObject)
             .then(responsePrinter);
 
-        endpointsService.Test.Put(5, "cap")
+        endpointsService.Test.Put({
+            hole: "cap",
+            id: 5
+        })
             .call("b")
             .then(responsePrinter);
 
-        endpointsService.Test.Delete(2, "cap")
+        endpointsService.Test.Delete({
+            hole: "cap",
+            id: 2
+        })
             .call()
             .then(responsePrinter);
     }
