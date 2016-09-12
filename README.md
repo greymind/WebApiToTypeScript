@@ -70,6 +70,7 @@ angular.module('framework').service('AngularEndpointsService', Framework.Endpoin
 ## Team
 * [Balakrishnan (Balki) Ranganathan](https://github.com/greymind)
 * [Augustin Juricic](https://github.com/omittones)
+* Darko Sperac
 
 ## License
 MIT
