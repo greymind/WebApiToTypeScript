@@ -92,8 +92,17 @@ namespace Endpoints {
                 });
             },
         
-            Get: (args?: Endpoints.Thingy.IGet): Endpoints.Thingy.IGetWithCall => {
+            Get: (args: Endpoints.Thingy.IGet): Endpoints.Thingy.IGetWithCall => {
                 var endpoint = new Endpoints.Thingy.Get(args);
+                return _.extendOwn(endpoint, {
+                    call<TView>() {
+                        return AngularEndpointsService.call<TView>(this, null);
+                    }
+                });
+            },
+        
+            Getty: (args: Endpoints.Thingy.IGetty): Endpoints.Thingy.IGettyWithCall => {
+                var endpoint = new Endpoints.Thingy.Getty(args);
                 return _.extendOwn(endpoint, {
                     call<TView>() {
                         return AngularEndpointsService.call<TView>(this, null);

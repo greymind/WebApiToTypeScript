@@ -22,7 +22,7 @@ namespace Endpoints {
             hole: string;
         
             constructor(args: IGet) {
-                this.hole = args.hole;
+                this.hole = args != null ? args.hole : null;
             }
         
             toString = (): string => {
@@ -45,8 +45,8 @@ namespace Endpoints {
             hole: string;
         
             constructor(args: IGet1) {
-                this.id = args.id;
-                this.hole = args.hole;
+                this.id = args != null ? args.id : null;
+                this.hole = args != null ? args.hole : null;
             }
         
             private getQueryString = (): string => {
@@ -85,9 +85,9 @@ namespace Endpoints {
             y: Enums.DummyEnum;
         
             constructor(args: IGetSomething) {
-                this.hole = args.hole;
-                this.id = args.id;
-                this.y = args.y;
+                this.hole = args != null ? args.hole : null;
+                this.id = args != null ? args.id : null;
+                this.y = args != null ? args.y : null;
             }
         
             private getQueryString = (): string => {
@@ -126,9 +126,9 @@ namespace Endpoints {
             y: Interfaces.DummyClass;
         
             constructor(args: IGetSomethingElse) {
-                this.id = args.id;
-                this.hole = args.hole;
-                this.y = args.y;
+                this.id = args != null ? args.id : null;
+                this.hole = args != null ? args.hole : null;
+                this.y = args != null ? args.y : null;
             }
         
             private getQueryString = (): string => {
@@ -172,7 +172,7 @@ namespace Endpoints {
             hole: string;
         
             constructor(args: IPost) {
-                this.hole = args.hole;
+                this.hole = args != null ? args.hole : null;
             }
         
             toString = (): string => {
@@ -195,8 +195,8 @@ namespace Endpoints {
             hole: string;
         
             constructor(args: IPut) {
-                this.id = args.id;
-                this.hole = args.hole;
+                this.id = args != null ? args.id : null;
+                this.hole = args != null ? args.hole : null;
             }
         
             toString = (): string => {
@@ -219,8 +219,8 @@ namespace Endpoints {
             hole: string;
         
             constructor(args: IDelete) {
-                this.id = args.id;
-                this.hole = args.hole;
+                this.id = args != null ? args.id : null;
+                this.hole = args != null ? args.hole : null;
             }
         
             private getQueryString = (): string => {
@@ -258,12 +258,12 @@ namespace Endpoints {
             }
         
             toString = (): string => {
-                return `/api/thingy/GetAll`;
+                return `/api/thingy`;
             }
         }
     
         export interface IGet {
-            id?: number;
+            id: number;
             x?: string;
             d?: Interfaces.DummyClass;
         }
@@ -278,18 +278,14 @@ namespace Endpoints {
             x: string;
             d: Interfaces.DummyClass;
         
-            constructor(args?: IGet) {
-                this.id = args.id;
-                this.x = args.x;
-                this.d = args.d;
+            constructor(args: IGet) {
+                this.id = args != null ? args.id : null;
+                this.x = args != null ? args.x : null;
+                this.d = args != null ? args.d : null;
             }
         
             private getQueryString = (): string => {
                 var parameters: string[] = [];
-            
-                if (this.id != null) {
-                    parameters.push(`id=${encodeURIComponent(this.id.toString())}`);
-                }
             
                 if (this.x != null) {
                     parameters.push(`x=${encodeURIComponent(this.x.toString())}`);
@@ -302,6 +298,48 @@ namespace Endpoints {
                             parameters.push(`${key}=${encodeURIComponent(dParams[key].toString())}`);
                         }
                     });
+                }
+            
+                if (parameters.length > 0) {
+                    return '?' + parameters.join('&');
+                }
+            
+                return '';
+            }
+        
+            toString = (): string => {
+                return `/api/thingy/${this.id}` + this.getQueryString();
+            }
+        }
+    
+        export interface IGetty {
+            y: number;
+            x?: string;
+        }
+    
+        export interface IGettyWithCall extends IGetty, IEndpoint {
+            call<TView>(): ng.IPromise<TView>;
+        }
+    
+        export class Getty implements IGetty, IEndpoint {
+            _verb = 'GET';
+            y: number;
+            x: string;
+        
+            constructor(args: IGetty) {
+                this.y = args != null ? args.y : null;
+                this.x = args != null ? args.x : null;
+            }
+        
+            private getQueryString = (): string => {
+                var parameters: string[] = [];
+            
+                if (this.x != null) {
+                    parameters.push(`x=${encodeURIComponent(this.x.toString())}`);
+                }
+            
+                if (this.y != null) {
+                    parameters.push(`y=${encodeURIComponent(this.y.toString())}`);
                 }
             
                 if (parameters.length > 0) {
