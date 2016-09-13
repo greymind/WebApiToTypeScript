@@ -1,4 +1,5 @@
-﻿using WebApiToTypeScript.Block;
+﻿using System.Linq;
+using WebApiToTypeScript.Block;
 using WebApiToTypeScript.WebApi;
 
 namespace WebApiToTypeScript.Endpoints
@@ -45,8 +46,14 @@ namespace WebApiToTypeScript.Endpoints
                     var isLastActionAndVerb = a == actions.Count - 1
                         && v == action.Verbs.Count - 1;
 
-                    var constructorParametersList = action.GetConstructorParametersList();
-                    var constructorParameterNamesList = action.GetConstructorParameterNamesList();
+                    var constructorParameterMappings = action.GetConstructorParameterMappings();
+
+                    var areAllParametersOptional = constructorParameterMappings
+                        .All(m => m.IsOptional);
+
+                    var optionalString = areAllParametersOptional
+                        ? "?"
+                        : string.Empty;
 
                     var callArgumentDefinition = action.GetCallArgumentDefinition(verb);
                     var callArgumentValue = action.GetCallArgumentValue(verb);
@@ -58,7 +65,7 @@ namespace WebApiToTypeScript.Endpoints
                     controllerBlock
                         .AddAndUseBlock
                         (
-                            outer: $"{actionName}: (args: {interfaceFullName}): {interfaceWithCallFullName} =>",
+                            outer: $"{actionName}: (args{optionalString}: {interfaceFullName}): {interfaceWithCallFullName} =>",
                             isFunctionBlock: false,
                             terminationString: !isLastActionAndVerb ? "," : string.Empty
                         )

@@ -103,7 +103,7 @@ namespace WebApiToTypeScript.WebApi
 
         public string GetParameterString(bool withOptionals = true)
         {
-            var isOptional = IsOptional && withOptionals && TypeService.IsParameterOptional(Parameter);
+            var isOptional = withOptionals && IsOptional && TypeService.IsParameterOptional(Parameter);
             var typeScriptType = GetTypeScriptType();
 
             var collectionString = typeScriptType.IsCollection ? "[]" : string.Empty;

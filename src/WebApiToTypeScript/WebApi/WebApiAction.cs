@@ -1,7 +1,6 @@
 ﻿using Mono.Cecil;
 using System.Collections.Generic;
 using System.Linq;
-using WebApiToTypeScript.Interfaces;
 using WebApiToTypeScript.Types;
 
 namespace WebApiToTypeScript.WebApi
@@ -143,7 +142,7 @@ namespace WebApiToTypeScript.WebApi
             var constructorParameterMappings = constructorParameters
                 .Select(routePart => new ConstructorParameterMapping
                 {
-                    IsOptional = TypeService.IsParameterOptional(routePart.Parameter),
+                    IsOptional = routePart.IsOptional && TypeService.IsParameterOptional(routePart.Parameter),
                     TypeMapping = routePart.GetTypeMapping(),
                     Name = routePart.Parameter.Name,
                     StringWithOptionals = routePart.GetParameterString(),
