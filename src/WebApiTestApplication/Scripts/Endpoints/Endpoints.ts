@@ -244,6 +244,24 @@ namespace Endpoints {
     }
 
     export namespace Thingy {
+        export interface IGetAll {
+        }
+    
+        export interface IGetAllWithCall extends IGetAll, IEndpoint {
+            call<TView>(): ng.IPromise<TView>;
+        }
+    
+        export class GetAll implements IGetAll, IEndpoint {
+            _verb = 'GET';
+        
+            constructor(args?: IGetAll) {
+            }
+        
+            toString = (): string => {
+                return `/api/thingy/GetAll`;
+            }
+        }
+    
         export interface IGet {
             id?: number;
             x?: string;

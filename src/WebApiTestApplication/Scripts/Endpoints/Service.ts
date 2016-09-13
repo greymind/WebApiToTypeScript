@@ -83,6 +83,15 @@ namespace Endpoints {
         }
     
         public Thingy = {
+            GetAll: (args?: Endpoints.Thingy.IGetAll): Endpoints.Thingy.IGetAllWithCall => {
+                var endpoint = new Endpoints.Thingy.GetAll(args);
+                return _.extendOwn(endpoint, {
+                    call<TView>() {
+                        return AngularEndpointsService.call<TView>(this, null);
+                    }
+                });
+            },
+        
             Get: (args?: Endpoints.Thingy.IGet): Endpoints.Thingy.IGetWithCall => {
                 var endpoint = new Endpoints.Thingy.Get(args);
                 return _.extendOwn(endpoint, {
