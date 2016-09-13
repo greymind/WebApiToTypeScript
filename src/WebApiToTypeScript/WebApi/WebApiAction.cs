@@ -1,6 +1,6 @@
-﻿using Mono.Cecil;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using Mono.Cecil;
 using WebApiToTypeScript.Interfaces;
 using WebApiToTypeScript.Types;
 
@@ -143,7 +143,7 @@ namespace WebApiToTypeScript.WebApi
             var constructorParameterMappings = constructorParameters
                 .Select(routePart => new ConstructorParameterMapping
                 {
-                    IsOptional = TypeService.IsParameterOptional(routePart.Parameter),
+                    IsOptional = routePart.IsOptional && TypeService.IsParameterOptional(routePart.Parameter),
                     TypeMapping = routePart.GetTypeMapping(),
                     Name = routePart.Parameter.Name,
                     StringWithOptionals = routePart.GetParameterString(),
@@ -184,7 +184,7 @@ namespace WebApiToTypeScript.WebApi
                     isPrimitive = isNullable && typeService.GetPrimitiveTypeScriptType(nullableType) != null;
                 }
 
-                if (isBodyAllowed 
+                if (isBodyAllowed
                     && ((isThereAnythingFromBody && isFromBody)
                         || (!isThereAnythingFromBody && !isFromUri && !isPrimitive)))
                 {
@@ -193,7 +193,8 @@ namespace WebApiToTypeScript.WebApi
                         Name = actionParameter.Name,
                         ParameterName = actionParameter.Name,
                         Parameter = actionParameter,
-                        CustomAttributes = new List<string> { fromBodyAttributeName }
+                        CustomAttributes = new List<string> { fromBodyAttributeName },
+                        IsOptional = false
                     });
                 }
                 else
@@ -202,7 +203,8 @@ namespace WebApiToTypeScript.WebApi
                     {
                         Name = actionParameter.Name,
                         ParameterName = actionParameter.Name,
-                        Parameter = actionParameter
+                        Parameter = actionParameter,
+                        IsOptional = true
                     };
 
                     if (actionParameter.HasCustomAttributes)

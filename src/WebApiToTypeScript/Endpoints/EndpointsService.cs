@@ -151,11 +151,17 @@ namespace WebApiToTypeScript.Endpoints
         private void WriteConstructorToBlock(TypeScriptBlock classBlock, WebApiAction action, WebApiHttpVerb verb)
         {
             var actionName = action.GetActionNameForVerb(verb);
+            var constructorParameterMappings = action.GetConstructorParameterMappings();
+
+            var areAllParametersOptional = constructorParameterMappings
+                .All(m => m.IsOptional);
+
+            var optionalString = areAllParametersOptional
+                ? "?"
+                : string.Empty;
 
             var constructorBlock = classBlock
-                .AddAndUseBlock($"constructor(args: I{actionName})");
-
-            var constructorParameterMappings = action.GetConstructorParameterMappings();
+                .AddAndUseBlock($"constructor(args{optionalString}: I{actionName})");
 
             foreach (var mapping in constructorParameterMappings)
             {

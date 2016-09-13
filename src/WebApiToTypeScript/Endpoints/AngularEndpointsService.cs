@@ -1,4 +1,5 @@
-﻿using WebApiToTypeScript.Block;
+﻿using System.Linq;
+using WebApiToTypeScript.Block;
 using WebApiToTypeScript.WebApi;
 
 namespace WebApiToTypeScript.Endpoints
@@ -36,6 +37,8 @@ namespace WebApiToTypeScript.Endpoints
             {
                 var action = actions[a];
 
+                var constructorParameterMappings = action.GetConstructorParameterMappings();
+
                 for (var v = 0; v < action.Verbs.Count; v++)
                 {
                     var verb = action.Verbs[v];
@@ -55,10 +58,17 @@ namespace WebApiToTypeScript.Endpoints
                     var interfaceWithCallFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.I{actionName}WithCall";
                     var endpointFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.{actionName}";
 
+                    var areAllParametersOptional = constructorParameterMappings
+                        .All(m => m.IsOptional);
+
+                    var optionalString = areAllParametersOptional
+                        ? "?"
+                        : string.Empty;
+
                     controllerBlock
                         .AddAndUseBlock
                         (
-                            outer: $"{actionName}: (args: {interfaceFullName}): {interfaceWithCallFullName} =>",
+                            outer: $"{actionName}: (args{optionalString}: {interfaceFullName}): {interfaceWithCallFullName} =>",
                             isFunctionBlock: false,
                             terminationString: !isLastActionAndVerb ? "," : string.Empty
                         )
