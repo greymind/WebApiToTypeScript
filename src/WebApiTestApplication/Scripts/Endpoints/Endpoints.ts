@@ -69,8 +69,8 @@ namespace Endpoints {
         }
     
         export interface IGetSomething {
-            id: number;
             hole: string;
+            id: number;
             y?: Enums.DummyEnum;
         }
     
@@ -80,13 +80,13 @@ namespace Endpoints {
     
         export class GetSomething implements IGetSomething, IEndpoint {
             _verb = 'GET';
-            id: number;
             hole: string;
+            id: number;
             y: Enums.DummyEnum;
         
             constructor(args: IGetSomething) {
-                this.id = args.id;
                 this.hole = args.hole;
+                this.id = args.id;
                 this.y = args.y;
             }
         
@@ -111,8 +111,8 @@ namespace Endpoints {
     
         export interface IGetSomethingElse {
             id: number;
-            y?: Interfaces.DummyClass;
             hole: string;
+            y?: Interfaces.DummyClass;
         }
     
         export interface IGetSomethingElseWithCall extends IGetSomethingElse, IEndpoint {
@@ -122,13 +122,13 @@ namespace Endpoints {
         export class GetSomethingElse implements IGetSomethingElse, IEndpoint {
             _verb = 'GET';
             id: number;
-            y: Interfaces.DummyClass;
             hole: string;
+            y: Interfaces.DummyClass;
         
             constructor(args: IGetSomethingElse) {
                 this.id = args.id;
-                this.y = args.y;
                 this.hole = args.hole;
+                this.y = args.y;
             }
         
             private getQueryString = (): string => {
@@ -239,6 +239,62 @@ namespace Endpoints {
         
             toString = (): string => {
                 return `/api/Test/${this.hole}/actions` + this.getQueryString();
+            }
+        }
+    }
+
+    export namespace Thingy {
+        export interface IGet {
+            id?: number;
+            x?: string;
+            d?: Interfaces.DummyClass;
+        }
+    
+        export interface IGetWithCall extends IGet, IEndpoint {
+            call<TView>(): ng.IPromise<TView>;
+        }
+    
+        export class Get implements IGet, IEndpoint {
+            _verb = 'GET';
+            id: number;
+            x: string;
+            d: Interfaces.DummyClass;
+        
+            constructor(args?: IGet) {
+                this.id = args.id;
+                this.x = args.x;
+                this.d = args.d;
+            }
+        
+            private getQueryString = (): string => {
+                var parameters: string[] = [];
+            
+                if (this.id != null) {
+                    parameters.push(`id=${encodeURIComponent(this.id.toString())}`);
+                }
+            
+                if (this.x != null) {
+                    parameters.push(`x=${encodeURIComponent(this.x.toString())}`);
+                }
+            
+                if (this.d != null) {
+                    var dParams = this.d.getQueryParams();
+                    Object.keys(dParams).forEach((key) => {
+                        if (dParams[key] != null) {
+                            parameters.push(`${key}=${encodeURIComponent(dParams[key].toString())}`);
+                        }
+                    });
+                }
+            
+                if (parameters.length > 0) {
+                    return '?' + parameters.join('&');
+                }
+            
+                return '';
+            }
+        
+            toString = (): string => {
+                return `/api/thingy` + this.getQueryString();
             }
         }
     }

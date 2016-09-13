@@ -81,5 +81,16 @@ namespace Endpoints {
                 });
             }
         }
+    
+        public Thingy = {
+            Get: (args?: Endpoints.Thingy.IGet): Endpoints.Thingy.IGetWithCall => {
+                var endpoint = new Endpoints.Thingy.Get(args);
+                return _.extendOwn(endpoint, {
+                    call<TView>() {
+                        return AngularEndpointsService.call<TView>(this, null);
+                    }
+                });
+            }
+        }
     }
 }
