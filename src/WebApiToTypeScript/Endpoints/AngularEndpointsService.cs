@@ -48,8 +48,12 @@ namespace WebApiToTypeScript.Endpoints
                     var isLastActionAndVerb = a == actions.Count - 1
                         && v == action.Verbs.Count - 1;
 
-                    var constructorParametersList = action.GetConstructorParametersList();
-                    var constructorParameterNamesList = action.GetConstructorParameterNamesList();
+                    var areAllParametersOptional = constructorParameterMappings
+                        .All(m => m.IsOptional);
+
+                    var optionalString = areAllParametersOptional
+                        ? "?"
+                        : string.Empty;
 
                     var callArgumentDefinition = action.GetCallArgumentDefinition(verb);
                     var callArgumentValue = action.GetCallArgumentValue(verb);
@@ -57,13 +61,6 @@ namespace WebApiToTypeScript.Endpoints
                     var interfaceFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.I{actionName}";
                     var interfaceWithCallFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.I{actionName}WithCall";
                     var endpointFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.{actionName}";
-
-                    var areAllParametersOptional = constructorParameterMappings
-                        .All(m => m.IsOptional);
-
-                    var optionalString = areAllParametersOptional
-                        ? "?"
-                        : string.Empty;
 
                     controllerBlock
                         .AddAndUseBlock

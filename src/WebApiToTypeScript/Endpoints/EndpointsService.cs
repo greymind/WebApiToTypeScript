@@ -151,6 +151,7 @@ namespace WebApiToTypeScript.Endpoints
         private void WriteConstructorToBlock(TypeScriptBlock classBlock, WebApiAction action, WebApiHttpVerb verb)
         {
             var actionName = action.GetActionNameForVerb(verb);
+
             var constructorParameterMappings = action.GetConstructorParameterMappings();
 
             var areAllParametersOptional = constructorParameterMappings
@@ -166,7 +167,7 @@ namespace WebApiToTypeScript.Endpoints
             foreach (var mapping in constructorParameterMappings)
             {
                 constructorBlock
-                    .AddStatement($"this.{mapping.Name} = args.{mapping.Name};");
+                    .AddStatement($"this.{mapping.Name} = args != null ? args.{mapping.Name} : null;");
 
                 if (mapping.TypeMapping?.AutoInitialize ?? false)
                 {
