@@ -24,7 +24,7 @@ namespace WebApiToTypeScript.Endpoints
                 .AddAndUseBlock("if (value == null)")
                 .AddStatement("return;")
                 .Parent
-                .AddAndUseBlock($"else if (_.isArray(value))")
+                .AddAndUseBlock($"if (_.isArray(value))")
                 .AddStatement($"var encodedItems = _.map(value, (item) => encodeURIComponent(item.toString()));")
                 .AddStatement($"parameters.push(`${{key}}=${{encodedItems.join(',')}}`);")
                 .Parent
@@ -39,12 +39,7 @@ namespace WebApiToTypeScript.Endpoints
                 .Parent
                 .AddStatement("var params = obj.getQueryParams();")
                 .AddAndUseBlock($"Object.keys(params).forEach((key) =>", isFunctionBlock: true, terminationString: ";")
-                .AddAndUseBlock($"if (isIHaveQueryParams(params[key]))")
-                .AddStatement("addObjectParameter(parameters, params[key]);")
-                .Parent
-                .AddAndUseBlock("else")
                 .AddStatement("addParameter(parameters, key, params[key]);")
-                .Parent
                 .Parent
                 .Parent;
         }
