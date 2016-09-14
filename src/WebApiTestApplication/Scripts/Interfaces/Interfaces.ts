@@ -1,6 +1,9 @@
 namespace Interfaces {
     export class AnotherClass {
-        constructor(public Number?: number, public Name?: string) {
+        Number: number;
+        Name: string;
+    
+        constructor() {
         }
     
         getQueryParams() {
@@ -9,7 +12,11 @@ namespace Interfaces {
     }
 
     export class DummyClass {
-        constructor(public Name?: string, public Date?: string, public C?: AnotherClass) {
+        Name: string;
+        Date: string;
+        C: Interfaces.AnotherClass;
+    
+        constructor() {
         }
     
         getQueryParams() {
