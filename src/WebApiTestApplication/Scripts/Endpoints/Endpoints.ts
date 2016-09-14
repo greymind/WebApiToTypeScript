@@ -17,7 +17,7 @@ namespace Endpoints {
             return;
         }
     
-        else if (_.isArray(value)) {
+        if (_.isArray(value)) {
             var encodedItems = _.map(value, (item) => encodeURIComponent(item.toString()));
             parameters.push(`${key}=${encodedItems.join(',')}`);
         }
@@ -33,12 +33,7 @@ namespace Endpoints {
     
         var params = obj.getQueryParams();
         Object.keys(params).forEach((key) => {
-            if (isIHaveQueryParams(params[key])) {
-                addObjectParameter(parameters, params[key]);
-            }
-            else {
-                addParameter(parameters, key, params[key]);
-            }
+            addParameter(parameters, key, params[key]);
         });
     }
 

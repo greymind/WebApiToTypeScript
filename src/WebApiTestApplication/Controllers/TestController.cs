@@ -57,7 +57,6 @@ namespace WebApiTestApplication.Controllers
     {
         public string Name { get; set; }
         public DateTime Date { get; set; }
-
         public AnotherClass C { get; set; }
     }
 
