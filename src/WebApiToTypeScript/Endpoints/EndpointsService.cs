@@ -16,9 +16,6 @@ namespace WebApiToTypeScript.Endpoints
                 .AddAndUseBlock($"export interface {IHaveQueryParams}")
                 .AddStatement("getQueryParams(): Object")
                 .Parent
-                .AddAndUseBlock("function isIHaveQueryParams(obj: any): obj is IHaveQueryParams")
-                .AddStatement("return !_.isUndefined((<IHaveQueryParams>obj).getQueryParams);")
-                .Parent
 
                 .AddAndUseBlock("function addParameter(parameters: string[], key: string, value: any)")
                 .AddAndUseBlock("if (value == null)")
@@ -33,7 +30,7 @@ namespace WebApiToTypeScript.Endpoints
                 .Parent
                 .Parent
 
-                .AddAndUseBlock("function addObjectParameter(parameters: string[], obj: IHaveQueryParams)")
+                .AddAndUseBlock("function addObjectParameters(parameters: string[], obj: IHaveQueryParams)")
                 .AddAndUseBlock("if (obj == null)")
                 .AddStatement("return;")
                 .Parent
@@ -151,7 +148,7 @@ namespace WebApiToTypeScript.Endpoints
                 else
                 {
                     block
-                        .AddStatement($"addObjectParameter(parameters, this.{argumentName});");
+                        .AddStatement($"addObjectParameters(parameters, this.{argumentName});");
                 }
             }
 
