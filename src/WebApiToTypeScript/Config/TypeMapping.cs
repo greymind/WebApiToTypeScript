@@ -13,5 +13,7 @@
 
         public bool AutoInitialize { get; set; }
             = false;
+
+        public string Match { get; set; }
     }
 }

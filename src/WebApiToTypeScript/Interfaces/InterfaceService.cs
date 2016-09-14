@@ -77,40 +77,18 @@ namespace WebApiToTypeScript.Interfaces
 
                 var things = GetMembers(typeDefinition);
 
-                var constructorParameters = new List<string>();
-
                 foreach (var thing in things)
                 {
                     var thingType = thing.CSharpType.TypeDefinition;
                     var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
 
-                    var primitiveType = TypeService.GetPrimitiveTypeScriptType(thingType.FullName);
-                    if (primitiveType != null)
-                    {
-                        constructorParameters.Add($"{thing.Name}?: {primitiveType}{collectionString}");
-                    }
-                    else
-                    {
-                        if (thingType.IsEnum && Config.GenerateEnums)
-                        {
-                            constructorParameters.Add(
-                                $"{thing.Name}?: {Config.EnumsNamespace}.{thingType.Name}{collectionString}");
-                        }
-                        else if (!thingType.IsPrimitive)
-                        {
-                            constructorParameters.Add($"{thing.Name}?: {thingType.Name}{collectionString}");
-                        }
-                    }
+                    var typeScriptType = TypeService.GetTypeScriptType(thingType, thing.Name);
+                    interfaceBlock
+                        .AddStatement($"{thing.Name}: {typeScriptType.TypeName}{collectionString};");
                 }
 
-                var constructorParameterStrings = constructorParameters
-                    .Select(p => $"public {p}");
-
-                var constructorParametersList =
-                    string.Join(", ", constructorParameterStrings);
-
                 var constructorBlock = interfaceBlock
-                    .AddAndUseBlock($"constructor({constructorParametersList})");
+                    .AddAndUseBlock("constructor()");
 
                 if (hasBaseClass)
                     constructorBlock.AddStatement("super();");

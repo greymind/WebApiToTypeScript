@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Mono.Cecil;
+using System.Collections.Generic;
 using System.Linq;
-using Mono.Cecil;
 using WebApiToTypeScript.Types;
 
 namespace WebApiToTypeScript.WebApi

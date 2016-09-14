@@ -3,10 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
+using WebApiToTypeScript.Config;
 
 namespace WebApiToTypeScript.Types
 {
-    public class TypeService
+    public class TypeService : ServiceAware
     {
         private Dictionary<string, List<Type>> PrimitiveTypesMapping { get; }
             = new Dictionary<string, List<Type>>();
@@ -25,7 +27,7 @@ namespace WebApiToTypeScript.Types
 
             mapping["string"] = new List<Type> { typeof(string), typeof(System.Guid), typeof(DateTime) };
             mapping["boolean"] = new List<Type> { typeof(bool) };
-            mapping["number"] = new List<Type> { typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
+            mapping["number"] = new List<Type> { typeof(byte), typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
         }
 
         public void LoadAllTypes(string webApiModuleFilePath)
@@ -119,17 +121,117 @@ namespace WebApiToTypeScript.Types
             return result;
         }
 
-        public string GetPrimitiveTypeScriptType(string typeName)
+        public TypeScriptType GetTypeScriptType(TypeReference cSharpType, string parameterName)
+        {
+            return GetTypeScriptType(cSharpType, parameterName, GetTypeMapping);
+        }
+
+        public TypeScriptType GetTypeScriptType(TypeReference cSharpType, string parameterName, Func<string, string, TypeMapping> getTypeMapping)
+        {
+            var result = new TypeScriptType();
+
+            var type = cSharpType;
+            var typeName = type.FullName;
+
+            var typeMapping = getTypeMapping(parameterName, cSharpType.FullName);
+
+            if (typeMapping != null)
+            {
+                var tsTypeName = typeMapping.TypeScriptTypeName;
+                result.TypeName = tsTypeName;
+                result.IsPrimitive = TypeService.IsPrimitiveTypeScriptType(result.TypeName);
+                result.IsEnum = tsTypeName.StartsWith($"{Config.EnumsNamespace}")
+                    || result.IsPrimitive;
+
+                return result;
+            }
+
+            typeName = TypeService.StripNullable(type) ?? typeName;
+
+            var collectionType = TypeService.StripCollection(type);
+            result.IsCollection = collectionType != null;
+            typeName = collectionType ?? typeName;
+
+            var typeDefinition = TypeService.GetTypeDefinition(typeName);
+
+            if (typeDefinition?.IsEnum ?? false)
+            {
+                if (!Config.GenerateEnums)
+                {
+                    result.TypeName = "number";
+                    result.IsPrimitive = true;
+                }
+                else
+                {
+                    EnumsService.AddEnum(typeDefinition);
+
+                    result.TypeName = $"{Config.EnumsNamespace}.{typeDefinition.Name}";
+                    result.IsPrimitive = false;
+                }
+
+                result.IsEnum = true;
+                return result;
+            }
+
+            var primitiveType = TypeService.GetPrimitiveTypeScriptType(typeName);
+
+            if (!string.IsNullOrEmpty(primitiveType))
+            {
+                result.TypeName = primitiveType;
+                result.IsPrimitive = true;
+
+                return result;
+            }
+
+            if (!typeDefinition?.IsValueType ?? false)
+            {
+                if (!Config.GenerateInterfaces)
+                {
+                    result.TypeName = $"{WebApiToTypeScript.IHaveQueryParams}";
+                }
+                else
+                {
+                    InterfaceService.AddInterfaceNode(typeDefinition);
+
+                    result.TypeName = $"{Config.InterfacesNamespace}.{typeDefinition.Name}";
+                }
+
+                return result;
+            }
+
+            throw new NotSupportedException("Maybe it is a generic class, or a yet unsupported collection, or chain thereof?");
+        }
+
+        private TypeMapping GetTypeMapping(string parameterName, string typeFullName)
+        {
+            var typeMapping = Config.TypeMappings
+                .FirstOrDefault(t => MatchTypeMapping(parameterName, typeFullName, t));
+
+            return typeMapping;
+        }
+
+        private bool MatchTypeMapping(string parameterName, string typeFullName, TypeMapping typeMapping)
+        {
+            var doesTypeNameMatch = typeFullName.StartsWith(typeMapping.WebApiTypeName);;
+
+            var matchExists = !string.IsNullOrEmpty(typeMapping.Match);
+            var doesPatternMatch = matchExists && new Regex(typeMapping.Match).IsMatch(parameterName);
+
+            return (doesTypeNameMatch && !matchExists)
+                || (doesTypeNameMatch && doesPatternMatch);
+        }
+
+        public string GetPrimitiveTypeScriptType(string typeFullName)
         {
             return PrimitiveTypesMapping
-                .Select(m => m.Value.Any(t => t.FullName == typeName) ? m.Key : string.Empty)
+                .Select(m => m.Value.Any(t => t.FullName == typeFullName) ? m.Key : string.Empty)
                 .SingleOrDefault(name => !string.IsNullOrEmpty(name));
         }
 
-        public bool IsPrimitiveTypeScriptType(string typeName)
+        public bool IsPrimitiveTypeScriptType(string typeScriptTypeName)
         {
             return PrimitiveTypesMapping.Keys
-                .Contains(typeName);
+                .Contains(typeScriptTypeName);
         }
 
         public string StripNullable(TypeReference type)
