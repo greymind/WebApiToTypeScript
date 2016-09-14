@@ -17,6 +17,7 @@ class TestController {
         var c = new Interfaces.AnotherClass();
         c.Name = "bappy";
         c.Number = 25;
+        c.List = ["balki", "monkey"];
 
         testObject.C = c;
 
@@ -71,6 +72,14 @@ class TestController {
         endpointsService.Test.Delete({
             hole: "cap",
             id: 2
+        })
+            .call()
+            .then(responsePrinter);
+
+        endpointsService.Thingy.Get({
+            id: 1,
+            x: "blah",
+            c: c
         })
             .call()
             .then(responsePrinter);

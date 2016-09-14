@@ -63,8 +63,9 @@ namespace WebApiTestApplication.Controllers
 
     public class AnotherClass
     {
-        public int Number;
-        public string Name;
+        public int Number { get; set; }
+        public string Name { get; set; }
+        public string[] List { get; set; }
     }
 
     [RoutePrefix("api/Test/{hole}/actions")]
@@ -107,7 +108,7 @@ namespace WebApiTestApplication.Controllers
 
         [HttpPost]
         [Route("")]
-        public string Post(string hole, [FromBody]DummyClass value)
+        public string Post(string hole, DummyClass value)
         {
             var valueJson = JsonConvert.SerializeObject(value);
             return $"thanks for the {valueJson} in the {hole}";

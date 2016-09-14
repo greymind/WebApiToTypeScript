@@ -8,6 +8,40 @@ namespace Endpoints {
         getQueryParams(): Object
     }
 
+    function isIHaveQueryParams(obj: any): obj is IHaveQueryParams {
+        return !_.isUndefined((<IHaveQueryParams>obj).getQueryParams);
+    }
+
+    function addParameter(parameters: string[], key: string, value: any) {
+        if (value == null) {
+            return;
+        }
+    
+        else if (_.isArray(value)) {
+            var encodedItems = _.map(value, (item) => encodeURIComponent(item.toString()));
+            parameters.push(`${key}=${encodedItems.join(',')}`);
+        }
+        else {
+            parameters.push(`${key}=${encodeURIComponent(value.toString())}`);
+        }
+    }
+
+    function addObjectParameter(parameters: string[], obj: IHaveQueryParams) {
+        if (obj == null) {
+            return;
+        }
+    
+        var params = obj.getQueryParams();
+        Object.keys(params).forEach((key) => {
+            if (isIHaveQueryParams(params[key])) {
+                addObjectParameter(parameters, params[key]);
+            }
+            else {
+                addParameter(parameters, key, params[key]);
+            }
+        });
+    }
+
     export namespace Test {
         export interface IGet {
             hole: string;
@@ -51,10 +85,7 @@ namespace Endpoints {
         
             private getQueryString = (): string => {
                 var parameters: string[] = [];
-            
-                if (this.id != null) {
-                    parameters.push(`id=${encodeURIComponent(this.id.toString())}`);
-                }
+                addParameter(parameters, 'id', this.id);
             
                 if (parameters.length > 0) {
                     return '?' + parameters.join('&');
@@ -92,10 +123,7 @@ namespace Endpoints {
         
             private getQueryString = (): string => {
                 var parameters: string[] = [];
-            
-                if (this.y != null) {
-                    parameters.push(`y=${encodeURIComponent(this.y.toString())}`);
-                }
+                addParameter(parameters, 'y', this.y);
             
                 if (parameters.length > 0) {
                     return '?' + parameters.join('&');
@@ -133,19 +161,8 @@ namespace Endpoints {
         
             private getQueryString = (): string => {
                 var parameters: string[] = [];
-            
-                if (this.id != null) {
-                    parameters.push(`id=${encodeURIComponent(this.id.toString())}`);
-                }
-            
-                if (this.y != null) {
-                    var yParams = this.y.getQueryParams();
-                    Object.keys(yParams).forEach((key) => {
-                        if (yParams[key] != null) {
-                            parameters.push(`${key}=${encodeURIComponent(yParams[key].toString())}`);
-                        }
-                    });
-                }
+                addParameter(parameters, 'id', this.id);
+                addObjectParameter(parameters, this.y);
             
                 if (parameters.length > 0) {
                     return '?' + parameters.join('&');
@@ -225,10 +242,7 @@ namespace Endpoints {
         
             private getQueryString = (): string => {
                 var parameters: string[] = [];
-            
-                if (this.id != null) {
-                    parameters.push(`id=${encodeURIComponent(this.id.toString())}`);
-                }
+                addParameter(parameters, 'id', this.id);
             
                 if (parameters.length > 0) {
                     return '?' + parameters.join('&');
@@ -265,7 +279,7 @@ namespace Endpoints {
         export interface IGet {
             id: number;
             x?: string;
-            d?: Interfaces.DummyClass;
+            c?: Interfaces.AnotherClass;
         }
     
         export interface IGetWithCall extends IGet, IEndpoint {
@@ -276,29 +290,18 @@ namespace Endpoints {
             _verb = 'GET';
             id: number;
             x: string;
-            d: Interfaces.DummyClass;
+            c: Interfaces.AnotherClass;
         
             constructor(args: IGet) {
                 this.id = args != null ? args.id : null;
                 this.x = args != null ? args.x : null;
-                this.d = args != null ? args.d : null;
+                this.c = args != null ? args.c : null;
             }
         
             private getQueryString = (): string => {
                 var parameters: string[] = [];
-            
-                if (this.x != null) {
-                    parameters.push(`x=${encodeURIComponent(this.x.toString())}`);
-                }
-            
-                if (this.d != null) {
-                    var dParams = this.d.getQueryParams();
-                    Object.keys(dParams).forEach((key) => {
-                        if (dParams[key] != null) {
-                            parameters.push(`${key}=${encodeURIComponent(dParams[key].toString())}`);
-                        }
-                    });
-                }
+                addParameter(parameters, 'x', this.x);
+                addObjectParameter(parameters, this.c);
             
                 if (parameters.length > 0) {
                     return '?' + parameters.join('&');
@@ -333,14 +336,8 @@ namespace Endpoints {
         
             private getQueryString = (): string => {
                 var parameters: string[] = [];
-            
-                if (this.x != null) {
-                    parameters.push(`x=${encodeURIComponent(this.x.toString())}`);
-                }
-            
-                if (this.y != null) {
-                    parameters.push(`y=${encodeURIComponent(this.y.toString())}`);
-                }
+                addParameter(parameters, 'x', this.x);
+                addParameter(parameters, 'y', this.y);
             
                 if (parameters.length > 0) {
                     return '?' + parameters.join('&');

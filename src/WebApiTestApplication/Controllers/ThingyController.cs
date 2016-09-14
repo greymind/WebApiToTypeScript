@@ -1,4 +1,5 @@
 ﻿using System.Web.Http;
+using Newtonsoft.Json;
 
 namespace WebApiTestApplication.Controllers
 {
@@ -14,9 +15,10 @@ namespace WebApiTestApplication.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public string Get(int? id, string x, DummyClass d)
+        public string Get(int? id, string x, [FromUri]AnotherClass c)
         {
-            return $"value {id}";
+            var valueJson = JsonConvert.SerializeObject(c);
+            return $"value {id} {x} {valueJson}";
         }
 
         [HttpGet]

@@ -2,6 +2,7 @@ namespace Interfaces {
     export class AnotherClass {
         Number: number;
         Name: string;
+        List: string[];
     
         constructor() {
         }
