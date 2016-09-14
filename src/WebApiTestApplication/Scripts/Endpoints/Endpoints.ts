@@ -8,10 +8,6 @@ namespace Endpoints {
         getQueryParams(): Object
     }
 
-    function isIHaveQueryParams(obj: any): obj is IHaveQueryParams {
-        return !_.isUndefined((<IHaveQueryParams>obj).getQueryParams);
-    }
-
     function addParameter(parameters: string[], key: string, value: any) {
         if (value == null) {
             return;
@@ -26,7 +22,7 @@ namespace Endpoints {
         }
     }
 
-    function addObjectParameter(parameters: string[], obj: IHaveQueryParams) {
+    function addObjectParameters(parameters: string[], obj: IHaveQueryParams) {
         if (obj == null) {
             return;
         }
@@ -157,7 +153,7 @@ namespace Endpoints {
             private getQueryString = (): string => {
                 var parameters: string[] = [];
                 addParameter(parameters, 'id', this.id);
-                addObjectParameter(parameters, this.y);
+                addObjectParameters(parameters, this.y);
             
                 if (parameters.length > 0) {
                     return '?' + parameters.join('&');
@@ -296,7 +292,7 @@ namespace Endpoints {
             private getQueryString = (): string => {
                 var parameters: string[] = [];
                 addParameter(parameters, 'x', this.x);
-                addObjectParameter(parameters, this.c);
+                addObjectParameters(parameters, this.c);
             
                 if (parameters.length > 0) {
                     return '?' + parameters.join('&');
