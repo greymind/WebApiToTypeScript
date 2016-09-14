@@ -15,6 +15,37 @@ namespace WebApiToTypeScript.Endpoints
                 .Parent
                 .AddAndUseBlock($"export interface {IHaveQueryParams}")
                 .AddStatement("getQueryParams(): Object")
+                .Parent
+                .AddAndUseBlock("function isIHaveQueryParams(obj: any): obj is IHaveQueryParams")
+                .AddStatement("return !_.isUndefined((<IHaveQueryParams>obj).getQueryParams);")
+                .Parent
+
+                .AddAndUseBlock("function addParameter(parameters: string[], key: string, value: any)")
+                .AddAndUseBlock("if (value == null)")
+                .AddStatement("return;")
+                .Parent
+                .AddAndUseBlock($"else if (_.isArray(value))")
+                .AddStatement($"var encodedItems = _.map(value, (item) => encodeURIComponent(item.toString()));")
+                .AddStatement($"parameters.push(`${{key}}=${{encodedItems.join(',')}}`);")
+                .Parent
+                .AddAndUseBlock("else")
+                .AddStatement($"parameters.push(`${{key}}=${{encodeURIComponent(value.toString())}}`);")
+                .Parent
+                .Parent
+
+                .AddAndUseBlock("function addObjectParameter(parameters: string[], obj: IHaveQueryParams)")
+                .AddAndUseBlock("if (obj == null)")
+                .AddStatement("return;")
+                .Parent
+                .AddStatement("var params = obj.getQueryParams();")
+                .AddAndUseBlock($"Object.keys(params).forEach((key) =>", isFunctionBlock: true, terminationString: ";")
+                .AddAndUseBlock($"if (isIHaveQueryParams(params[key]))")
+                .AddStatement("addObjectParameter(parameters, params[key]);")
+                .Parent
+                .AddAndUseBlock("else")
+                .AddStatement("addParameter(parameters, key, params[key]);")
+                .Parent
+                .Parent
                 .Parent;
         }
 
@@ -113,31 +144,19 @@ namespace WebApiToTypeScript.Endpoints
             {
                 var argumentName = routePart.Name;
 
-                var block = queryStringBlock
-                    .AddAndUseBlock($"if (this.{argumentName} != null)");
+                var block = queryStringBlock;
 
                 var argumentType = routePart.GetTypeScriptType();
 
                 if (argumentType.IsPrimitive || argumentType.IsEnum)
                 {
-                    if (argumentType.IsCollection)
-                    {
-                        block
-                            .AddStatement($"parameters.push(`{argumentName}=${{this.{argumentName}.join(',')}}`);");
-                    }
-                    else
-                    {
-                        block
-                            .AddStatement($"parameters.push(`{argumentName}=${{encodeURIComponent(this.{argumentName}.toString())}}`);");
-                    }
+                    block
+                        .AddStatement($"addParameter(parameters, '{argumentName}', this.{argumentName});");
                 }
                 else
                 {
                     block
-                        .AddStatement($"var {argumentName}Params = this.{argumentName}.getQueryParams();")
-                        .AddAndUseBlock($"Object.keys({argumentName}Params).forEach((key) =>", isFunctionBlock: true, terminationString: ";")
-                        .AddAndUseBlock($"if ({argumentName}Params[key] != null)")
-                        .AddStatement($"parameters.push(`${{key}}=${{encodeURIComponent({argumentName}Params[key].toString())}}`);");
+                        .AddStatement($"addObjectParameter(parameters, this.{argumentName});");
                 }
             }
 
