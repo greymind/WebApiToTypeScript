@@ -121,8 +121,12 @@ namespace WebApiToTypeScript.Interfaces
 
                     var typeScriptType = TypeService.GetTypeScriptType(thingType, thing.Name);
 
+                    var thingName = Config.InterfaceMembersInCamelCase
+                        ? Helpers.ToCamelCaseFromPascalCase(thing.Name)
+                        : thing.Name;
+
                     interfaceBlock
-                        .AddStatement($"{thing.Name}: {typeScriptType.TypeName}{collectionString};");
+                        .AddStatement($"{thingName}: {typeScriptType.TypeName}{collectionString};");
                 }
 
                 if (hasBaseClass)

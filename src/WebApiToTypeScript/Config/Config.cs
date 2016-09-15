@@ -54,6 +54,9 @@ namespace WebApiToTypeScript.Config
         public string InterfacesNamespace { get; set; }
             = "Interfaces";
 
+        public bool InterfaceMembersInCamelCase { get; set; }
+            = true;
+
         public List<InterfaceMatch> InterfaceMatches { get; set; }
             = new List<InterfaceMatch>();
 
