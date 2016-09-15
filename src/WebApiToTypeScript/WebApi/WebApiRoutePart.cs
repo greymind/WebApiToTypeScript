@@ -64,7 +64,7 @@ namespace WebApiToTypeScript.WebApi
                 && Helpers.HasCustomAttribute(Parameter, $"{typeMapping.WebApiTypeName}Attribute");
 
             var doesConstraintMatch = typeMapping.TreatAsConstraint
-                && Constraints.Any(c => c == Helpers.ToCamelCase(typeMapping.WebApiTypeName));
+                && Constraints.Any(c => c == Helpers.ToCamelCaseFromPascalCase(typeMapping.WebApiTypeName));
 
             var typeMatches = doesTypeNameMatch || doesAttributeMatch || doesConstraintMatch;
 

@@ -14,7 +14,10 @@ namespace WebApiToTypeScript
 
         public static string ToCamelCaseFromPascalCase(string inPascalCase)
         {
-            return $"{inPascalCase[0].ToString().ToLower()}{inPascalCase.Substring(1)}";
+            if (!string.IsNullOrEmpty(inPascalCase))
+                return $"{inPascalCase.First().ToString().ToLower()}{inPascalCase.Substring(1)}";
+            else
+                return inPascalCase;
         }
 
         public static string GetBaseEndpoint(List<WebApiRoutePart> routeParts)
@@ -58,14 +61,6 @@ namespace WebApiToTypeScript
         {
             return parameter.HasCustomAttributes
                 && parameter.CustomAttributes.Any(a => a.AttributeType.Name == attributeName);
-        }
-
-        public static string ToCamelCase(string value)
-        {
-            if (!string.IsNullOrEmpty(value))
-                return $"{value.First().ToString().ToLower()}{value.Substring(1)}";
-            else
-                return value;
         }
     }
 }
