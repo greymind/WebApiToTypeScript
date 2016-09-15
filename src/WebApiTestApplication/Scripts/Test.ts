@@ -3,12 +3,12 @@ function responsePrinter(response) {
 }
 
 var testObject = new Interfaces.DummyClass();
-testObject.Name = "cappy";
-testObject.Date = new Date().toJSON();
+testObject.name = "cappy";
+testObject.date = new Date().toJSON();
 var c = new Interfaces.AnotherClass();
-c.Name = "bappy";
-c.Number = 25;
-testObject.C = c;
+c.name = "bappy";
+c.number = 25;
+testObject.c = c;
 
 new Endpoints.Test.Get({
     hole: "cap"

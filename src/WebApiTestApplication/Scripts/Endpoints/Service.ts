@@ -57,7 +57,7 @@ namespace Endpoints {
             Post: (args: Endpoints.Test.IPost): Endpoints.Test.IPostWithCall => {
                 var endpoint = new Endpoints.Test.Post(args);
                 return _.extendOwn(endpoint, {
-                    call<TView>(value: Interfaces.DummyClass) {
+                    call<TView>(value: Interfaces.IDummyClass) {
                         return AngularEndpointsService.call<TView>(this, value != null ? value : null);
                     }
                 });
@@ -106,6 +106,15 @@ namespace Endpoints {
                 return _.extendOwn(endpoint, {
                     call<TView>() {
                         return AngularEndpointsService.call<TView>(this, null);
+                    }
+                });
+            },
+        
+            Post: (args?: Endpoints.Thingy.IPost): Endpoints.Thingy.IPostWithCall => {
+                var endpoint = new Endpoints.Thingy.Post(args);
+                return _.extendOwn(endpoint, {
+                    call<TView>(value: Interfaces.IMegaClass) {
+                        return AngularEndpointsService.call<TView>(this, value != null ? value : null);
                     }
                 });
             }

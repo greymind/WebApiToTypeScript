@@ -1,10 +1,29 @@
 namespace Interfaces {
-    export class AnotherClass {
-        Number: number;
-        Name: string;
-        List: string[];
+    export interface IAnotherClass {
+        number?: number;
+        name?: string;
+        list?: string[];
+    }
+
+    export class AnotherClass implements IAnotherClass, Endpoints.IHaveQueryParams {
+        number: number;
+        name: string;
+        list: string[];
+    
+        getQueryParams() {
+            return this;
+        }
+    }
+
+    export interface IMegaClass extends IAnotherClass {
+        something?: number;
+    }
+
+    export class MegaClass extends AnotherClass implements IMegaClass, Endpoints.IHaveQueryParams {
+        something: number;
     
         constructor() {
+            super();
         }
     
         getQueryParams() {
@@ -12,13 +31,16 @@ namespace Interfaces {
         }
     }
 
-    export class DummyClass {
-        Name: string;
-        Date: string;
-        C: Interfaces.AnotherClass;
-    
-        constructor() {
-        }
+    export interface IDummyClass {
+        name?: string;
+        date?: string;
+        c?: Interfaces.IAnotherClass;
+    }
+
+    export class DummyClass implements IDummyClass, Endpoints.IHaveQueryParams {
+        name: string;
+        date: string;
+        c: Interfaces.AnotherClass;
     
         getQueryParams() {
             return this;

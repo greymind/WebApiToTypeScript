@@ -10,16 +10,19 @@ class TestController {
             console.log(data);
         }
 
-        var testObject = new Interfaces.DummyClass();
-        testObject.Name = "cappy";
-        testObject.Date = new Date().toJSON();
+        var dummyClass = new Interfaces.DummyClass();
+        dummyClass.name = "cappy";
+        dummyClass.date = new Date().toJSON();
 
-        var c = new Interfaces.AnotherClass();
-        c.Name = "bappy";
-        c.Number = 25;
-        c.List = ["balki", "monkey"];
+        var anotherClass = new Interfaces.AnotherClass();
+        anotherClass.name = "bappy";
+        anotherClass.number = 25;
+        anotherClass.list = ["balki", "monkey"];
 
-        testObject.C = c;
+        dummyClass.c = anotherClass;
+
+        var megaClass: Interfaces.MegaClass = _.extend(new Interfaces.MegaClass(), anotherClass);
+        megaClass.something = 7;
 
         endpointsService.Test.Get({
             hole: "cap"
@@ -45,7 +48,7 @@ class TestController {
         endpointsService.Test.GetSomethingElse({
             hole: "cap",
             id: 3,
-            y: testObject
+            y: dummyClass
         })
             .call()
             .then(responsePrinter);
@@ -59,7 +62,7 @@ class TestController {
         endpointsService.Test.Post({
             hole: "cap"
         })
-            .call(testObject)
+            .call(dummyClass)
             .then(responsePrinter);
 
         endpointsService.Test.Put({
@@ -79,9 +82,16 @@ class TestController {
         endpointsService.Thingy.Get({
             id: 1,
             x: "blah",
-            c: c
+            c: megaClass
         })
             .call()
+            .then(responsePrinter);
+
+        endpointsService.Thingy.Post()
+            .call({
+                something: 7,
+                number: 1
+            })
             .then(responsePrinter);
     }
 }

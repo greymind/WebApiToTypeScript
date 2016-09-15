@@ -172,7 +172,7 @@ namespace Endpoints {
         }
     
         export interface IPostWithCall extends IPost, IEndpoint {
-            call<TView>(value: Interfaces.DummyClass): ng.IPromise<TView>;
+            call<TView>(value: Interfaces.IDummyClass): ng.IPromise<TView>;
         }
     
         export class Post implements IPost, IEndpoint {
@@ -270,7 +270,7 @@ namespace Endpoints {
         export interface IGet {
             id: number;
             x?: string;
-            c?: Interfaces.AnotherClass;
+            c?: Interfaces.MegaClass;
         }
     
         export interface IGetWithCall extends IGet, IEndpoint {
@@ -281,7 +281,7 @@ namespace Endpoints {
             _verb = 'GET';
             id: number;
             x: string;
-            c: Interfaces.AnotherClass;
+            c: Interfaces.MegaClass;
         
             constructor(args: IGet) {
                 this.id = args != null ? args.id : null;
@@ -339,6 +339,24 @@ namespace Endpoints {
         
             toString = (): string => {
                 return `/api/thingy` + this.getQueryString();
+            }
+        }
+    
+        export interface IPost {
+        }
+    
+        export interface IPostWithCall extends IPost, IEndpoint {
+            call<TView>(value: Interfaces.IMegaClass): ng.IPromise<TView>;
+        }
+    
+        export class Post implements IPost, IEndpoint {
+            _verb = 'POST';
+        
+            constructor(args?: IPost) {
+            }
+        
+            toString = (): string => {
+                return `/api/thingy`;
             }
         }
     }
