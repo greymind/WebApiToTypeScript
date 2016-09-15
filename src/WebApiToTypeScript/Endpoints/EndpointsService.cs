@@ -99,7 +99,7 @@ namespace WebApiToTypeScript.Endpoints
             var callArguments = action.BodyParameters;
 
             var callArgumentStrings = callArguments
-                .Select(a => a.GetParameterString(false))
+                .Select(a => a.GetParameterString(withOptionals: false, interfaceName: true))
                 .SingleOrDefault();
 
             var callArgumentsList = string.Join(", ", callArgumentStrings);

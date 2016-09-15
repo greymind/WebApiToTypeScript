@@ -1,6 +1,6 @@
-﻿using Mono.Cecil;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using Mono.Cecil;
 using WebApiToTypeScript.Types;
 
 namespace WebApiToTypeScript.WebApi
@@ -92,7 +92,7 @@ namespace WebApiToTypeScript.WebApi
                 return string.Empty;
 
             return BodyParameters
-                .Select(a => a.GetParameterString(false))
+                .Select(a => a.GetParameterString(withOptionals: false, interfaceName: true))
                 .SingleOrDefault();
         }
 

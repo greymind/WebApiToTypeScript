@@ -1,7 +1,7 @@
-﻿using Mono.Cecil;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Mono.Cecil;
 using WebApiToTypeScript.Config;
 using WebApiToTypeScript.Types;
 
@@ -27,14 +27,18 @@ namespace WebApiToTypeScript.WebApi
             return TypeService.GetTypeScriptType(Parameter.ParameterType, ParameterName, GetTypeMapping);
         }
 
-        public string GetParameterString(bool withOptionals = true)
+        public string GetParameterString(bool withOptionals = true, bool interfaceName = false)
         {
             var isOptional = withOptionals && IsOptional && TypeService.IsParameterOptional(Parameter);
             var typeScriptType = GetTypeScriptType();
 
             var collectionString = typeScriptType.IsCollection ? "[]" : string.Empty;
 
-            return $"{Parameter.Name}{(isOptional ? "?" : "")}: {typeScriptType.TypeName}{collectionString}";
+            var typeName = interfaceName
+                ? typeScriptType.InterfaceName
+                : typeScriptType.TypeName;
+
+            return $"{Parameter.Name}{(isOptional ? "?" : "")}: {typeName}{collectionString}";
         }
 
         public TypeMapping GetTypeMapping()

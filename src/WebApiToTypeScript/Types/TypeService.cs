@@ -1,9 +1,9 @@
-﻿using Mono.Cecil;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Mono.Cecil;
 using WebApiToTypeScript.Config;
 
 namespace WebApiToTypeScript.Types
@@ -111,7 +111,10 @@ namespace WebApiToTypeScript.Types
         {
             var result = new CSharpType();
 
+            result.IsValueType = type.IsValueType;
+
             var nullableType = StripNullable(type);
+            result.IsNullable = nullableType != null;
 
             var collectionType = StripCollection(type);
             result.IsCollection = collectionType != null;
@@ -139,6 +142,7 @@ namespace WebApiToTypeScript.Types
             {
                 var tsTypeName = typeMapping.TypeScriptTypeName;
                 result.TypeName = tsTypeName;
+                result.InterfaceName = tsTypeName;
                 result.IsPrimitive = TypeService.IsPrimitiveTypeScriptType(result.TypeName);
                 result.IsEnum = tsTypeName.StartsWith($"{Config.EnumsNamespace}")
                     || result.IsPrimitive;
@@ -159,6 +163,7 @@ namespace WebApiToTypeScript.Types
                 if (!Config.GenerateEnums)
                 {
                     result.TypeName = "number";
+                    result.InterfaceName = "number";
                     result.IsPrimitive = true;
                 }
                 else
@@ -166,6 +171,7 @@ namespace WebApiToTypeScript.Types
                     EnumsService.AddEnum(typeDefinition);
 
                     result.TypeName = $"{Config.EnumsNamespace}.{typeDefinition.Name}";
+                    result.InterfaceName = $"{Config.EnumsNamespace}.{typeDefinition.Name}";
                     result.IsPrimitive = false;
                 }
 
@@ -178,6 +184,7 @@ namespace WebApiToTypeScript.Types
             if (!string.IsNullOrEmpty(primitiveType))
             {
                 result.TypeName = primitiveType;
+                result.InterfaceName = primitiveType;
                 result.IsPrimitive = true;
 
                 return result;
@@ -188,12 +195,14 @@ namespace WebApiToTypeScript.Types
                 if (!Config.GenerateInterfaces)
                 {
                     result.TypeName = $"{WebApiToTypeScript.IHaveQueryParams}";
+                    result.InterfaceName = "any";
                 }
                 else
                 {
                     InterfaceService.AddInterfaceNode(typeDefinition);
 
                     result.TypeName = $"{Config.InterfacesNamespace}.{typeDefinition.Name}";
+                    result.InterfaceName = $"{Config.InterfacesNamespace}.I{typeDefinition.Name}";
                 }
 
                 return result;
@@ -212,7 +221,7 @@ namespace WebApiToTypeScript.Types
 
         private bool MatchTypeMapping(string parameterName, string typeFullName, TypeMapping typeMapping)
         {
-            var doesTypeNameMatch = typeFullName.StartsWith(typeMapping.WebApiTypeName);;
+            var doesTypeNameMatch = typeFullName.StartsWith(typeMapping.WebApiTypeName); ;
 
             var matchExists = !string.IsNullOrEmpty(typeMapping.Match);
             var doesPatternMatch = matchExists && new Regex(typeMapping.Match).IsMatch(parameterName);

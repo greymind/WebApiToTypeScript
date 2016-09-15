@@ -1,8 +1,8 @@
-﻿using Mono.Cecil;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Mono.Cecil;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.Types;
 
@@ -105,12 +105,22 @@ namespace WebApiToTypeScript.Interfaces
             {
                 var hasBaseClass = interfaceNode.BaseInterface?.TypeDefinition != null;
 
-                var extendsString = hasBaseClass
+                var interfaceExtendsString = hasBaseClass
+                    ? $" extends I{interfaceNode.BaseInterface.TypeDefinition.Name}"
+                    : string.Empty;
+
+                var classExtendsString = hasBaseClass
                     ? $" extends {interfaceNode.BaseInterface.TypeDefinition.Name}"
                     : string.Empty;
 
+                var classImplementsString =
+                    $" implements I{typeDefinition.Name}, {Config.EndpointsNamespace}.{nameof(IHaveQueryParams)}";
+
                 var interfaceBlock = interfacesBlock
-                    .AddAndUseBlock($"export class {typeDefinition.Name}{extendsString}");
+                    .AddAndUseBlock($"export interface I{typeDefinition.Name}{interfaceExtendsString}");
+
+                var classBlock = interfacesBlock
+                    .AddAndUseBlock($"export class {typeDefinition.Name}{classExtendsString}{classImplementsString}");
 
                 var things = GetMembers(typeDefinition);
 
@@ -126,17 +136,20 @@ namespace WebApiToTypeScript.Interfaces
                         : thing.Name;
 
                     interfaceBlock
+                        .AddStatement($"{thingName}?: {typeScriptType.InterfaceName}{collectionString};");
+
+                    classBlock
                         .AddStatement($"{thingName}: {typeScriptType.TypeName}{collectionString};");
                 }
 
                 if (hasBaseClass)
                 {
-                    interfaceBlock
+                    classBlock
                        .AddAndUseBlock("constructor()")
                        .AddStatement("super();");
                 }
 
-                interfaceBlock
+                classBlock
                     .AddAndUseBlock("getQueryParams()")
                     .AddStatement("return this;");
             }
