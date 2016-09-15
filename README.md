@@ -1,5 +1,5 @@
 # Web API To TypeScript
-A tool for code generating TypeScript endpoints for your ASP.NET Web API controllers and their actions
+A tool for code generating TypeScript endpoints for your ASP.NET Web API controllers and their actions. No more need for dumb repositories!
 * Generates typed endpoints with required and optional parameters for GET, PUT, POST and DELETE verbs
 * Generates enumerations and interfaces for DTOs used in all controller actions
 * Generates Angular service to expose typed `call()` function to fetch response from server  
