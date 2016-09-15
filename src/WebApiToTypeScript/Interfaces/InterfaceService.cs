@@ -1,6 +1,8 @@
 ﻿using Mono.Cecil;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.Types;
 
@@ -23,8 +25,38 @@ namespace WebApiToTypeScript.Interfaces
             return interfacesBlock;
         }
 
+        public void AddMatchingInterfaces()
+        {
+            foreach (var interfaceMatch in Config.InterfaceMatches)
+            {
+                var matchConfigExists = !string.IsNullOrEmpty(interfaceMatch.Match);
+                var matchRegEx = matchConfigExists ? new Regex(interfaceMatch.Match) : null;
+
+                var baseTypeNameConfigExists = !string.IsNullOrEmpty(interfaceMatch.BaseTypeName);
+                if (baseTypeNameConfigExists)
+                {
+                    var baseType = TypeService.GetTypeDefinition(interfaceMatch.BaseTypeName);
+                    AddInterfaceNode(baseType);
+                }
+
+                foreach (var type in TypeService.Types)
+                {
+                    var isMatch = matchRegEx != null && matchRegEx.IsMatch(type.FullName);
+                    var doesBaseTypeMatch = !baseTypeNameConfigExists
+                        || TypeService.GetBaseTypes(type).Any(t => t.FullName.EndsWith(interfaceMatch.BaseTypeName));
+
+                    if (isMatch && doesBaseTypeMatch)
+                    {
+                        AddInterfaceNode(type);
+                    }
+                }
+            }
+        }
+
         public InterfaceNode AddInterfaceNode(TypeDefinition typeDefinition)
         {
+            Debug.Assert(typeDefinition != null);
+
             var interfaceNode = SearchForInterfaceNode(InterfaceNode, typeDefinition);
 
             if (interfaceNode != null)
@@ -43,8 +75,8 @@ namespace WebApiToTypeScript.Interfaces
             {
                 var thingType = thing.CSharpType.TypeDefinition;
 
-                var primitiveType = TypeService.GetPrimitiveTypeScriptType(thingType.FullName);
-                if (primitiveType != null)
+                var typeMapping = TypeService.GetTypeScriptType(thingType, thing.Name);
+                if (typeMapping != null)
                     continue;
 
                 if (thingType.IsEnum && Config.GenerateEnums)
@@ -83,15 +115,17 @@ namespace WebApiToTypeScript.Interfaces
                     var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
 
                     var typeScriptType = TypeService.GetTypeScriptType(thingType, thing.Name);
+
                     interfaceBlock
                         .AddStatement($"{thing.Name}: {typeScriptType.TypeName}{collectionString};");
                 }
 
-                var constructorBlock = interfaceBlock
-                    .AddAndUseBlock("constructor()");
-
                 if (hasBaseClass)
-                    constructorBlock.AddStatement("super();");
+                {
+                    interfaceBlock
+                       .AddAndUseBlock("constructor()")
+                       .AddStatement("super();");
+                }
 
                 interfaceBlock
                     .AddAndUseBlock("getQueryParams()")

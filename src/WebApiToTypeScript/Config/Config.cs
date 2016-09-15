@@ -6,7 +6,6 @@ namespace WebApiToTypeScript.Config
     {
         public string WebApiModuleFileName { get; set; }
 
-
         public string EndpointsOutputDirectory { get; set; }
             = "Endpoints";
 
@@ -15,7 +14,6 @@ namespace WebApiToTypeScript.Config
 
         public string EndpointsNamespace { get; set; }
             = "Endpoints";
-
 
         public bool GenerateService { get; set; }
             = true;
@@ -32,7 +30,6 @@ namespace WebApiToTypeScript.Config
         public string ServiceName { get; set; }
             = "AngularEndpointsService";
 
-
         public bool GenerateEnums { get; set; }
             = true;
 
@@ -44,7 +41,6 @@ namespace WebApiToTypeScript.Config
 
         public string EnumsNamespace { get; set; }
             = "Enums";
-
 
         public bool GenerateInterfaces { get; set; }
             = true;
@@ -58,6 +54,8 @@ namespace WebApiToTypeScript.Config
         public string InterfacesNamespace { get; set; }
             = "Interfaces";
 
+        public List<InterfaceMatch> InterfaceMatches { get; set; }
+            = new List<InterfaceMatch>();
 
         public bool ScanOtherModules { get; set; }
             = true;

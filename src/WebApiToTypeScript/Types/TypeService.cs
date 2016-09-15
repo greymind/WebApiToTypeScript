@@ -13,7 +13,7 @@ namespace WebApiToTypeScript.Types
         private Dictionary<string, List<Type>> PrimitiveTypesMapping { get; }
             = new Dictionary<string, List<Type>>();
 
-        private List<TypeDefinition> Types { get; }
+        public List<TypeDefinition> Types { get; }
             = new List<TypeDefinition>();
 
         public TypeService()
@@ -89,7 +89,7 @@ namespace WebApiToTypeScript.Types
                 && GetBaseTypes(type).Any(bt => bt.FullName == apiControllerType);
         }
 
-        private IEnumerable<TypeReference> GetBaseTypes(TypeDefinition type)
+        public IEnumerable<TypeReference> GetBaseTypes(TypeDefinition type)
         {
             var baseType = type.BaseType;
             while (baseType != null)

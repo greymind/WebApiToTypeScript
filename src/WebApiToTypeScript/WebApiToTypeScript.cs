@@ -54,6 +54,7 @@ namespace WebApiToTypeScript
 
             if (Config.GenerateInterfaces)
             {
+                InterfaceService.AddMatchingInterfaces();
                 InterfaceService.WriteInterfacesToBlock(interfacesBlock);
 
                 CreateFileForBlock(interfacesBlock, Config.InterfacesOutputDirectory, Config.InterfacesFileName);
