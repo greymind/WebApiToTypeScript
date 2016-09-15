@@ -32,6 +32,9 @@ namespace WebApiToTypeScript.Interfaces
                 var matchConfigExists = !string.IsNullOrEmpty(interfaceMatch.Match);
                 var matchRegEx = matchConfigExists ? new Regex(interfaceMatch.Match) : null;
 
+                var excludeMatchConfigExists = !string.IsNullOrEmpty(interfaceMatch.ExcludeMatch);
+                var excludeMatchRegEx = excludeMatchConfigExists ? new Regex(interfaceMatch.ExcludeMatch) : null;
+
                 var baseTypeNameConfigExists = !string.IsNullOrEmpty(interfaceMatch.BaseTypeName);
                 if (baseTypeNameConfigExists)
                 {
@@ -41,7 +44,9 @@ namespace WebApiToTypeScript.Interfaces
 
                 foreach (var type in TypeService.Types)
                 {
-                    var isMatch = matchRegEx != null && matchRegEx.IsMatch(type.FullName);
+                    var isMatch = matchRegEx != null && matchRegEx.IsMatch(type.FullName)
+                        && (!excludeMatchConfigExists || !excludeMatchRegEx.IsMatch(type.FullName));
+
                     var doesBaseTypeMatch = !baseTypeNameConfigExists
                         || TypeService.GetBaseTypes(type).Any(t => t.FullName.EndsWith(interfaceMatch.BaseTypeName));
 
