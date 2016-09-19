@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Mono.Cecil;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Mono.Cecil;
 using WebApiToTypeScript.Config;
 
 namespace WebApiToTypeScript.Types
@@ -28,6 +28,7 @@ namespace WebApiToTypeScript.Types
             mapping["string"] = new List<Type> { typeof(string), typeof(System.Guid), typeof(DateTime) };
             mapping["boolean"] = new List<Type> { typeof(bool) };
             mapping["number"] = new List<Type> { typeof(byte), typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
+            mapping["any"] = new List<Type> { typeof(object) };
         }
 
         public void LoadAllTypes(string webApiModuleFilePath)
@@ -118,6 +119,9 @@ namespace WebApiToTypeScript.Types
 
             var collectionType = StripCollection(type);
             result.IsCollection = collectionType != null;
+
+            result.IsGenericParameter = type.IsGenericParameter;
+            result.GenericParameterName = type.Name;
 
             result.TypeDefinition = GetTypeDefinition(nullableType ?? collectionType ?? type.FullName);
 
@@ -221,7 +225,7 @@ namespace WebApiToTypeScript.Types
 
         private bool MatchTypeMapping(string parameterName, string typeFullName, TypeMapping typeMapping)
         {
-            var doesTypeNameMatch = typeFullName.StartsWith(typeMapping.WebApiTypeName); ;
+            var doesTypeNameMatch = typeFullName.StartsWith(typeMapping.WebApiTypeName);
 
             var matchExists = !string.IsNullOrEmpty(typeMapping.Match);
             var doesPatternMatch = matchExists && new Regex(typeMapping.Match).IsMatch(parameterName);

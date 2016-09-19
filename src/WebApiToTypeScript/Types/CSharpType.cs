@@ -8,5 +8,7 @@ namespace WebApiToTypeScript.Types
         public bool IsNullable { get; set; }
         public bool IsCollection { get; set; }
         public bool IsValueType { get; set; }
+        public bool IsGenericParameter { get; set; }
+        public string GenericParameterName { get; set; }
     }
 }
