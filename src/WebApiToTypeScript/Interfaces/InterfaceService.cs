@@ -1,8 +1,8 @@
-﻿using Mono.Cecil;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Mono.Cecil;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.Types;
 
@@ -139,7 +139,9 @@ namespace WebApiToTypeScript.Interfaces
                     {
                         var baseTypeInstance = typeDefinition.BaseType as GenericInstanceType;
                         var genericArguments = baseTypeInstance.GenericArguments
-                            .Select(p => TypeService.GetTypeScriptType(p.GetElementType(), p.Name).TypeName);
+                            .Select(p => p.IsGenericParameter
+                                ? p.Name
+                                : TypeService.GetTypeScriptType(p.GetElementType(), p.Name).TypeName);
 
                         extendsString = WrapInAngledBrackets(string.Join(", ", genericArguments));
                     }
