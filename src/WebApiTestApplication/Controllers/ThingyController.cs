@@ -8,12 +8,13 @@ namespace WebApiTestApplication.Controllers
         public int Something { get; set; }
     }
 
-    public class Chain1<T>
+    public class Chain1<T1, T2>
     {
-        public T Value1 { get; set; }
+        public T1 Value11 { get; set; }
+        public T2 Value12 { get; set; }
     }
 
-    public class Chain2<TValue> : Chain1<TValue>
+    public class Chain2<TValue> : Chain1<TValue, int>
     {
         public TValue Value2 { get; set; }
     }
