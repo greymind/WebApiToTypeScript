@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Mono.Cecil;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Mono.Cecil;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.Types;
 
@@ -67,14 +67,28 @@ namespace WebApiToTypeScript.Interfaces
             if (interfaceNode != null)
                 return interfaceNode;
 
-            var baseClass = typeDefinition.BaseType as TypeDefinition;
-            var isBaseClassNotObject = baseClass != null && baseClass.FullName != "System.Object";
-
             var baseInterfaceNode = InterfaceNode;
-            if (isBaseClassNotObject)
-                baseInterfaceNode = AddInterfaceNode(baseClass);
 
-            var things = GetMembers(typeDefinition);
+            var baseType = typeDefinition.BaseType;
+            if (baseType.IsGenericInstance)
+            {
+                var genericBaseType = baseType as GenericInstanceType;
+                var elementType = genericBaseType?.ElementType as TypeDefinition;
+
+                if (elementType != null && elementType != typeDefinition)
+                    baseInterfaceNode = AddInterfaceNode(elementType);
+            }
+            else
+            {
+                var baseClass = typeDefinition.BaseType as TypeDefinition;
+                var isBaseClassNotObject = baseClass != null && baseClass.FullName != "System.Object";
+
+                if (isBaseClassNotObject)
+                    baseInterfaceNode = AddInterfaceNode(baseClass);
+            }
+
+            var things = GetMembers(typeDefinition)
+                .Where(m => !m.CSharpType.IsGenericParameter);
 
             foreach (var thing in things)
             {
@@ -103,43 +117,97 @@ namespace WebApiToTypeScript.Interfaces
 
             if (typeDefinition != null)
             {
+                string implementsString = null;
+                string extendsString = null;
+
+                var iHaveGenericParameters = typeDefinition.HasGenericParameters;
+                if (iHaveGenericParameters)
+                {
+                    var genericParameters = typeDefinition.GenericParameters
+                        .Select(p => p.Name);
+
+                    implementsString = WrapInAngledBrackets(string.Join(", ", genericParameters));
+                }
+
                 var hasBaseClass = interfaceNode.BaseInterface?.TypeDefinition != null;
+                var baseTypeName = CleanName(interfaceNode.BaseInterface?.TypeDefinition?.Name);
+
+                if (hasBaseClass)
+                {
+                    var iHaveGenericArguments = typeDefinition.BaseType.IsGenericInstance;
+                    if (iHaveGenericArguments)
+                    {
+                        var baseTypeInstance = typeDefinition.BaseType as GenericInstanceType;
+                        var genericArguments = baseTypeInstance.GenericArguments
+                            .Select(p => TypeService.GetTypeScriptType(p.GetElementType(), p.Name).TypeName);
+
+                        extendsString = WrapInAngledBrackets(string.Join(", ", genericArguments));
+                    }
+
+                    var baseTypeHasGenericParameters = typeDefinition.BaseType.HasGenericParameters;
+                    if (baseTypeHasGenericParameters)
+                    {
+                        var genericParameters = typeDefinition.BaseType.GenericParameters
+                            .Select(p => p.Name);
+
+                        extendsString = WrapInAngledBrackets(string.Join(", ", genericParameters));
+                    }
+                }
 
                 var interfaceExtendsString = hasBaseClass
-                    ? $" extends I{interfaceNode.BaseInterface.TypeDefinition.Name}"
+                    ? $" extends I{baseTypeName}{extendsString}"
                     : string.Empty;
 
                 var classExtendsString = hasBaseClass
-                    ? $" extends {interfaceNode.BaseInterface.TypeDefinition.Name}"
+                    ? $" extends {baseTypeName}{extendsString}"
                     : string.Empty;
 
+                var blockTypeName = CleanName(typeDefinition.Name);
+
                 var classImplementsString =
-                    $" implements I{typeDefinition.Name}, {Config.EndpointsNamespace}.{nameof(IHaveQueryParams)}";
+                    $" implements I{blockTypeName}{implementsString}, {Config.EndpointsNamespace}.{nameof(IHaveQueryParams)}";
+
+                var parameterOrInstanceString = iHaveGenericParameters
+                    ? implementsString
+                    : string.Empty;
 
                 var interfaceBlock = interfacesBlock
-                    .AddAndUseBlock($"export interface I{typeDefinition.Name}{interfaceExtendsString}");
+                    .AddAndUseBlock($"export interface I{blockTypeName}{parameterOrInstanceString}{interfaceExtendsString}");
 
                 var classBlock = interfacesBlock
-                    .AddAndUseBlock($"export class {typeDefinition.Name}{classExtendsString}{classImplementsString}");
+                    .AddAndUseBlock($"export class {blockTypeName}{parameterOrInstanceString}{classExtendsString}{classImplementsString}");
 
                 var things = GetMembers(typeDefinition);
 
                 foreach (var thing in things)
                 {
-                    var thingType = thing.CSharpType.TypeDefinition;
-                    var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
+                    var interfaceName = string.Empty;
+                    var typeName = string.Empty;
 
-                    var typeScriptType = TypeService.GetTypeScriptType(thingType, thing.Name);
+                    if (thing.CSharpType.IsGenericParameter)
+                    {
+                        typeName = interfaceName = thing.CSharpType.GenericParameterName;
+                    }
+                    else
+                    {
+                        var thingType = thing.CSharpType.TypeDefinition;
+                        var typeScriptType = TypeService.GetTypeScriptType(thingType, thing.Name);
+
+                        interfaceName = typeScriptType.InterfaceName;
+                        typeName = typeScriptType.TypeName;
+                    }
 
                     var thingName = Config.InterfaceMembersInCamelCase
                         ? Helpers.ToCamelCaseFromPascalCase(thing.Name)
                         : thing.Name;
 
+                    var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
+
                     interfaceBlock
-                        .AddStatement($"{thingName}?: {typeScriptType.InterfaceName}{collectionString};");
+                        .AddStatement($"{thingName}?: {interfaceName}{collectionString};");
 
                     classBlock
-                        .AddStatement($"{thingName}: {typeScriptType.TypeName}{collectionString};");
+                        .AddStatement($"{thingName}: {typeName}{collectionString};");
                 }
 
                 if (hasBaseClass)
@@ -156,6 +224,20 @@ namespace WebApiToTypeScript.Interfaces
 
             foreach (var derivedInterfaceNode in interfaceNode.DerivedInterfaces)
                 WriteInterfaces(interfacesBlock, derivedInterfaceNode);
+        }
+
+        private string CleanName(string dirtyName)
+        {
+            return string.IsNullOrEmpty(dirtyName)
+                ? string.Empty
+                : dirtyName.Replace("`1", "Generic");
+        }
+
+        private string WrapInAngledBrackets(string genericString)
+        {
+            return string.IsNullOrEmpty(genericString)
+                ? string.Empty
+                : $"<{genericString}>";
         }
 
         private List<MemberWithCSharpType> GetMembers(TypeDefinition typeDefinition)
@@ -177,7 +259,7 @@ namespace WebApiToTypeScript.Interfaces
                 });
 
             return fields.Union(properties)
-                .Where(t => t.CSharpType.TypeDefinition != null)
+                .Where(t => t.CSharpType.IsGenericParameter || t.CSharpType.TypeDefinition != null)
                 .ToList();
         }
 
