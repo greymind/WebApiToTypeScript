@@ -10,6 +10,9 @@ namespace WebApiToTypeScript.Interfaces
 {
     public class InterfaceService : ServiceAware
     {
+        private readonly Regex genericNameRegEx
+            = new Regex("(.*)(`(\\d*))");
+
         private InterfaceNode InterfaceNode { get; }
             = new InterfaceNode();
 
@@ -232,7 +235,7 @@ namespace WebApiToTypeScript.Interfaces
         {
             return string.IsNullOrEmpty(dirtyName)
                 ? string.Empty
-                : dirtyName.Replace("`1", "Generic");
+                : genericNameRegEx.Replace(dirtyName, "$1Generic$3");
         }
 
         private string WrapInAngledBrackets(string genericString)
