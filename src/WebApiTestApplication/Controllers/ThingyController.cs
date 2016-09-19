@@ -8,6 +8,21 @@ namespace WebApiTestApplication.Controllers
         public int Something { get; set; }
     }
 
+    public class Chain1<T>
+    {
+        public T Value1 { get; set; }
+    }
+
+    public class Chain2<TValue> : Chain1<TValue>
+    {
+        public TValue Value2 { get; set; }
+    }
+
+    public class Chain3 : Chain2<MegaClass>
+    {
+        public object Value3 { get; set; }
+    }
+
     [RoutePrefix("api/thingy")]
     public class ThingyController : ApiController
     {
