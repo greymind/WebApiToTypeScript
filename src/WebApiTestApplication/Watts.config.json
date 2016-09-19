@@ -21,7 +21,7 @@
     "InterfacesNamespace": "Interfaces",
     "InterfaceMatches": [
         {
-            "Match": ".*Chain3$"
+            "Match": "WebApiTestApplication.Controllers.*Chain.*$"
         }
     ],
 
