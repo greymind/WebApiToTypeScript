@@ -8,6 +8,11 @@ namespace WebApiTestApplication.Controllers
         public int Something { get; set; }
     }
 
+    public class Chain1<T>
+    {
+        public T Value { get; set; }
+    }
+
     public class Chain1<T1, T2>
     {
         public T1 Value11 { get; set; }
