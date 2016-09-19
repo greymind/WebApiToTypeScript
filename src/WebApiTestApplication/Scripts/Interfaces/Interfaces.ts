@@ -46,4 +46,48 @@ namespace Interfaces {
             return this;
         }
     }
+
+    export interface IChain1Generic<T> {
+        value1?: T;
+    }
+
+    export class Chain1Generic<T> implements IChain1Generic<T>, Endpoints.IHaveQueryParams {
+        value1: T;
+    
+        getQueryParams() {
+            return this;
+        }
+    }
+
+    export interface IChain2Generic<TValue> extends IChain1Generic<TValue> {
+        value2?: TValue;
+    }
+
+    export class Chain2Generic<TValue> extends Chain1Generic<TValue> implements IChain2Generic<TValue>, Endpoints.IHaveQueryParams {
+        value2: TValue;
+    
+        constructor() {
+            super();
+        }
+    
+        getQueryParams() {
+            return this;
+        }
+    }
+
+    export interface IChain3 extends IChain2Generic<Interfaces.MegaClass> {
+        value3?: any;
+    }
+
+    export class Chain3 extends Chain2Generic<Interfaces.MegaClass> implements IChain3, Endpoints.IHaveQueryParams {
+        value3: any;
+    
+        constructor() {
+            super();
+        }
+    
+        getQueryParams() {
+            return this;
+        }
+    }
 }
