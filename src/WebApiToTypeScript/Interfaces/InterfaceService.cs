@@ -204,7 +204,7 @@ namespace WebApiToTypeScript.Interfaces
                     var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
 
                     interfaceBlock
-                        .AddStatement($"{thingName}?: {interfaceName}{collectionString};");
+                        .AddStatement($"{thingName}: {interfaceName}{collectionString};");
 
                     classBlock
                         .AddStatement($"{thingName}: {typeName}{collectionString};");
