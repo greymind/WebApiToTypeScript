@@ -20,6 +20,8 @@ watts.exe "Path/To/Config/File.json"
 ```
 
 ## Using as MSBuild Target
+> I haven't tested this in a while, so if you find any inconsistencies with working directory and such, feel free to file an issue or better yet, submit a pull request!
+
 Ensure the DLL is part of the build process, so you have access to it. Easiest way is to reference it in your project.
 ```
 <UsingTask TaskName="WebApiToTypeScript.WebApiToTypeScript" AssemblyFile="$(ProjectDir)..\WebApiToTypeScript\bin\Debug\WebApiToTypeScript.dll" />
@@ -27,6 +29,9 @@ Ensure the DLL is part of the build process, so you have access to it. Easiest w
     <WebApiToTypeScript ConfigFilePath="$(ProjectDir)Watts.config.json" />
 </Target>
 ```
+
+## T4 Template
+If you wish to integrate the executable as part of your workflow from within Visual Studio, you may consider wiring it up to a T4 template. [Here](https://github.com/greymind/WebApiToTypeScript/tree/master/src/WebApiTestApplication/Scripts/Watts.tt) is a sample.
 
 ## Protip
 You can build just the C# parts of the solution by adding a condition to the TypeScript target in the `csproj` file. This way you can ensure that before you run WebApiToTypeScript, you have a hassle-free build of the backend code.
@@ -39,7 +44,6 @@ You can build just the C# parts of the solution by adding a condition to the Typ
 ```
 Path\To\msbuild.exe /t:build /p:SkipTypeScript:True Path\To\Project.csproj
 ```
-
 
 ## Using Angular Endpoints Service
 You'll need to register the Endpoints service to your app and inject it as is typical in Angular
