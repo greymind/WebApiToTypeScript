@@ -2,6 +2,7 @@
 using Microsoft.Build.Utilities;
 using Newtonsoft.Json;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using WebApiToTypeScript.Block;
@@ -15,6 +16,8 @@ namespace WebApiToTypeScript
 {
     public class WebApiToTypeScript : AppDomainIsolatedTask
     {
+        private Stopwatch stopwatch;
+
         public const string IHaveQueryParams = nameof(IHaveQueryParams);
         public const string IEndpoint = nameof(IEndpoint);
 
@@ -38,6 +41,8 @@ namespace WebApiToTypeScript
             var endpointBlock = EndpointsService.CreateEndpointBlock();
             var serviceBlock = AngularEndpointsService.CreateServiceBlock();
 
+            StartAnalysis("controllers and actions");
+
             foreach (var apiController in apiControllers)
             {
                 var webApiController = new WebApiController(apiController);
@@ -45,6 +50,8 @@ namespace WebApiToTypeScript
                 EndpointsService.WriteEndpointClassToBlock(endpointBlock, webApiController);
                 AngularEndpointsService.WriteServiceObjectToBlock(serviceBlock.Children.First() as TypeScriptBlock, webApiController);
             }
+
+            StopAnalysis();
 
             CreateFileForBlock(endpointBlock, Config.EndpointsOutputDirectory, Config.EndpointsFileName);
             CreateFileForBlock(serviceBlock, Config.ServiceOutputDirectory, Config.ServiceFileName);
@@ -54,15 +61,23 @@ namespace WebApiToTypeScript
 
             if (Config.GenerateInterfaces)
             {
+                StartAnalysis("interfaces");
+
                 InterfaceService.AddMatchingInterfaces();
                 InterfaceService.WriteInterfacesToBlock(interfacesBlock);
+
+                StopAnalysis();
 
                 CreateFileForBlock(interfacesBlock, Config.InterfacesOutputDirectory, Config.InterfacesFileName);
             }
 
             if (Config.GenerateEnums)
             {
+                StartAnalysis("enumerations");
+
                 EnumsService.WriteEnumsToBlock(enumsBlock);
+
+                StopAnalysis();
 
                 CreateFileForBlock(enumsBlock, Config.EnumsOutputDirectory, Config.EnumsFileName);
             }
@@ -97,25 +112,46 @@ namespace WebApiToTypeScript
 
             var filePath = Path.Combine(outputDirectory, fileName);
 
+            //LogMessage($"Writing file [{filePath}]...");
+
+            //stopwatch = Stopwatch.StartNew();
+
             using (var endpointFileWriter = new StreamWriter(filePath, false))
             {
                 endpointFileWriter.Write(typeScriptBlock.ToString());
             }
 
-            LogMessage($"{filePath} created!");
+            //LogMessage($"File [{filePath}] saved! Took {stopwatch.ElapsedMilliseconds}ms.");
         }
 
         private void CreateOuputDirectory(string directory)
         {
+            //LogMessage($"Creating directory [{directory}]...");
+
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
-                LogMessage($"{directory} created!");
+                //LogMessage($"Directory [{directory}] created!");
             }
             else
             {
-                LogMessage($"{directory} already exists!");
+                //LogMessage($"Directory [{directory}] already exists!");
             }
+        }
+
+        private void StartAnalysis(string ofWhat)
+        {
+            LogMessage("");
+            LogMessage($"Analyzing {ofWhat}...");
+
+            stopwatch = Stopwatch.StartNew();
+        }
+
+        private void StopAnalysis()
+        {
+            LogMessage($"Analysis complete. Took {stopwatch.ElapsedMilliseconds}ms.");
+
+            stopwatch = null;
         }
 
         private void LogMessage(string log)
