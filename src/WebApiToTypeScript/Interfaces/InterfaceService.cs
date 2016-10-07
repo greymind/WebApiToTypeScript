@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Mono.Cecil;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Mono.Cecil;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.Types;
 
@@ -15,6 +15,9 @@ namespace WebApiToTypeScript.Interfaces
 
         private InterfaceNode InterfaceNode { get; }
             = new InterfaceNode();
+
+        private HashSet<TypeDefinition> InterfacesBeingAdded { get; }
+            = new HashSet<TypeDefinition>();
 
         public TypeScriptBlock CreateInterfacesBlock()
         {
@@ -69,6 +72,14 @@ namespace WebApiToTypeScript.Interfaces
 
             if (interfaceNode != null)
                 return interfaceNode;
+
+            if (typeDefinition.IsInterface)
+                return null;
+
+            if (InterfacesBeingAdded.Contains(typeDefinition))
+                return null;
+
+            InterfacesBeingAdded.Add(typeDefinition);
 
             var baseInterfaceNode = InterfaceNode;
 
@@ -256,7 +267,7 @@ namespace WebApiToTypeScript.Interfaces
                 });
 
             var properties = typeDefinition.Properties
-                .Where(p => !p.IsSpecialName && p.SetMethod != null)
+                .Where(p => p.GetMethod.IsPublic && !p.IsSpecialName)
                 .Select(p => new MemberWithCSharpType
                 {
                     Name = p.Name,
@@ -296,6 +307,8 @@ namespace WebApiToTypeScript.Interfaces
 
             baseInterfaceNode.DerivedInterfaces
                 .Add(derivedInterfaceNode);
+
+            InterfacesBeingAdded.Remove(typeDefinition);
 
             return derivedInterfaceNode;
         }
