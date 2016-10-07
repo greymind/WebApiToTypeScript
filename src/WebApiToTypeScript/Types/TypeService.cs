@@ -25,7 +25,7 @@ namespace WebApiToTypeScript.Types
         {
             var mapping = PrimitiveTypesMapping;
 
-            mapping["string"] = new List<Type> { typeof(string), typeof(System.Guid), typeof(DateTime) };
+            mapping["string"] = new List<Type> { typeof(string), typeof(System.Guid), typeof(DateTime), typeof(TimeSpan) };
             mapping["boolean"] = new List<Type> { typeof(bool) };
             mapping["number"] = new List<Type> { typeof(byte), typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
             mapping["any"] = new List<Type> { typeof(object) };
