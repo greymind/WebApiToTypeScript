@@ -1,4 +1,6 @@
 # Web API To TypeScript
+
+[![Join the chat at https://gitter.im/WebApiToTypeScript/Lobby](https://badges.gitter.im/WebApiToTypeScript/Lobby.svg)](https://gitter.im/WebApiToTypeScript/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 A tool for code generating TypeScript endpoints for your ASP.NET Web API controllers and their actions. No more need for dumb repositories!
 * Generates typed endpoints with required and optional parameters for GET, PUT, POST and DELETE verbs
 * Generates enumerations and interfaces for DTOs used in all controller actions
