@@ -66,6 +66,9 @@ namespace WebApiToTypeScript.Config
         public string ViewsSourceDirectory { get; set; }
             = "Views";
 
+        public string ViewsPattern { get; set; }
+            = ".view.";
+
         public string ViewsOutputDirectory { get; set; }
             = "Views";
 
@@ -74,6 +77,9 @@ namespace WebApiToTypeScript.Config
 
         public string ViewsNamespace { get; set; }
             = "Views";
+
+        public bool UseViewsGroupingNamespace { get; set; }
+            = true;
 
         public bool ScanOtherModules { get; set; }
             = true;
