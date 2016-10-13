@@ -15,9 +15,31 @@ namespace WebApiToTypeScript
         public static string ToCamelCaseFromPascalCase(string inPascalCase)
         {
             if (!string.IsNullOrEmpty(inPascalCase))
-                return $"{inPascalCase.First().ToString().ToLower()}{inPascalCase.Substring(1)}";
+                return $"{char.ToLower(inPascalCase.First())}{inPascalCase.Substring(1)}";
             else
                 return inPascalCase;
+        }
+
+        public static string ToPascalCaseFromCamelCase(string inCamelCase)
+        {
+            if (!string.IsNullOrEmpty(inCamelCase))
+                return $"{char.ToUpper(inCamelCase.First())}{inCamelCase.Substring(1)}";
+            else
+                return inCamelCase;
+        }
+
+        public static string ToPascalCaseFromKebabCase(string inKebabCase)
+        {
+            if (!string.IsNullOrEmpty(inKebabCase))
+            {
+                var parts = inKebabCase
+                    .Split(new[] { '-' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(v => $"{char.ToUpper(v.First())}{v.Substring(1)}");
+
+                return string.Join(string.Empty, parts);
+            }
+            else
+                return inKebabCase;
         }
 
         public static string GetBaseEndpoint(List<WebApiRoutePart> routeParts)
