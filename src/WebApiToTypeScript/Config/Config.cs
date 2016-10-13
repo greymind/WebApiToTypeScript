@@ -60,6 +60,21 @@ namespace WebApiToTypeScript.Config
         public List<InterfaceMatch> InterfaceMatches { get; set; }
             = new List<InterfaceMatch>();
 
+        public bool GenerateViews { get; set; }
+            = true;
+
+        public string ViewsSourceDirectory { get; set; }
+            = "Views";
+
+        public string ViewsOutputDirectory { get; set; }
+            = "Views";
+
+        public string ViewsFileName { get; set; }
+            = "Views.ts";
+
+        public string ViewsNamespace { get; set; }
+            = "Views";
+
         public bool ScanOtherModules { get; set; }
             = true;
 
