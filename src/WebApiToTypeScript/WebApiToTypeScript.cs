@@ -49,14 +49,13 @@ namespace WebApiToTypeScript
                 StartAnalysis("views");
 
                 var viewsBlock = ViewsService.CreateViewsBlock();
+                ViewsService.AddViews();
                 ViewsService.WriteViewsToBlock(viewsBlock);
 
                 CreateFileForBlock(viewsBlock, Config.ViewsOutputDirectory, Config.ViewsFileName);
 
                 StopAnalysis();
             }
-
-            return true;
 
             StartAnalysis("controllers and actions");
 

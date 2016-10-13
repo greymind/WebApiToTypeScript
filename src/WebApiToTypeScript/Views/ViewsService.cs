@@ -9,8 +9,6 @@ namespace WebApiToTypeScript.Views
 {
     public class ViewsService : ServiceAware
     {
-        private string ViewsSourceDirectory { get; set; }
-
         private List<ViewNode> FeatureViews { get; }
             = new List<ViewNode>();
 
@@ -21,14 +19,24 @@ namespace WebApiToTypeScript.Views
 
         public TypeScriptBlock WriteViewsToBlock(TypeScriptBlock viewsBlock)
         {
-            ViewsSourceDirectory = Path.GetFullPath(Config.ViewsSourceDirectory);
+            foreach (var featureView in FeatureViews)
+            {
+                WriteViewEntry(viewsBlock, featureView);
+            }
 
-            var viewFiles = Directory.GetFiles(ViewsSourceDirectory, "*.view.*", SearchOption.AllDirectories);
+            return viewsBlock;
+        }
+
+        public void AddViews()
+        {
+            var viewsSourceDirectory = Path.GetFullPath(Config.ViewsSourceDirectory);
+
+            var viewFiles = Directory.GetFiles(viewsSourceDirectory, $"*{Config.ViewsPattern}*", SearchOption.AllDirectories);
 
             foreach (var viewFile in viewFiles)
             {
                 var featureViewPath = Path.GetFullPath(viewFile)
-                    .Split(new[] { $@"{ViewsSourceDirectory}\" }, StringSplitOptions.RemoveEmptyEntries)
+                    .Split(new[] { $@"{viewsSourceDirectory}\" }, StringSplitOptions.RemoveEmptyEntries)
                     .Last();
 
                 var parts = featureViewPath
@@ -54,7 +62,7 @@ namespace WebApiToTypeScript.Views
                     .ToList();
 
                 var viewNode = FeatureViews.Single(v => v.Name == featureNamespace);
-                var nameThusFar = subFeatures.Count == 0 // instead should i skip last or first or something 
+                var nameThusFar = subFeatures.Count == 0
                     ? featureNamespace
                     : string.Empty;
 
@@ -81,7 +89,7 @@ namespace WebApiToTypeScript.Views
 
                 var fullViewNameInKebabCase = parts
                     .Last()
-                    .Split(new[] {".view."}, StringSplitOptions.RemoveEmptyEntries)
+                    .Split(new[] { Config.ViewsPattern }, StringSplitOptions.RemoveEmptyEntries)
                     .First();
 
                 var fullViewNameInPascalCase = Helpers.ToPascalCaseFromKebabCase(fullViewNameInKebabCase);
@@ -90,25 +98,19 @@ namespace WebApiToTypeScript.Views
                     ? Regex.Replace(fullViewNameInPascalCase, $"^{nameThusFar}", string.Empty)
                     : fullViewNameInPascalCase;
 
-                viewNode.ViewEntries.Add(new ViewEntry { 
+                viewNode.ViewEntries.Add(new ViewEntry
+                {
                     Name = viewName,
                     Path = featureViewPath.Replace(@"\", "/")
                 });
             }
-
-            foreach (var featureView in FeatureViews)
-            {
-                WriteViewEntry(viewsBlock, featureView);
-            }
-
-            return viewsBlock;
         }
 
         private void WriteViewEntry(TypeScriptBlock viewsBlock, ViewNode featureViewNode, bool isChild = false)
         {
-            var viewNamespace = isChild
-                ? string.Empty
-                : ".Views";
+            var viewNamespace = Config.UseViewsGroupingNamespace && !isChild
+                ? ".Views"
+                : string.Empty;
 
             var featureBlock = viewsBlock
                 .AddAndUseBlock($"export namespace {featureViewNode.Name}{viewNamespace}");
