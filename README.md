@@ -84,7 +84,15 @@ angular.module('framework').service('AngularEndpointsService', Framework.Endpoin
     "Match": "string",
     "ExcludeMatch": "string",
     "BaseTypeName": "string"
-  ]
+  ],
+
+  "GenerateViews": "boolean",
+  "ViewsSourceDirectory": "string",
+  "ViewsPattern": "string",
+  "ViewsOutputDirectory": "string",
+  "ViewsFileName": "string",
+  "ViewsNamespace": "string",
+  "UseViewsGroupingNamespace": "boolean",
 
   "ScanOtherModules": "boolean",
   "WriteNamespaceAsModule": "boolean",
