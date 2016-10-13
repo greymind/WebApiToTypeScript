@@ -5,7 +5,8 @@
 A tool for code generating TypeScript endpoints for your ASP.NET Web API controllers and their actions. No more need for dumb repositories!
 * Generates typed endpoints with required and optional parameters for GET, PUT, POST and DELETE verbs
 * Generates enumerations and interfaces for DTOs used in all controller actions
-* Generates Angular service to expose typed `call()` function to fetch response from server  
+* Generates Angular service to expose typed `call()` function to fetch response from server
+* Generates typed views to use on front-end  
 
 ## Examples
 Take a look at the generated files and sample test files [here](https://github.com/greymind/WebApiToTypeScript/tree/master/src/WebApiTestApplication/Scripts)
