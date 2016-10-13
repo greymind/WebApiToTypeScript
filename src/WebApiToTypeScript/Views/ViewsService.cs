@@ -44,7 +44,7 @@ namespace WebApiToTypeScript.Views
 
                 var namespaces = parts
                     .Take(parts.Length - 1)
-                    .Select(Helpers.ToPascalCaseFromCamelCase)
+                    .Select(Helpers.ToPascalCaseFromKebabCase)
                     .ToList();
 
                 var featureNamespace = namespaces.First();
