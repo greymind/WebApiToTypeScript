@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using WebApiToTypeScript.Block;
-using WebApiToTypeScript.Interfaces;
 
 namespace WebApiToTypeScript.Enums
 {
