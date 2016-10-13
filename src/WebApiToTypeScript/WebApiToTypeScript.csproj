@@ -79,6 +79,9 @@
     <Compile Include="Block\TypeScriptBlock.cs" />
     <Compile Include="Types\TypeScriptType.cs" />
     <Compile Include="Types\TypeService.cs" />
+    <Compile Include="Views\ViewEntry.cs" />
+    <Compile Include="Views\ViewNode.cs" />
+    <Compile Include="Views\ViewsService.cs" />
     <Compile Include="WebApi\WebApiAction.cs" />
     <Compile Include="WebApi\WebApiController.cs" />
     <Compile Include="WebApi\WebApiHttpVerb.cs" />

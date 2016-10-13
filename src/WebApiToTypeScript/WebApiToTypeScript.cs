@@ -10,6 +10,7 @@ using WebApiToTypeScript.Endpoints;
 using WebApiToTypeScript.Enums;
 using WebApiToTypeScript.Interfaces;
 using WebApiToTypeScript.Types;
+using WebApiToTypeScript.Views;
 using WebApiToTypeScript.WebApi;
 
 namespace WebApiToTypeScript
@@ -29,6 +30,8 @@ namespace WebApiToTypeScript
         public static EndpointsService EndpointsService { get; private set; }
         public static AngularEndpointsService AngularEndpointsService { get; private set; }
 
+        public static ViewsService ViewsService { get; private set; }
+
         [Required]
         public string ConfigFilePath { get; set; }
 
@@ -40,6 +43,20 @@ namespace WebApiToTypeScript
 
             var endpointBlock = EndpointsService.CreateEndpointBlock();
             var serviceBlock = AngularEndpointsService.CreateServiceBlock();
+
+            if (Config.GenerateViews)
+            {
+                StartAnalysis("views");
+
+                var viewsBlock = ViewsService.CreateViewsBlock();
+                ViewsService.WriteViewsToBlock(viewsBlock);
+
+                CreateFileForBlock(viewsBlock, Config.ViewsOutputDirectory, Config.ViewsFileName);
+
+                StopAnalysis();
+            }
+
+            return true;
 
             StartAnalysis("controllers and actions");
 
@@ -57,12 +74,12 @@ namespace WebApiToTypeScript
             CreateFileForBlock(serviceBlock, Config.ServiceOutputDirectory, Config.ServiceFileName);
 
             var enumsBlock = EnumsService.CreateEnumsBlock();
-            var interfacesBlock = InterfaceService.CreateInterfacesBlock();
 
             if (Config.GenerateInterfaces)
             {
                 StartAnalysis("interfaces");
 
+                var interfacesBlock = InterfaceService.CreateInterfacesBlock();
                 InterfaceService.AddMatchingInterfaces();
                 InterfaceService.WriteInterfacesToBlock(interfacesBlock);
 
@@ -97,6 +114,8 @@ namespace WebApiToTypeScript
 
             EndpointsService = new EndpointsService();
             AngularEndpointsService = new AngularEndpointsService();
+
+            ViewsService = new ViewsService();
         }
 
         private Config.Config GetConfig(string configFilePath)
@@ -112,30 +131,17 @@ namespace WebApiToTypeScript
 
             var filePath = Path.Combine(outputDirectory, fileName);
 
-            //LogMessage($"Writing file [{filePath}]...");
-
-            //stopwatch = Stopwatch.StartNew();
-
             using (var endpointFileWriter = new StreamWriter(filePath, false))
             {
                 endpointFileWriter.Write(typeScriptBlock.ToString());
             }
-
-            //LogMessage($"File [{filePath}] saved! Took {stopwatch.ElapsedMilliseconds}ms.");
         }
 
         private void CreateOuputDirectory(string directory)
         {
-            //LogMessage($"Creating directory [{directory}]...");
-
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
-                //LogMessage($"Directory [{directory}] created!");
-            }
-            else
-            {
-                //LogMessage($"Directory [{directory}] already exists!");
             }
         }
 
