@@ -62,9 +62,7 @@ namespace WebApiToTypeScript.Views
                     .ToList();
 
                 var viewNode = FeatureViews.Single(v => v.Name == featureNamespace);
-                var nameThusFar = subFeatures.Count == 0
-                    ? featureNamespace
-                    : string.Empty;
+                var parentFolderName = subFeatures.LastOrDefault() ?? featureNamespace;
 
                 foreach (var subFeature in subFeatures)
                 {
@@ -83,8 +81,6 @@ namespace WebApiToTypeScript.Views
 
                     viewNode = viewNode.ChildViews
                         .Single(v => v.Name == subFeature);
-
-                    nameThusFar += viewNode.Name;
                 }
 
                 var fullViewNameInKebabCase = parts
@@ -94,8 +90,8 @@ namespace WebApiToTypeScript.Views
 
                 var fullViewNameInPascalCase = Helpers.ToPascalCaseFromKebabCase(fullViewNameInKebabCase);
 
-                var viewName = fullViewNameInPascalCase != nameThusFar
-                    ? Regex.Replace(fullViewNameInPascalCase, $"^{nameThusFar}", string.Empty)
+                var viewName = fullViewNameInPascalCase != parentFolderName
+                    ? Regex.Replace(fullViewNameInPascalCase, $"^{parentFolderName}", string.Empty)
                     : fullViewNameInPascalCase;
 
                 viewNode.ViewEntries.Add(new ViewEntry
