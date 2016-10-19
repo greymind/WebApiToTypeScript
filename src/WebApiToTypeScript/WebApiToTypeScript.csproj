@@ -64,6 +64,7 @@
   <ItemGroup>
     <Compile Include="Config\Config.cs" />
     <Compile Include="Config\InterfaceMatch.cs" />
+    <Compile Include="Config\ViewConfig.cs" />
     <Compile Include="Endpoints\AngularEndpointsService.cs" />
     <Compile Include="Endpoints\EndpointsService.cs" />
     <Compile Include="ServiceAware.cs" />
@@ -81,6 +82,7 @@
     <Compile Include="Types\TypeService.cs" />
     <Compile Include="Views\ViewEntry.cs" />
     <Compile Include="Views\ViewNode.cs" />
+    <Compile Include="Views\ViewsBlock.cs" />
     <Compile Include="Views\ViewsService.cs" />
     <Compile Include="WebApi\WebApiAction.cs" />
     <Compile Include="WebApi\WebApiController.cs" />

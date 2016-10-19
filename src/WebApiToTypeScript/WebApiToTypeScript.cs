@@ -48,11 +48,8 @@ namespace WebApiToTypeScript
             {
                 StartAnalysis("views");
 
-                var viewsBlock = ViewsService.CreateViewsBlock();
-                ViewsService.AddViews();
-                ViewsService.WriteViewsToBlock(viewsBlock);
-
-                CreateFileForBlock(viewsBlock, Config.ViewsOutputDirectory, Config.ViewsFileName);
+                foreach (var viewsBlock in ViewsService.GetBlocksForViews())
+                    CreateFileForBlock(viewsBlock.TypeScriptBlock, Config.ViewsOutputDirectory, viewsBlock.Filename);
 
                 StopAnalysis();
             }

@@ -9,17 +9,32 @@ namespace WebApiToTypeScript.Views
 {
     public class ViewsService : ServiceAware
     {
-        private List<ViewNode> FeatureViews { get; }
-            = new List<ViewNode>();
-
-        public TypeScriptBlock CreateViewsBlock()
+        public IEnumerable<ViewsBlock> GetBlocksForViews()
         {
-            return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ViewsNamespace}");
+            foreach (var viewConfig in Config.ViewConfigs)
+            {
+                var featureViews = new List<ViewNode>();
+
+                var viewsBlock = CreateViewsBlock(viewConfig.Namespace);
+                AddViewsFromDirectory(viewConfig.SourceDirectory, featureViews);
+                WriteViewsToBlock(featureViews, viewsBlock);
+
+                yield return new ViewsBlock
+                {
+                    TypeScriptBlock = viewsBlock,
+                    Filename = viewConfig.OutputFilename
+                };
+            }
         }
 
-        public TypeScriptBlock WriteViewsToBlock(TypeScriptBlock viewsBlock)
+        public TypeScriptBlock CreateViewsBlock(string namespaceName)
         {
-            foreach (var featureView in FeatureViews)
+            return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {namespaceName}");
+        }
+
+        public TypeScriptBlock WriteViewsToBlock(List<ViewNode> featureViews, TypeScriptBlock viewsBlock)
+        {
+            foreach (var featureView in featureViews)
             {
                 WriteViewEntry(viewsBlock, featureView);
             }
@@ -27,9 +42,9 @@ namespace WebApiToTypeScript.Views
             return viewsBlock;
         }
 
-        public void AddViews()
+        public void AddViewsFromDirectory(string sourceDirectory, List<ViewNode> featureViews)
         {
-            var viewsSourceDirectory = Path.GetFullPath(Config.ViewsSourceDirectory);
+            var viewsSourceDirectory = Path.GetFullPath(sourceDirectory);
 
             var viewFiles = Directory.GetFiles(viewsSourceDirectory, $"*{Config.ViewsPattern}*", SearchOption.AllDirectories);
 
@@ -49,9 +64,9 @@ namespace WebApiToTypeScript.Views
 
                 var featureNamespace = namespaces.First();
 
-                if (FeatureViews.All(v => v.Name != featureNamespace))
+                if (featureViews.All(v => v.Name != featureNamespace))
                 {
-                    FeatureViews.Add(new ViewNode
+                    featureViews.Add(new ViewNode
                     {
                         Name = featureNamespace
                     });
@@ -61,7 +76,7 @@ namespace WebApiToTypeScript.Views
                     .Skip(1)
                     .ToList();
 
-                var viewNode = FeatureViews.Single(v => v.Name == featureNamespace);
+                var viewNode = featureViews.Single(v => v.Name == featureNamespace);
                 var parentFolderName = subFeatures.LastOrDefault() ?? featureNamespace;
 
                 foreach (var subFeature in subFeatures)

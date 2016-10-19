@@ -63,19 +63,13 @@ namespace WebApiToTypeScript.Config
         public bool GenerateViews { get; set; }
             = true;
 
-        public string ViewsSourceDirectory { get; set; }
-            = "Views";
+        public List<ViewConfig> ViewConfigs { get; set; }
+            = new List<ViewConfig>();
 
         public string ViewsPattern { get; set; }
             = ".view.";
 
         public string ViewsOutputDirectory { get; set; }
-            = "Views";
-
-        public string ViewsFileName { get; set; }
-            = "Views.ts";
-
-        public string ViewsNamespace { get; set; }
             = "Views";
 
         public bool UseViewsGroupingNamespace { get; set; }
