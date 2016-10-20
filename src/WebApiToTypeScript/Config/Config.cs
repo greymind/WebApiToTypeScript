@@ -75,6 +75,18 @@ namespace WebApiToTypeScript.Config
         public bool UseViewsGroupingNamespace { get; set; }
             = true;
 
+        public bool GenerateResources { get; set; }
+            = true;
+
+        public List<ResourceConfig> ResourceConfigs { get; set; }
+            = new List<ResourceConfig>();
+
+        public string ResourcesNamespace { get; set; }
+            = "Resources";
+
+        public string ResourcesOutputDirectory { get; set; }
+            = "Resources";
+
         public bool ScanOtherModules { get; set; }
             = true;
 
