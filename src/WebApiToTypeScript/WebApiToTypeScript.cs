@@ -9,6 +9,7 @@ using WebApiToTypeScript.Block;
 using WebApiToTypeScript.Endpoints;
 using WebApiToTypeScript.Enums;
 using WebApiToTypeScript.Interfaces;
+using WebApiToTypeScript.Resources;
 using WebApiToTypeScript.Types;
 using WebApiToTypeScript.Views;
 using WebApiToTypeScript.WebApi;
@@ -31,6 +32,7 @@ namespace WebApiToTypeScript
         public static AngularEndpointsService AngularEndpointsService { get; private set; }
 
         public static ViewsService ViewsService { get; private set; }
+        public static ResourceService ResourceService { get; private set; }
 
         [Required]
         public string ConfigFilePath { get; set; }
@@ -50,6 +52,16 @@ namespace WebApiToTypeScript
 
                 foreach (var viewsBlock in ViewsService.GetBlocksForViews())
                     CreateFileForBlock(viewsBlock.TypeScriptBlock, Config.ViewsOutputDirectory, viewsBlock.Filename);
+
+                StopAnalysis();
+            }
+
+            if (Config.GenerateResources)
+            {
+                StartAnalysis("resources");
+
+                foreach (var resourceBlock in ResourceService.GetBlocksForResources())
+                    CreateFileForBlock(resourceBlock.TypeScriptBlock, Config.ResourcesOutputDirectory, resourceBlock.Filename);
 
                 StopAnalysis();
             }
@@ -112,6 +124,7 @@ namespace WebApiToTypeScript
             AngularEndpointsService = new AngularEndpointsService();
 
             ViewsService = new ViewsService();
+            ResourceService = new ResourceService();
         }
 
         private Config.Config GetConfig(string configFilePath)
