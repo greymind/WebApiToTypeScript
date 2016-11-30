@@ -19,6 +19,10 @@ namespace Watts
 
             watts.Execute();
 
+#if DEBUG
+            Console.ReadLine();
+#endif
+
             return 0;
         }
     }
