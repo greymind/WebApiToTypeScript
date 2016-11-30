@@ -20,5 +20,8 @@ namespace WebApiToTypeScript
 
         public Config.Config Config
             => WebApiToTypeScript.Config;
+
+        public void LogMessage(string message)
+            => WebApiToTypeScript.LogMessages.Add(message);
     }
 }
