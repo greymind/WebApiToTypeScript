@@ -27,7 +27,7 @@ namespace WebApiToTypeScript.Types
 
             mapping["string"] = new List<Type> { typeof(string), typeof(System.Guid), typeof(DateTime), typeof(TimeSpan) };
             mapping["boolean"] = new List<Type> { typeof(bool) };
-            mapping["number"] = new List<Type> { typeof(byte), typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
+            mapping["number"] = new List<Type> { typeof(byte), typeof(short), typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
             mapping["any"] = new List<Type> { typeof(object) };
         }
 
@@ -211,6 +211,16 @@ namespace WebApiToTypeScript.Types
 
                 return result;
             }
+
+            var logTypeName = typeDefinition?.FullName ?? cSharpType.FullName;
+            var isValueType = typeDefinition?.IsValueType ?? cSharpType.IsValueType;
+
+            LogMessage($"Parameter [{parameterName}] of type [{logTypeName}] unmapped. IsValueType: [{isValueType}]");
+            result.TypeName = "any";
+            result.InterfaceName = "any";
+            result.IsPrimitive = isValueType;
+
+            return result;
 
             throw new NotSupportedException("Maybe it is a generic class, or a yet unsupported collection, or chain thereof?");
         }
