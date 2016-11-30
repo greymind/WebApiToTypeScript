@@ -19,6 +19,10 @@ namespace WebApiToTypeScript.Enums
 
         public void AddEnum(TypeDefinition thingType)
         {
+            // todo-balki duplicate enums detection
+            // fullname might be the issue here, since we are actually going by final namespaced name
+            // but we might want to detect that AFTER adding all unique types so we can complain correctly what conflicted
+
             if (Enums.All(e => e.FullName != thingType.FullName))
                 Enums.Add(thingType);
         }
