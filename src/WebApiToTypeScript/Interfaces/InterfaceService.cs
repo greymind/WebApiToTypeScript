@@ -16,8 +16,8 @@ namespace WebApiToTypeScript.Interfaces
         private InterfaceNode InterfaceNode { get; }
             = new InterfaceNode();
 
-        private HashSet<TypeDefinition> InterfacesBeingAdded { get; }
-            = new HashSet<TypeDefinition>();
+        private List<InterfaceNode> InterfaceNodes { get; }
+            = new List<InterfaceNode>();
 
         public TypeScriptBlock CreateInterfacesBlock()
         {
@@ -76,10 +76,7 @@ namespace WebApiToTypeScript.Interfaces
             if (typeDefinition.IsInterface)
                 return null;
 
-            if (InterfacesBeingAdded.Contains(typeDefinition))
-                return null;
-
-            InterfacesBeingAdded.Add(typeDefinition);
+            interfaceNode = AddInterfaceNode(typeDefinition, InterfaceNode);
 
             var baseInterfaceNode = InterfaceNode;
 
@@ -97,9 +94,11 @@ namespace WebApiToTypeScript.Interfaces
                 var baseClass = typeDefinition.BaseType as TypeDefinition;
                 var isBaseClassNotObject = baseClass != null && baseClass.FullName != "System.Object";
 
-                if (isBaseClassNotObject)
+                if (isBaseClassNotObject && baseClass != typeDefinition)
                     baseInterfaceNode = AddInterfaceNode(baseClass);
             }
+            
+            interfaceNode = AdjustBaseClass(interfaceNode, baseInterfaceNode);
 
             var things = GetMembers(typeDefinition)
                 .Where(m => !m.CSharpType.IsGenericParameter);
@@ -122,7 +121,7 @@ namespace WebApiToTypeScript.Interfaces
                 }
             }
 
-            return AddInterfaceNode(typeDefinition, baseInterfaceNode);
+            return interfaceNode;
         }
 
         private void WriteInterfaces(TypeScriptBlock interfacesBlock, InterfaceNode interfaceNode)
@@ -209,6 +208,9 @@ namespace WebApiToTypeScript.Interfaces
                         var thingType = thing.CSharpType.TypeDefinition;
                         var typeScriptType = TypeService.GetTypeScriptType(thingType, thing.Name);
 
+                        if (thingType.IsInterface)
+                            continue;
+
                         interfaceName = typeScriptType.InterfaceName;
                         typeName = typeScriptType.TypeName;
                     }
@@ -218,6 +220,10 @@ namespace WebApiToTypeScript.Interfaces
                         : thing.Name;
 
                     var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
+
+                    // todo-balki sigh
+                    if (thingName == "constructor")
+                        thingName = "_constructor";
 
                     interfaceBlock
                         .AddStatement($"{thingName}: {interfaceName}{collectionString};");
@@ -267,7 +273,7 @@ namespace WebApiToTypeScript.Interfaces
                 });
 
             var properties = typeDefinition.Properties
-                .Where(p => p.GetMethod.IsPublic && !p.IsSpecialName)
+                .Where(p => p.GetMethod != null && p.GetMethod.IsPublic && !p.IsSpecialName)
                 .Select(p => new MemberWithCSharpType
                 {
                     Name = p.Name,
@@ -308,9 +314,23 @@ namespace WebApiToTypeScript.Interfaces
             baseInterfaceNode.DerivedInterfaces
                 .Add(derivedInterfaceNode);
 
-            InterfacesBeingAdded.Remove(typeDefinition);
-
             return derivedInterfaceNode;
+        }
+
+        private InterfaceNode AdjustBaseClass(InterfaceNode interfaceNode, InterfaceNode baseInterfaceNode)
+        {
+            interfaceNode
+                .BaseInterface
+                .DerivedInterfaces
+                .Remove(interfaceNode);
+
+            interfaceNode.BaseInterface = baseInterfaceNode;
+
+            baseInterfaceNode
+                .DerivedInterfaces
+                .Add(interfaceNode);
+
+            return interfaceNode;
         }
     }
 }
