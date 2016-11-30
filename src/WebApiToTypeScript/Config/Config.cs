@@ -6,6 +6,9 @@ namespace WebApiToTypeScript.Config
     {
         public string WebApiModuleFileName { get; set; }
 
+        public bool GenerateEndpoints { get; set; }
+            = false;
+
         public string EndpointsOutputDirectory { get; set; }
             = "Endpoints";
 
@@ -16,7 +19,7 @@ namespace WebApiToTypeScript.Config
             = "Endpoints";
 
         public bool GenerateService { get; set; }
-            = true;
+            = false;
 
         public string ServiceOutputDirectory { get; set; }
             = "Endpoints";
@@ -61,7 +64,7 @@ namespace WebApiToTypeScript.Config
             = new List<InterfaceMatch>();
 
         public bool GenerateViews { get; set; }
-            = true;
+            = false;
 
         public List<ViewConfig> ViewConfigs { get; set; }
             = new List<ViewConfig>();
@@ -76,7 +79,7 @@ namespace WebApiToTypeScript.Config
             = true;
 
         public bool GenerateResources { get; set; }
-            = true;
+            = false;
 
         public List<ResourceConfig> ResourceConfigs { get; set; }
             = new List<ResourceConfig>();
