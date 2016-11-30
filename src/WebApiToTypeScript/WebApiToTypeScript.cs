@@ -1,10 +1,11 @@
-﻿using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Newtonsoft.Json;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+using Newtonsoft.Json;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.Endpoints;
 using WebApiToTypeScript.Enums;
@@ -34,6 +35,9 @@ namespace WebApiToTypeScript
         public static ViewsService ViewsService { get; private set; }
         public static ResourceService ResourceService { get; private set; }
 
+        public static List<string> LogMessages { get; }
+            = new List<string>();
+
         [Required]
         public string ConfigFilePath { get; set; }
 
@@ -42,9 +46,6 @@ namespace WebApiToTypeScript
             InitializeServices();
 
             var apiControllers = TypeService.GetControllers(Config.WebApiModuleFileName);
-
-            var endpointBlock = EndpointsService.CreateEndpointBlock();
-            var serviceBlock = AngularEndpointsService.CreateServiceBlock();
 
             if (Config.GenerateViews)
             {
@@ -68,18 +69,26 @@ namespace WebApiToTypeScript
 
             StartAnalysis("controllers and actions");
 
+            var endpointBlock = EndpointsService.CreateEndpointBlock();
+            var serviceBlock = AngularEndpointsService.CreateServiceBlock();
+
             foreach (var apiController in apiControllers)
             {
                 var webApiController = new WebApiController(apiController);
 
-                EndpointsService.WriteEndpointClassToBlock(endpointBlock, webApiController);
-                AngularEndpointsService.WriteServiceObjectToBlock(serviceBlock.Children.First() as TypeScriptBlock, webApiController);
+                if (Config.GenerateEndpoints || Config.GenerateService)
+                    EndpointsService.WriteEndpointClassToBlock(endpointBlock, webApiController);
+
+                if (Config.GenerateService)
+                    AngularEndpointsService.WriteServiceObjectToBlock(serviceBlock.Children.First() as TypeScriptBlock, webApiController);
             }
 
-            StopAnalysis();
-
             CreateFileForBlock(endpointBlock, Config.EndpointsOutputDirectory, Config.EndpointsFileName);
-            CreateFileForBlock(serviceBlock, Config.ServiceOutputDirectory, Config.ServiceFileName);
+
+            if (Config.GenerateService)
+                CreateFileForBlock(serviceBlock, Config.ServiceOutputDirectory, Config.ServiceFileName);
+
+            StopAnalysis();
 
             var enumsBlock = EnumsService.CreateEnumsBlock();
 
@@ -107,7 +116,17 @@ namespace WebApiToTypeScript
                 CreateFileForBlock(enumsBlock, Config.EnumsOutputDirectory, Config.EnumsFileName);
             }
 
+            WriteServiceLogMessages();
+
             return true;
+        }
+
+        private void WriteServiceLogMessages()
+        {
+            LogMessage("");
+
+            foreach (var message in LogMessages)
+                LogMessage(message);
         }
 
         private void InitializeServices()
@@ -169,15 +188,15 @@ namespace WebApiToTypeScript
             stopwatch = null;
         }
 
-        private void LogMessage(string log)
+        private void LogMessage(string message)
         {
             try
             {
-                Log.LogMessage(log);
+                Log.LogMessage(message);
             }
             catch (Exception)
             {
-                Console.WriteLine(log);
+                Console.WriteLine(message);
             }
         }
     }
