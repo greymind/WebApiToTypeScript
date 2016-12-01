@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>WebApiToTypeScript</id>
-    <version>1.7.0</version>
+    <version>1.7.1</version>
     <authors>Balakrishnan (Balki) Ranganathan</authors>
     <owners>Balakrishnan (Balki) Ranganathan</owners>
     <licenseUrl>https://raw.githubusercontent.com/greymind/WebApiToTypeScript/master/LICENSE</licenseUrl>
@@ -10,7 +10,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A tool for code generating TypeScript endpoints for your ASP.NET Web API controllers</description>
     <summary>A tool for code generating TypeScript endpoints for your ASP.NET Web API controllers</summary>
-    <releaseNotes>Handle cyclic interface references better. Fix duplicate enum generation. Added log output when auto-resolving to any, or in the aforementioned cases.</releaseNotes>
+    <releaseNotes>Sort enums and trim reserved typescript variable words</releaseNotes>
     <copyright>Copyright (c) 2016 Balakrishnan (Balki) Ranganathan</copyright>
     <tags>WebAPI TypeScript Endpoint Enum Interface Code Generation Angular Service Balki Greymind Watts</tags>
   </metadata>
