@@ -1,7 +1,6 @@
-﻿using System.Linq;
-using Mono.Cecil;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using Mono.Cecil;
 using WebApiToTypeScript.Block;
 
 namespace WebApiToTypeScript.Enums
