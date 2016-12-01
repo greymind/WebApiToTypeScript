@@ -10,6 +10,9 @@ namespace WebApiToTypeScript.Types
 {
     public class TypeService : ServiceAware
     {
+        private Regex ValidTypeNameRegex { get; }
+            = new Regex("^[a-zA-Z_][a-zA-Z0-9_]*$");
+
         private Dictionary<string, List<Type>> PrimitiveTypesMapping { get; }
             = new Dictionary<string, List<Type>>();
 
@@ -35,6 +38,11 @@ namespace WebApiToTypeScript.Types
             return IsReservedWord(word)
                 ? $"_{word}"
                 : word;
+        }
+
+        public bool IsValidTypeName(string typeName)
+        {
+            return ValidTypeNameRegex.IsMatch(typeName);
         }
 
         public void LoadAllTypes(string webApiModuleFilePath)
