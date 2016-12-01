@@ -221,9 +221,7 @@ namespace WebApiToTypeScript.Interfaces
 
                     var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
 
-                    // todo-balki sigh
-                    if (thingName == "constructor")
-                        thingName = "_constructor";
+                    thingName = TypeService.FixIfReservedWord(thingName);
 
                     interfaceBlock
                         .AddStatement($"{thingName}: {interfaceName}{collectionString};");

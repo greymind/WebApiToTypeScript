@@ -1,9 +1,9 @@
-﻿using Mono.Cecil;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Mono.Cecil;
 using WebApiToTypeScript.Config;
 
 namespace WebApiToTypeScript.Types
@@ -13,22 +13,28 @@ namespace WebApiToTypeScript.Types
         private Dictionary<string, List<Type>> PrimitiveTypesMapping { get; }
             = new Dictionary<string, List<Type>>();
 
+        private List<string> ReservedWords { get; set;  }
+            = new List<string>();
+
         public List<TypeDefinition> Types { get; }
             = new List<TypeDefinition>();
 
         public TypeService()
         {
             LoadPrimitiveTypesMapping();
+            LoadReservedWords();
         }
 
-        private void LoadPrimitiveTypesMapping()
+        public bool IsReservedWord(string word)
         {
-            var mapping = PrimitiveTypesMapping;
+            return ReservedWords.Contains(word);
+        }
 
-            mapping["string"] = new List<Type> { typeof(string), typeof(System.Guid), typeof(DateTime), typeof(TimeSpan) };
-            mapping["boolean"] = new List<Type> { typeof(bool) };
-            mapping["number"] = new List<Type> { typeof(byte), typeof(short), typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
-            mapping["any"] = new List<Type> { typeof(object) };
+        public string FixIfReservedWord(string word)
+        {
+            return IsReservedWord(word)
+                ? $"_{word}"
+                : word;
         }
 
         public void LoadAllTypes(string webApiModuleFilePath)
@@ -296,6 +302,36 @@ namespace WebApiToTypeScript.Types
             }
 
             return null;
+        }
+
+        private void LoadReservedWords()
+        {
+            ReservedWords = new List<string>
+            {
+                "break", "case", "catch", "class", "const",
+                "continue", "debugger", "default", "delete", "do",
+                "else", "enum", "export", "extends", "false",
+                "finally", "for", "function", "if", "import",
+                "in", "instanceof", "new", "null", "return",
+                "super", "switch", "this", "throw", "true",
+                "try", "typeof", "var", "void", "while",
+                "with", "as", "implements", "interface", "let",
+                "package", "private", "protected", "public", "static",
+                "yield", "any", "boolean", "constructor", "declare",
+                "get", "module", "require", "number", "set",
+                "string", "symbol", "type", "from", "of",
+                "namespace", "async", "await"
+            };
+        }
+
+        private void LoadPrimitiveTypesMapping()
+        {
+            var mapping = PrimitiveTypesMapping;
+
+            mapping["string"] = new List<Type> { typeof(string), typeof(Guid), typeof(DateTime), typeof(TimeSpan) };
+            mapping["boolean"] = new List<Type> { typeof(bool) };
+            mapping["number"] = new List<Type> { typeof(byte), typeof(short), typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
+            mapping["any"] = new List<Type> { typeof(object) };
         }
     }
 }
