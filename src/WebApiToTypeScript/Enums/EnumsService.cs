@@ -38,7 +38,10 @@ namespace WebApiToTypeScript.Enums
 
         public TypeScriptBlock WriteEnumsToBlock(TypeScriptBlock enumsBlock)
         {
-            foreach (var typeDefinition in Enums)
+            var sortedEnums = Enums
+                .OrderBy(e => e.Name);
+
+            foreach (var typeDefinition in sortedEnums)
                 CreateEnumForType(enumsBlock, typeDefinition);
 
             foreach (var logMessage in LogMessages)
