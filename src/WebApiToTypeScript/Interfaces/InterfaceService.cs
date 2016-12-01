@@ -1,8 +1,8 @@
-﻿using Mono.Cecil;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Mono.Cecil;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.Types;
 
@@ -97,7 +97,7 @@ namespace WebApiToTypeScript.Interfaces
                 if (isBaseClassNotObject && baseClass != typeDefinition)
                     baseInterfaceNode = AddInterfaceNode(baseClass);
             }
-            
+
             interfaceNode = AdjustBaseClass(interfaceNode, baseInterfaceNode);
 
             var things = GetMembers(typeDefinition)
@@ -130,120 +130,133 @@ namespace WebApiToTypeScript.Interfaces
 
             if (typeDefinition != null)
             {
-                string implementsString = null;
-                string extendsString = null;
-
-                var iHaveGenericParameters = typeDefinition.HasGenericParameters;
-                if (iHaveGenericParameters)
-                {
-                    var genericParameters = typeDefinition.GenericParameters
-                        .Select(p => p.Name);
-
-                    implementsString = WrapInAngledBrackets(string.Join(", ", genericParameters));
-                }
-
-                var hasBaseClass = interfaceNode.BaseInterface?.TypeDefinition != null;
-                var baseTypeName = CleanName(interfaceNode.BaseInterface?.TypeDefinition?.Name);
-
-                if (hasBaseClass)
-                {
-                    var iHaveGenericArguments = typeDefinition.BaseType.IsGenericInstance;
-                    if (iHaveGenericArguments)
-                    {
-                        var baseTypeInstance = typeDefinition.BaseType as GenericInstanceType;
-                        var genericArguments = baseTypeInstance.GenericArguments
-                            .Select(p => p.IsGenericParameter
-                                ? p.Name
-                                : TypeService.GetTypeScriptType(p.GetElementType(), p.Name).TypeName);
-
-                        extendsString = WrapInAngledBrackets(string.Join(", ", genericArguments));
-                    }
-
-                    var baseTypeHasGenericParameters = typeDefinition.BaseType.HasGenericParameters;
-                    if (baseTypeHasGenericParameters)
-                    {
-                        var genericParameters = typeDefinition.BaseType.GenericParameters
-                            .Select(p => p.Name);
-
-                        extendsString = WrapInAngledBrackets(string.Join(", ", genericParameters));
-                    }
-                }
-
-                var interfaceExtendsString = hasBaseClass
-                    ? $" extends I{baseTypeName}{extendsString}"
-                    : string.Empty;
-
-                var classExtendsString = hasBaseClass
-                    ? $" extends {baseTypeName}{extendsString}"
-                    : string.Empty;
-
-                var blockTypeName = CleanName(typeDefinition.Name);
-
-                var classImplementsString =
-                    $" implements I{blockTypeName}{implementsString}, {Config.EndpointsNamespace}.{nameof(IHaveQueryParams)}";
-
-                var parameterOrInstanceString = iHaveGenericParameters
-                    ? implementsString
-                    : string.Empty;
-
-                var interfaceBlock = interfacesBlock
-                    .AddAndUseBlock($"export interface I{blockTypeName}{parameterOrInstanceString}{interfaceExtendsString}");
-
-                var classBlock = interfacesBlock
-                    .AddAndUseBlock($"export class {blockTypeName}{parameterOrInstanceString}{classExtendsString}{classImplementsString}");
-
-                var things = GetMembers(typeDefinition);
-
-                foreach (var thing in things)
-                {
-                    var interfaceName = string.Empty;
-                    var typeName = string.Empty;
-
-                    if (thing.CSharpType.IsGenericParameter)
-                    {
-                        typeName = interfaceName = thing.CSharpType.GenericParameterName;
-                    }
-                    else
-                    {
-                        var thingType = thing.CSharpType.TypeDefinition;
-                        var typeScriptType = TypeService.GetTypeScriptType(thingType, thing.Name);
-
-                        if (thingType.IsInterface)
-                            continue;
-
-                        interfaceName = typeScriptType.InterfaceName;
-                        typeName = typeScriptType.TypeName;
-                    }
-
-                    var thingName = Config.InterfaceMembersInCamelCase
-                        ? Helpers.ToCamelCaseFromPascalCase(thing.Name)
-                        : thing.Name;
-
-                    var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
-
-                    thingName = TypeService.FixIfReservedWord(thingName);
-
-                    interfaceBlock
-                        .AddStatement($"{thingName}: {interfaceName}{collectionString};");
-
-                    classBlock
-                        .AddStatement($"{thingName}: {typeName}{collectionString};");
-                }
-
-                if (hasBaseClass)
-                {
-                    classBlock
-                       .AddAndUseBlock("constructor()")
-                       .AddStatement("super();");
-                }
-
-                classBlock
-                    .AddAndUseBlock("getQueryParams()")
-                    .AddStatement("return this;");
+                WriteInterfaceNode(interfacesBlock, interfaceNode);
             }
 
             foreach (var derivedInterfaceNode in interfaceNode.DerivedInterfaces)
                 WriteInterfaces(interfacesBlock, derivedInterfaceNode);
+        }
+
+        private void WriteInterfaceNode(TypeScriptBlock interfacesBlock, InterfaceNode interfaceNode)
+        {
+            var typeDefinition = interfaceNode.TypeDefinition;
+
+            string implementsString = null;
+            string extendsString = null;
+
+            var iHaveGenericParameters = typeDefinition.HasGenericParameters;
+            if (iHaveGenericParameters)
+            {
+                var genericParameters = typeDefinition.GenericParameters
+                    .Select(p => p.Name);
+
+                implementsString = WrapInAngledBrackets(string.Join(", ", genericParameters));
+            }
+
+            var hasBaseClass = interfaceNode.BaseInterface?.TypeDefinition != null;
+            var baseTypeName = CleanName(interfaceNode.BaseInterface?.TypeDefinition?.Name);
+
+            if (hasBaseClass)
+            {
+                var iHaveGenericArguments = typeDefinition.BaseType.IsGenericInstance;
+                if (iHaveGenericArguments)
+                {
+                    var baseTypeInstance = typeDefinition.BaseType as GenericInstanceType;
+                    var genericArguments = baseTypeInstance.GenericArguments
+                        .Select(p => p.IsGenericParameter
+                            ? p.Name
+                            : TypeService.GetTypeScriptType(p.GetElementType(), p.Name).TypeName);
+
+                    extendsString = WrapInAngledBrackets(string.Join(", ", genericArguments));
+                }
+
+                var baseTypeHasGenericParameters = typeDefinition.BaseType.HasGenericParameters;
+                if (baseTypeHasGenericParameters)
+                {
+                    var genericParameters = typeDefinition.BaseType.GenericParameters
+                        .Select(p => p.Name);
+
+                    extendsString = WrapInAngledBrackets(string.Join(", ", genericParameters));
+                }
+            }
+
+            var interfaceExtendsString = hasBaseClass
+                ? $" extends I{baseTypeName}{extendsString}"
+                : string.Empty;
+
+            var classExtendsString = hasBaseClass
+                ? $" extends {baseTypeName}{extendsString}"
+                : string.Empty;
+
+            var blockTypeName = CleanName(typeDefinition.Name);
+
+            if (!TypeService.IsValidTypeName(blockTypeName))
+            {
+                LogMessage($"Interface name [{blockTypeName}] of type [{typeDefinition.FullName}] is invalid!");
+                return;
+            }
+
+            var classImplementsString =
+                $" implements I{blockTypeName}{implementsString}, {Config.EndpointsNamespace}.{nameof(IHaveQueryParams)}";
+
+            var parameterOrInstanceString = iHaveGenericParameters
+                ? implementsString
+                : string.Empty;
+
+            var interfaceBlock = interfacesBlock
+                .AddAndUseBlock($"export interface I{blockTypeName}{parameterOrInstanceString}{interfaceExtendsString}");
+
+            var classBlock = interfacesBlock
+                .AddAndUseBlock($"export class {blockTypeName}{parameterOrInstanceString}{classExtendsString}{classImplementsString}");
+
+            var things = GetMembers(typeDefinition);
+
+            foreach (var thing in things)
+            {
+                var interfaceName = string.Empty;
+                var typeName = string.Empty;
+
+                if (thing.CSharpType.IsGenericParameter)
+                {
+                    typeName = interfaceName = thing.CSharpType.GenericParameterName;
+                }
+                else
+                {
+                    var thingType = thing.CSharpType.TypeDefinition;
+                    var typeScriptType = TypeService.GetTypeScriptType(thingType, thing.Name);
+
+                    if (thingType.IsInterface)
+                        continue;
+
+                    interfaceName = typeScriptType.InterfaceName;
+                    typeName = typeScriptType.TypeName;
+                }
+
+                var thingName = Config.InterfaceMembersInCamelCase
+                    ? Helpers.ToCamelCaseFromPascalCase(thing.Name)
+                    : thing.Name;
+
+                var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
+
+                thingName = TypeService.FixIfReservedWord(thingName);
+
+                interfaceBlock
+                    .AddStatement($"{thingName}: {interfaceName}{collectionString};");
+
+                classBlock
+                    .AddStatement($"{thingName}: {typeName}{collectionString};");
+            }
+
+            if (hasBaseClass)
+            {
+                classBlock
+                   .AddAndUseBlock("constructor()")
+                   .AddStatement("super();");
+            }
+
+            classBlock
+                .AddAndUseBlock("getQueryParams()")
+                .AddStatement("return this;");
         }
 
         private string CleanName(string dirtyName)
