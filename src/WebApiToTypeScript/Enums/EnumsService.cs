@@ -1,4 +1,5 @@
-﻿using Mono.Cecil;
+﻿using System.Linq;
+using Mono.Cecil;
 using System.Collections.Generic;
 using System.Linq;
 using WebApiToTypeScript.Block;
@@ -10,6 +11,9 @@ namespace WebApiToTypeScript.Enums
         private List<TypeDefinition> Enums { get; }
             = new List<TypeDefinition>();
 
+        private Dictionary<string, string> LogMessages { get; }
+            = new Dictionary<string, string>();
+
         public TypeScriptBlock CreateEnumsBlock()
         {
             return Config.GenerateEnums
@@ -19,18 +23,27 @@ namespace WebApiToTypeScript.Enums
 
         public void AddEnum(TypeDefinition thingType)
         {
-            // todo-balki duplicate enums detection
-            // fullname might be the issue here, since we are actually going by final namespaced name
-            // but we might want to detect that AFTER adding all unique types so we can complain correctly what conflicted
-
             if (Enums.All(e => e.FullName != thingType.FullName))
-                Enums.Add(thingType);
+            {
+                var conflictEnum = Enums.SingleOrDefault(e => e.Name == thingType.Name);
+                if (conflictEnum == null)
+                {
+                    Enums.Add(thingType);
+                }
+                else
+                {
+                    LogMessages[thingType.Name] = $"Enum [{thingType.Name}] of type [{thingType.FullName}] conflicts with [{conflictEnum.FullName}]";
+                }
+            }
         }
 
         public TypeScriptBlock WriteEnumsToBlock(TypeScriptBlock enumsBlock)
         {
             foreach (var typeDefinition in Enums)
                 CreateEnumForType(enumsBlock, typeDefinition);
+
+            foreach (var logMessage in LogMessages)
+                LogMessage(logMessage.Value);
 
             return enumsBlock;
         }
