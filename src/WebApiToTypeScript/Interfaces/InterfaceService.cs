@@ -196,8 +196,12 @@ namespace WebApiToTypeScript.Interfaces
                 return;
             }
 
+            var iHaveQueryParams = Config.GenerateEndpoints || Config.GenerateService
+                ? $", {Config.EndpointsNamespace}.{nameof(IHaveQueryParams)}"
+                : string.Empty;
+
             var classImplementsString =
-                $" implements I{blockTypeName}{implementsString}, {Config.EndpointsNamespace}.{nameof(IHaveQueryParams)}";
+                $" implements I{blockTypeName}{implementsString}{iHaveQueryParams}";
 
             var parameterOrInstanceString = iHaveGenericParameters
                 ? implementsString
@@ -254,9 +258,12 @@ namespace WebApiToTypeScript.Interfaces
                    .AddStatement("super();");
             }
 
-            classBlock
-                .AddAndUseBlock("getQueryParams()")
-                .AddStatement("return this;");
+            if (Config.GenerateEndpoints || Config.GenerateService)
+            {
+                classBlock
+                    .AddAndUseBlock("getQueryParams()")
+                    .AddStatement("return this;");
+            }
         }
 
         private string CleanName(string dirtyName)

@@ -67,30 +67,36 @@ namespace WebApiToTypeScript
                 StopAnalysis();
             }
 
-            StartAnalysis("controllers and actions");
-
-            var endpointBlock = EndpointsService.CreateEndpointBlock();
-            var serviceBlock = AngularEndpointsService.CreateServiceBlock();
-
-            foreach (var apiController in apiControllers)
+            if (Config.GenerateEndpoints || Config.GenerateService)
             {
-                var webApiController = new WebApiController(apiController);
+                StartAnalysis("controllers and actions");
+
+                var endpointBlock = EndpointsService.CreateEndpointBlock();
+                var serviceBlock = AngularEndpointsService.CreateServiceBlock();
+
+                foreach (var apiController in apiControllers)
+                {
+                    var webApiController = new WebApiController(apiController);
+
+                    if (Config.GenerateEndpoints || Config.GenerateService)
+                        EndpointsService.WriteEndpointClassToBlock(endpointBlock, webApiController);
+
+                    if (Config.GenerateService)
+                        AngularEndpointsService.WriteServiceObjectToBlock(serviceBlock.Children.First() as TypeScriptBlock, webApiController);
+                }
 
                 if (Config.GenerateEndpoints || Config.GenerateService)
-                    EndpointsService.WriteEndpointClassToBlock(endpointBlock, webApiController);
+                {
+                    CreateFileForBlock(endpointBlock, Config.EndpointsOutputDirectory, Config.EndpointsFileName);
+                }
 
                 if (Config.GenerateService)
-                    AngularEndpointsService.WriteServiceObjectToBlock(serviceBlock.Children.First() as TypeScriptBlock, webApiController);
+                {
+                    CreateFileForBlock(serviceBlock, Config.ServiceOutputDirectory, Config.ServiceFileName);
+                }
+
+                StopAnalysis();
             }
-
-            CreateFileForBlock(endpointBlock, Config.EndpointsOutputDirectory, Config.EndpointsFileName);
-
-            if (Config.GenerateService)
-                CreateFileForBlock(serviceBlock, Config.ServiceOutputDirectory, Config.ServiceFileName);
-
-            StopAnalysis();
-
-            var enumsBlock = EnumsService.CreateEnumsBlock();
 
             if (Config.GenerateInterfaces)
             {
@@ -109,6 +115,7 @@ namespace WebApiToTypeScript
             {
                 StartAnalysis("enumerations");
 
+                var enumsBlock = EnumsService.CreateEnumsBlock();
                 EnumsService.WriteEnumsToBlock(enumsBlock);
 
                 StopAnalysis();
