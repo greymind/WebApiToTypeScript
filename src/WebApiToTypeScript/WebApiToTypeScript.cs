@@ -162,6 +162,8 @@ namespace WebApiToTypeScript
 
         private void CreateFileForBlock(TypeScriptBlock typeScriptBlock, string outputDirectory, string fileName)
         {
+            LogMessage($"Writing {fileName}...");
+
             CreateOuputDirectory(outputDirectory);
 
             var filePath = Path.Combine(outputDirectory, fileName);
