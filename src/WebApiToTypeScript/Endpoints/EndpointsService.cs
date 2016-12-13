@@ -23,7 +23,7 @@ namespace WebApiToTypeScript.Endpoints
                 .Parent
                 .AddAndUseBlock($"if (_.isArray(value))")
                 .AddStatement($"var encodedItems = _.map(value, (item: any) => encodeURIComponent(item.toString()));")
-                .AddStatement($"parameters.push(`${{key}}=${{encodedItems.join(',')}}`);")
+                .AddStatement($"_(encodedItems).each(item => parameters.push(`${{key}}=${{item}}`));")
                 .Parent
                 .AddAndUseBlock("else")
                 .AddStatement($"parameters.push(`${{key}}=${{encodeURIComponent(value.toString())}}`);")
