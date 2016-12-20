@@ -86,6 +86,9 @@
   <ItemGroup>
     <Content Include="Global.asax" />
     <Content Include="Index.html" />
+    <Content Include="Scripts\Watts.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </Content>
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
@@ -99,6 +102,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
+    <Content Include="Watts.config.json" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

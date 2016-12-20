@@ -157,7 +157,24 @@ namespace WebApiToTypeScript
         {
             var configFileContent = File.ReadAllText(configFilePath);
 
-            return JsonConvert.DeserializeObject<Config.Config>(configFileContent);
+            var config = JsonConvert.DeserializeObject<Config.Config>(configFileContent);
+
+            var baseDir = Path.GetDirectoryName(configFilePath) ?? "";
+            config.WebApiModuleFileName = Path.Combine(baseDir, config.WebApiModuleFileName);
+            config.EndpointsOutputDirectory = Path.Combine(baseDir, config.EndpointsOutputDirectory);
+            config.ServiceOutputDirectory = Path.Combine(baseDir, config.ServiceOutputDirectory);
+            config.EnumsOutputDirectory = Path.Combine(baseDir, config.EnumsOutputDirectory);
+            config.InterfacesOutputDirectory = Path.Combine(baseDir, config.InterfacesOutputDirectory);
+            config.ViewsOutputDirectory = Path.Combine(baseDir, config.ViewsOutputDirectory);
+            config.ResourcesOutputDirectory = Path.Combine(baseDir, config.ResourcesOutputDirectory);
+
+            foreach (var c in config.ViewConfigs)
+                c.SourceDirectory = Path.Combine(baseDir, c.SourceDirectory);
+
+            foreach (var c in config.ResourceConfigs)
+                c.SourcePath = Path.Combine(baseDir, c.SourcePath);
+
+            return config;
         }
 
         private void CreateFileForBlock(TypeScriptBlock typeScriptBlock, string outputDirectory, string fileName)
