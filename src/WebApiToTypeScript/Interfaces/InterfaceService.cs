@@ -124,10 +124,27 @@ namespace WebApiToTypeScript.Interfaces
             return interfaceNode;
         }
 
+        public IEnumerable<MemberWithCSharpType> SameNamedDerivedMembers(
+            MemberWithCSharpType member,
+            InterfaceNode interfaceNode)
+        {
+            var members = Enumerable.Empty<MemberWithCSharpType>();
+
+            foreach (var derived in interfaceNode.DerivedInterfaces)
+            {
+                members = members.Concat(
+                    GetMembers(derived.TypeDefinition)
+                        .Where(m => m.Name == member.Name));
+
+                members = members.Concat(SameNamedDerivedMembers(member, derived));
+            }
+
+            return members;
+        }
+
         private void WriteInterfaces(TypeScriptBlock interfacesBlock, InterfaceNode interfaceNode)
         {
             var typeDefinition = interfaceNode.TypeDefinition;
-
             if (typeDefinition != null)
             {
                 WriteInterfaceNode(interfacesBlock, interfaceNode);
@@ -217,23 +234,45 @@ namespace WebApiToTypeScript.Interfaces
 
             foreach (var thing in things)
             {
-                var interfaceName = string.Empty;
-                var typeName = string.Empty;
+                var thingType = thing.CSharpType.TypeDefinition;
+                var union = SameNamedDerivedMembers(thing, interfaceNode)
+                    .Select(e => e.CSharpType.TypeDefinition)
+                    .ToList();
+                union.Add(thingType);
 
+                string interfaceName;
+                string typeName;
                 if (thing.CSharpType.IsGenericParameter)
                 {
                     typeName = interfaceName = thing.CSharpType.GenericParameterName;
                 }
                 else
                 {
-                    var thingType = thing.CSharpType.TypeDefinition;
-                    var typeScriptType = TypeService.GetTypeScriptType(thingType, thing.Name);
-
                     if (thingType.IsInterface)
                         continue;
 
-                    interfaceName = typeScriptType.InterfaceName;
-                    typeName = typeScriptType.TypeName;
+                    if (union.Count == 1)
+                    {
+                        var typeScriptType = TypeService.GetTypeScriptType(union[0], thing.Name);
+                        interfaceName = typeScriptType.InterfaceName;
+                        typeName = typeScriptType.TypeName;
+                    }
+                    else
+                    {
+                        typeName = string.Join(" | ", union
+                            .Select(t =>
+                            {
+                                var type = TypeService.GetTypeScriptType(t, thing.Name);
+                                return type.TypeName;
+                            })
+                            .Distinct());
+                        interfaceName = string.Join(" | ", union
+                            .Select(t =>
+                            {
+                                var type = TypeService.GetTypeScriptType(t, thing.Name);
+                                return type.InterfaceName;
+                            }).Distinct());
+                    }
                 }
 
                 var thingName = Config.InterfaceMembersInCamelCase
