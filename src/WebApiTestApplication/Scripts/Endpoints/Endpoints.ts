@@ -14,8 +14,8 @@ namespace Endpoints {
         }
     
         if (_.isArray(value)) {
-            var encodedItems = _.map(value, (item) => encodeURIComponent(item.toString()));
-            parameters.push(`${key}=${encodedItems.join(',')}`);
+            var encodedItems = _.map(value, (item: any) => encodeURIComponent(item.toString()));
+            _(encodedItems).each(item => parameters.push(`${key}=${item}`));
         }
         else {
             parameters.push(`${key}=${encodeURIComponent(value.toString())}`);
@@ -185,6 +185,48 @@ namespace Endpoints {
         
             toString = (): string => {
                 return `/api/Test/${this.hole}/actions`;
+            }
+        }
+    
+        export interface IPost1 {
+            hole: string;
+        }
+    
+        export interface IPost1WithCall extends IPost1, IEndpoint {
+            call<TView>(value: Interfaces.IDerivedClassWithShadowedProperty): ng.IPromise<TView>;
+        }
+    
+        export class Post1 implements IPost1, IEndpoint {
+            _verb = 'POST';
+            hole: string;
+        
+            constructor(args: IPost1) {
+                this.hole = args != null ? args.hole : null;
+            }
+        
+            toString = (): string => {
+                return `/api/Test/${this.hole}/actions/derived`;
+            }
+        }
+    
+        export interface IPost2 {
+            hole: string;
+        }
+    
+        export interface IPost2WithCall extends IPost2, IEndpoint {
+            call<TView>(value: Interfaces.IDerivedClassWithAnotherShadowedProperty): ng.IPromise<TView>;
+        }
+    
+        export class Post2 implements IPost2, IEndpoint {
+            _verb = 'POST';
+            hole: string;
+        
+            constructor(args: IPost2) {
+                this.hole = args != null ? args.hole : null;
+            }
+        
+            toString = (): string => {
+                return `/api/Test/${this.hole}/actions/derivedAgain`;
             }
         }
     

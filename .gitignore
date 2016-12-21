@@ -1,8 +1,8 @@
-packages/
+/src/packages
 .vs/
 bin/
 obj/
+/src/WebApiTestApplication/Scripts/CompiledTypeScript/
 *.csproj.user
-src/WebApiTestApplication/Scripts/typings/
-src/WebApiTestApplication/Scripts/CompiledTypeScript/
+*.DotSettings.user
 *.nupkg

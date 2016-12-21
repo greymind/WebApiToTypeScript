@@ -63,6 +63,24 @@ namespace Endpoints {
                 });
             },
         
+            Post1: (args: Endpoints.Test.IPost1): Endpoints.Test.IPost1WithCall => {
+                var endpoint = new Endpoints.Test.Post1(args);
+                return _.extendOwn(endpoint, {
+                    call<TView>(value: Interfaces.IDerivedClassWithShadowedProperty) {
+                        return AngularEndpointsService.call<TView>(this, value != null ? value : null);
+                    }
+                });
+            },
+        
+            Post2: (args: Endpoints.Test.IPost2): Endpoints.Test.IPost2WithCall => {
+                var endpoint = new Endpoints.Test.Post2(args);
+                return _.extendOwn(endpoint, {
+                    call<TView>(value: Interfaces.IDerivedClassWithAnotherShadowedProperty) {
+                        return AngularEndpointsService.call<TView>(this, value != null ? value : null);
+                    }
+                });
+            },
+        
             Put: (args: Endpoints.Test.IPut): Endpoints.Test.IPutWithCall => {
                 var endpoint = new Endpoints.Test.Put(args);
                 return _.extendOwn(endpoint, {

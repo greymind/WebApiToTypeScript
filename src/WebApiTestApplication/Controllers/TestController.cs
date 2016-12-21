@@ -67,6 +67,16 @@ namespace WebApiTestApplication.Controllers
         public string[] List { get; set; }
     }
 
+    public class DerivedClassWithShadowedProperty : AnotherClass
+    {
+        public new string Number { get; set; }
+    }
+
+    public class DerivedClassWithAnotherShadowedProperty : DerivedClassWithShadowedProperty
+    {
+        public new int Number { get; set; }
+    }
+
     [RoutePrefix("api/Test/{hole}/actions")]
     public class TestController : ApiController
     {
@@ -83,14 +93,7 @@ namespace WebApiTestApplication.Controllers
         {
             return $"value {hole} / {id}";
         }
-
-        //[HttpGet]
-        //[Route("getty/{id:encryptedInt}")]
-        //public string Getty(int id, string hole)
-        //{
-        //    return $"{nameof(Getty)}: value {hole} / {id}";
-        //}
-
+        
         [HttpGet]
         [Route("getSomething/{id}/ha")]
         public string GetSomething(string hole, int id, DummyEnum y = DummyEnum.Bye)
@@ -108,6 +111,22 @@ namespace WebApiTestApplication.Controllers
         [HttpPost]
         [Route("")]
         public string Post(string hole, DummyClass value)
+        {
+            var valueJson = JsonConvert.SerializeObject(value);
+            return $"thanks for the {valueJson} in the {hole}";
+        }
+
+        [HttpPost]
+        [Route("derived")]
+        public string Post(string hole, DerivedClassWithShadowedProperty value)
+        {
+            var valueJson = JsonConvert.SerializeObject(value);
+            return $"thanks for the {valueJson} in the {hole}";
+        }
+
+        [HttpPost]
+        [Route("derivedAgain")]
+        public string Post(string hole, DerivedClassWithAnotherShadowedProperty value)
         {
             var valueJson = JsonConvert.SerializeObject(value);
             return $"thanks for the {valueJson} in the {hole}";

@@ -25,72 +25,74 @@ class TestController {
         megaClass.something = 7;
 
         endpointsService.Test.Get({
-            hole: "cap"
-        })
+                hole: "cap"
+            })
             .call()
             .then(responsePrinter);
 
         endpointsService.Test.Get1({
-            hole: "cap",
-            id: "777"
-        })
+                hole: "cap",
+                id: "777"
+            })
             .call()
             .then(responsePrinter);
 
         endpointsService.Test.GetSomething({
-            hole: "cap",
-            id: 7,
-            y: Enums.DummyEnum.Bye
-        })
+                hole: "cap",
+                id: 7,
+                y: Enums.DummyEnum.Bye
+            })
             .call()
             .then(responsePrinter);
 
         endpointsService.Test.GetSomethingElse({
-            hole: "cap",
-            id: 3,
-            y: dummyClass
-        })
+                hole: "cap",
+                id: 3,
+                y: dummyClass
+            })
             .call()
             .then(responsePrinter);
 
         endpointsService.Test.Post({
-            hole: "cap"
-        })
+                hole: "cap"
+            })
             .call(null)
             .then(responsePrinter);
 
         endpointsService.Test.Post({
-            hole: "cap"
-        })
+                hole: "cap"
+            })
             .call(dummyClass)
             .then(responsePrinter);
 
         endpointsService.Test.Put({
-            hole: "cap",
-            id: 5
-        })
+                hole: "cap",
+                id: 5
+            })
             .call("b")
             .then(responsePrinter);
 
         endpointsService.Test.Delete({
-            hole: "cap",
-            id: 2
-        })
+                hole: "cap",
+                id: 2
+            })
             .call()
             .then(responsePrinter);
 
         endpointsService.Thingy.Get({
-            id: 1,
-            x: "blah",
-            c: megaClass
-        })
+                id: 1,
+                x: "blah",
+                c: megaClass
+            })
             .call()
             .then(responsePrinter);
 
         endpointsService.Thingy.Post()
             .call({
                 something: 7,
-                number: 1
+                number: 1,
+                name: null,
+                list: null
             })
             .then(responsePrinter);
     }

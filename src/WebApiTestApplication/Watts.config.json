@@ -1,22 +1,22 @@
 ﻿{
-    "WebApiModuleFileName": "../../../WebApiTestApplication/bin/WebApiTestApplication.dll",
+    "WebApiModuleFileName": "./bin/WebApiTestApplication.dll",
 
-    "EndpointsOutputDirectory": "../../../WebApiTestApplication/Scripts/Endpoints",
+    "EndpointsOutputDirectory": "./Scripts/Endpoints",
     "EndpointsFileName": "Endpoints.ts",
     "EndpointsNamespace": "Endpoints",
 
     "GenerateService": true,
-    "ServiceOutputDirectory": "../../../WebApiTestApplication/Scripts/Endpoints",
+    "ServiceOutputDirectory": "./Scripts/Endpoints",
     "ServiceFileName": "Service.ts",
     "ServiceNamespace": "Endpoints",
 
     "GenerateEnums": true,
-    "EnumsOutputDirectory": "../../../WebApiTestApplication/Scripts/Enums",
+    "EnumsOutputDirectory": "./Scripts/Enums",
     "EnumsFileName": "Enums.ts",
     "EnumsNamespace": "Enums",
 
     "GenerateInterfaces": true,
-    "InterfacesOutputDirectory": "../../../WebApiTestApplication/Scripts/Interfaces",
+    "InterfacesOutputDirectory": "./Scripts/Interfaces",
     "InterfacesFileName": "Interfaces.ts",
     "InterfacesNamespace": "Interfaces",
     "InterfaceMatches": [

@@ -153,11 +153,33 @@ namespace WebApiToTypeScript
             ResourceService = new ResourceService();
         }
 
+        private static string ToAbsolutePath(string baseDir, string directory)
+        {
+            return Path.GetFullPath(Path.Combine(baseDir, directory));
+        }
+
         private Config.Config GetConfig(string configFilePath)
         {
             var configFileContent = File.ReadAllText(configFilePath);
 
-            return JsonConvert.DeserializeObject<Config.Config>(configFileContent);
+            var config = JsonConvert.DeserializeObject<Config.Config>(configFileContent);
+
+            var baseDir = Path.GetFullPath(Path.GetDirectoryName(configFilePath) ?? "");
+            config.WebApiModuleFileName = ToAbsolutePath(baseDir, config.WebApiModuleFileName);
+            config.EndpointsOutputDirectory = ToAbsolutePath(baseDir, config.EndpointsOutputDirectory);
+            config.ServiceOutputDirectory = ToAbsolutePath(baseDir, config.ServiceOutputDirectory);
+            config.EnumsOutputDirectory = ToAbsolutePath(baseDir, config.EnumsOutputDirectory);
+            config.InterfacesOutputDirectory = ToAbsolutePath(baseDir, config.InterfacesOutputDirectory);
+            config.ViewsOutputDirectory = ToAbsolutePath(baseDir, config.ViewsOutputDirectory);
+            config.ResourcesOutputDirectory = ToAbsolutePath(baseDir, config.ResourcesOutputDirectory);
+
+            foreach (var c in config.ViewConfigs)
+                c.SourceDirectory = ToAbsolutePath(baseDir, c.SourceDirectory);
+
+            foreach (var c in config.ResourceConfigs)
+                c.SourcePath = ToAbsolutePath(baseDir, c.SourcePath);
+
+            return config;
         }
 
         private void CreateFileForBlock(TypeScriptBlock typeScriptBlock, string outputDirectory, string fileName)
