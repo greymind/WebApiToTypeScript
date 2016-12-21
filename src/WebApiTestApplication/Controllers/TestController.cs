@@ -118,18 +118,18 @@ namespace WebApiTestApplication.Controllers
 
         [HttpPost]
         [Route("derived")]
-        public string Post(DerivedClassWithShadowedProperty value)
+        public string Post(string hole, DerivedClassWithShadowedProperty value)
         {
             var valueJson = JsonConvert.SerializeObject(value);
-            return $"thanks for the {valueJson}";
+            return $"thanks for the {valueJson} in the {hole}";
         }
 
         [HttpPost]
         [Route("derivedAgain")]
-        public string Post(DerivedClassWithAnotherShadowedProperty value)
+        public string Post(string hole, DerivedClassWithAnotherShadowedProperty value)
         {
             var valueJson = JsonConvert.SerializeObject(value);
-            return $"thanks for the {valueJson}";
+            return $"thanks for the {valueJson} in the {hole}";
         }
 
         [HttpPut]

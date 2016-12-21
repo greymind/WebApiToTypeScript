@@ -153,26 +153,31 @@ namespace WebApiToTypeScript
             ResourceService = new ResourceService();
         }
 
+        private static string ToAbsolutePath(string baseDir, string directory)
+        {
+            return Path.GetFullPath(Path.Combine(baseDir, directory));
+        }
+
         private Config.Config GetConfig(string configFilePath)
         {
             var configFileContent = File.ReadAllText(configFilePath);
 
             var config = JsonConvert.DeserializeObject<Config.Config>(configFileContent);
 
-            var baseDir = Path.GetDirectoryName(configFilePath) ?? "";
-            config.WebApiModuleFileName = Path.Combine(baseDir, config.WebApiModuleFileName);
-            config.EndpointsOutputDirectory = Path.Combine(baseDir, config.EndpointsOutputDirectory);
-            config.ServiceOutputDirectory = Path.Combine(baseDir, config.ServiceOutputDirectory);
-            config.EnumsOutputDirectory = Path.Combine(baseDir, config.EnumsOutputDirectory);
-            config.InterfacesOutputDirectory = Path.Combine(baseDir, config.InterfacesOutputDirectory);
-            config.ViewsOutputDirectory = Path.Combine(baseDir, config.ViewsOutputDirectory);
-            config.ResourcesOutputDirectory = Path.Combine(baseDir, config.ResourcesOutputDirectory);
+            var baseDir = Path.GetFullPath(Path.GetDirectoryName(configFilePath) ?? "");
+            config.WebApiModuleFileName = ToAbsolutePath(baseDir, config.WebApiModuleFileName);
+            config.EndpointsOutputDirectory = ToAbsolutePath(baseDir, config.EndpointsOutputDirectory);
+            config.ServiceOutputDirectory = ToAbsolutePath(baseDir, config.ServiceOutputDirectory);
+            config.EnumsOutputDirectory = ToAbsolutePath(baseDir, config.EnumsOutputDirectory);
+            config.InterfacesOutputDirectory = ToAbsolutePath(baseDir, config.InterfacesOutputDirectory);
+            config.ViewsOutputDirectory = ToAbsolutePath(baseDir, config.ViewsOutputDirectory);
+            config.ResourcesOutputDirectory = ToAbsolutePath(baseDir, config.ResourcesOutputDirectory);
 
             foreach (var c in config.ViewConfigs)
-                c.SourceDirectory = Path.Combine(baseDir, c.SourceDirectory);
+                c.SourceDirectory = ToAbsolutePath(baseDir, c.SourceDirectory);
 
             foreach (var c in config.ResourceConfigs)
-                c.SourcePath = Path.Combine(baseDir, c.SourcePath);
+                c.SourcePath = ToAbsolutePath(baseDir, c.SourcePath);
 
             return config;
         }
