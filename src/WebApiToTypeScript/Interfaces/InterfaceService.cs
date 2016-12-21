@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Mono.Cecil;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Mono.Cecil;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.Types;
 
@@ -235,9 +235,11 @@ namespace WebApiToTypeScript.Interfaces
             foreach (var thing in things)
             {
                 var thingType = thing.CSharpType.TypeDefinition;
+
                 var union = SameNamedDerivedMembers(thing, interfaceNode)
                     .Select(e => e.CSharpType.TypeDefinition)
                     .ToList();
+
                 union.Add(thingType);
 
                 string interfaceName;
@@ -254,6 +256,7 @@ namespace WebApiToTypeScript.Interfaces
                     if (union.Count == 1)
                     {
                         var typeScriptType = TypeService.GetTypeScriptType(union[0], thing.Name);
+
                         interfaceName = typeScriptType.InterfaceName;
                         typeName = typeScriptType.TypeName;
                     }
@@ -266,6 +269,7 @@ namespace WebApiToTypeScript.Interfaces
                                 return type.TypeName;
                             })
                             .Distinct());
+
                         interfaceName = string.Join(" | ", union
                             .Select(t =>
                             {

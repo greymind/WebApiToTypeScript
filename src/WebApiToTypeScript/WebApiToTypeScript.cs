@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Newtonsoft.Json;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.Endpoints;
 using WebApiToTypeScript.Enums;
@@ -165,6 +165,7 @@ namespace WebApiToTypeScript
             var config = JsonConvert.DeserializeObject<Config.Config>(configFileContent);
 
             var baseDir = Path.GetFullPath(Path.GetDirectoryName(configFilePath) ?? "");
+
             config.WebApiModuleFileName = ToAbsolutePath(baseDir, config.WebApiModuleFileName);
             config.EndpointsOutputDirectory = ToAbsolutePath(baseDir, config.EndpointsOutputDirectory);
             config.ServiceOutputDirectory = ToAbsolutePath(baseDir, config.ServiceOutputDirectory);
@@ -173,11 +174,11 @@ namespace WebApiToTypeScript
             config.ViewsOutputDirectory = ToAbsolutePath(baseDir, config.ViewsOutputDirectory);
             config.ResourcesOutputDirectory = ToAbsolutePath(baseDir, config.ResourcesOutputDirectory);
 
-            foreach (var c in config.ViewConfigs)
-                c.SourceDirectory = ToAbsolutePath(baseDir, c.SourceDirectory);
+            foreach (var viewConfig in config.ViewConfigs)
+                viewConfig.SourceDirectory = ToAbsolutePath(baseDir, viewConfig.SourceDirectory);
 
-            foreach (var c in config.ResourceConfigs)
-                c.SourcePath = ToAbsolutePath(baseDir, c.SourcePath);
+            foreach (var resourceConfig in config.ResourceConfigs)
+                resourceConfig.SourcePath = ToAbsolutePath(baseDir, resourceConfig.SourcePath);
 
             return config;
         }
