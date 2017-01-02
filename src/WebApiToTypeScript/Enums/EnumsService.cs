@@ -9,6 +9,9 @@ namespace WebApiToTypeScript.Enums
 {
     public class EnumsService : ServiceAware
     {
+        private readonly Regex regexToFindUppercases
+            = new Regex(@"(?<=[A-Z])(?=[A-Z][a-z]) | (?<=[^A-Z])(?=[A-Z]) | (?<=[A-Za-z])(?=[^A-Za-z])", RegexOptions.IgnorePatternWhitespace);
+
         private List<TypeDefinition> Enums { get; }
             = new List<TypeDefinition>();
 
@@ -81,6 +84,7 @@ namespace WebApiToTypeScript.Enums
             foreach (var field in fields)
             {
                 var fieldDescription = GetFieldDescription(field);
+
                 switchBlock
                     .AddStatement($"case {typeDefinition.Name}.{field.Name}: return \"{fieldDescription}\";");
             }
@@ -88,17 +92,15 @@ namespace WebApiToTypeScript.Enums
 
         private string GetFieldDescription(FieldDefinition field)
         {
-            var regexToFindUppercases = new Regex(@"
-                (?<=[A-Z])(?=[A-Z][a-z]) |
-                 (?<=[^A-Z])(?=[A-Z]) |
-                 (?<=[A-Za-z])(?=[^A-Za-z])", RegexOptions.IgnorePatternWhitespace);
-
             var descriptionAttributeName = typeof(DescriptionAttribute).FullName;
 
             var fieldDescription =
                 field.CustomAttributes.Any(attr => attr.AttributeType.FullName == descriptionAttributeName)
-                    ? field.CustomAttributes.Single(attr => attr.AttributeType.FullName == descriptionAttributeName)
-                        .ConstructorArguments[0].Value.ToString()
+                    ? field.CustomAttributes
+                           .Single(attr => attr.AttributeType.FullName == descriptionAttributeName)
+                           .ConstructorArguments[0]
+                           .Value
+                           .ToString()
                     : regexToFindUppercases.Replace(field.Name, " ");
 
             return fieldDescription;
