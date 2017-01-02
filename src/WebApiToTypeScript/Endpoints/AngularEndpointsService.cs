@@ -28,8 +28,18 @@ namespace WebApiToTypeScript.Endpoints
 
         public void WriteServiceObjectToBlock(TypeScriptBlock serviceBlock, WebApiController webApiController)
         {
-            var controllerBlock = serviceBlock
-                .AddAndUseBlock($"public {webApiController.Name}: I{webApiController.Name}Service =");
+            TypeScriptBlock controllerBlock = null;
+
+            if (Config.GenerateService)
+            {
+                controllerBlock = serviceBlock
+                    .AddAndUseBlock($"public {webApiController.Name}: {Config.EndpointsNamespace}.{webApiController.Name}.I{webApiController.Name}Service =");
+            }
+            else
+            {
+                controllerBlock = serviceBlock
+                    .AddAndUseBlock($"public {webApiController.Name} =");
+            }
 
             var actions = webApiController.Actions;
 
