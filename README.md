@@ -73,6 +73,7 @@ angular.module('framework').service('AngularEndpointsService', Framework.Endpoin
   "ServicesName": "string",
 
   "GenerateEnums": "boolean",
+  "GenerateEnumDescriptions": "boolean",
   "EnumsOutputDirectory": "string",
   "EnumsFileName": "string",
   "EnumsNamespace": "string",
@@ -116,6 +117,7 @@ angular.module('framework').service('AngularEndpointsService', Framework.Endpoin
 * [Balakrishnan (Balki) Ranganathan](https://github.com/greymind)
 * [Augustin Juricic](https://github.com/omittones)
 * [Darko Sperac](https://github.com/dsperac)
+* [Dominik Borovic] (https://github.com/dborovic)
 
 ## License
 MIT

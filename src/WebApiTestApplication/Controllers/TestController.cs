@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,7 +51,9 @@ namespace WebApiTestApplication.Controllers
     public enum DummyEnum
     {
         Hi = 1,
-        Bye = 2
+        [Description("Bye a lot")]
+        Bye = 2,
+        ValueWithMultipleUppercaseWords = 3
     }
 
     public class DummyClass
