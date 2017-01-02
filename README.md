@@ -5,6 +5,7 @@
 A tool for code generating TypeScript endpoints for your ASP.NET Web API controllers and their actions. No more need for dumb repositories!
 * Generates typed endpoints with required and optional parameters for GET, PUT, POST and DELETE verbs
 * Generates enumerations and interfaces for DTOs used in all controller actions
+  * Generates enum descriptions based on the `[Description]` attribute
 * Generates Angular service to expose typed `call()` function to fetch response from server
 * Generates typed views to use on front-end
 * Generates resources files based on .resx files
@@ -117,7 +118,7 @@ angular.module('framework').service('AngularEndpointsService', Framework.Endpoin
 * [Balakrishnan (Balki) Ranganathan](https://github.com/greymind)
 * [Augustin Juricic](https://github.com/omittones)
 * [Darko Sperac](https://github.com/dsperac)
-* [Dominik Borovic] (https://github.com/dborovic)
+* [Dominik Borovic](https://github.com/dborovic)
 
 ## License
 MIT
