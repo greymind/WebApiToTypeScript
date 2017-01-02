@@ -46,6 +46,13 @@ namespace WebApiToTypeScript.Endpoints
             var controllerBlock = endpointBlock
                 .AddAndUseBlock($"export {Config.NamespaceOrModuleName} {webApiController.Name}");
 
+            TypeScriptBlock serviceBlock = null;
+            if (Config.GenerateService)
+            {
+                serviceBlock = controllerBlock
+                    .AddAndUseBlock($"export interface I{webApiController.Name}Service");
+            }
+
             var actions = webApiController.Actions;
 
             foreach (var action in actions)
@@ -59,10 +66,16 @@ namespace WebApiToTypeScript.Endpoints
 
                     WriteInterfaceToBlock(interfaceBlock, action);
 
-                    var interfaceWithCallBlock = controllerBlock
-                        .AddAndUseBlock($"export interface I{actionName}WithCall extends I{actionName}, {IEndpoint}");
+                    if (Config.GenerateService)
+                    {
+                        var interfaceWithCallBlock = controllerBlock
+                            .AddAndUseBlock($"export interface I{actionName}WithCall extends I{actionName}, {IEndpoint}");
 
-                    WriteInterfaceWithCallToBlock(interfaceWithCallBlock, action);
+                        WriteInterfaceWithCallToBlock(interfaceWithCallBlock, action);
+
+                        serviceBlock
+                            .AddStatement($"{actionName}: (args?: I{actionName}) => I{actionName}WithCall");
+                    }
 
                     var classBlock = controllerBlock
                         .AddAndUseBlock($"export class {actionName} implements I{actionName}, {IEndpoint}")
