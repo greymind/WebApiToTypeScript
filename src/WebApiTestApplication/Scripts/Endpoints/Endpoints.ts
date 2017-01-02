@@ -34,6 +34,18 @@ namespace Endpoints {
     }
 
     export namespace Test {
+        export interface ITestService {
+            Get: (args?: IGet) => IGetWithCall
+            Get1: (args?: IGet1) => IGet1WithCall
+            GetSomething: (args?: IGetSomething) => IGetSomethingWithCall
+            GetSomethingElse: (args?: IGetSomethingElse) => IGetSomethingElseWithCall
+            Post: (args?: IPost) => IPostWithCall
+            Post1: (args?: IPost1) => IPost1WithCall
+            Post2: (args?: IPost2) => IPost2WithCall
+            Put: (args?: IPut) => IPutWithCall
+            Delete: (args?: IDelete) => IDeleteWithCall
+        }
+    
         export interface IGet {
             hole: string;
         }
@@ -291,6 +303,13 @@ namespace Endpoints {
     }
 
     export namespace Thingy {
+        export interface IThingyService {
+            GetAll: (args?: IGetAll) => IGetAllWithCall
+            Get: (args?: IGet) => IGetWithCall
+            Getty: (args?: IGetty) => IGettyWithCall
+            Post: (args?: IPost) => IPostWithCall
+        }
+    
         export interface IGetAll {
         }
     

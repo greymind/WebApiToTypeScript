@@ -11,6 +11,7 @@
     "ServiceNamespace": "Endpoints",
 
     "GenerateEnums": true,
+    "GenerateEnumDescriptions":  true, 
     "EnumsOutputDirectory": "./Scripts/Enums",
     "EnumsFileName": "Enums.ts",
     "EnumsNamespace": "Enums",

@@ -17,7 +17,7 @@ namespace Endpoints {
             return call.then(response => response.data);
         }
     
-        public Test = {
+        public Test: Endpoints.Test.ITestService = {
             Get: (args: Endpoints.Test.IGet): Endpoints.Test.IGetWithCall => {
                 var endpoint = new Endpoints.Test.Get(args);
                 return _.extendOwn(endpoint, {
@@ -100,7 +100,7 @@ namespace Endpoints {
             }
         }
     
-        public Thingy = {
+        public Thingy: Endpoints.Thingy.IThingyService = {
             GetAll: (args?: Endpoints.Thingy.IGetAll): Endpoints.Thingy.IGetAllWithCall => {
                 var endpoint = new Endpoints.Thingy.GetAll(args);
                 return _.extendOwn(endpoint, {

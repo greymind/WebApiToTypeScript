@@ -36,6 +36,9 @@ namespace WebApiToTypeScript.Config
         public bool GenerateEnums { get; set; }
             = true;
 
+        public bool GenerateEnumDescriptions { get; set; }
+            = false;
+
         public string EnumsOutputDirectory { get; set; }
             = "Enums";
 
