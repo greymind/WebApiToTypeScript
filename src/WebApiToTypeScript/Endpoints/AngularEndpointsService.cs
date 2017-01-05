@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.WebApi;
 
@@ -8,12 +9,15 @@ namespace WebApiToTypeScript.Endpoints
     {
         public TypeScriptBlock CreateServiceBlock()
         {
-            return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}")
+            var serviceBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}")
                 .AddAndUseBlock($"export class {Config.ServiceName}")
-                .AddStatement("static $inject = ['$http'];")
+                .AddStatement("static $inject = ['$http', '$q'];")
                 .AddStatement("static $http: ng.IHttpService;")
-                .AddAndUseBlock("constructor($http: ng.IHttpService)")
+                .AddStatement("static $q: ng.IQService;")
+                .AddStatement("static endpointCache = {};")
+                .AddAndUseBlock("constructor($http: ng.IHttpService, $q: ng.IQService)")
                 .AddStatement($"{Config.ServiceName}.$http = $http;")
+                .AddStatement($"{Config.ServiceName}.$q = $q;")
                 .Parent
                 .AddAndUseBlock("static call<TView>(endpoint: IEndpoint, data)")
                 .AddAndUseBlock($"var call = {Config.ServiceName}.$http<TView>(", isFunctionBlock: true, terminationString: ";")
@@ -21,9 +25,29 @@ namespace WebApiToTypeScript.Endpoints
                 .AddStatement("url: endpoint.toString(),")
                 .AddStatement("data: data")
                 .Parent
-                .AddStatement("return call.then(response => response.data);")
-                .Parent
-                .Parent;
+                .AddStatement("return call.then(response => response.data);");
+
+            if (Config.EndpointsSupportCaching)
+                serviceBlock
+                    .Parent
+                    .AddAndUseBlock("static callCached<TView>(endpoint: IEndpoint, data)")
+                    .AddAndUseBlock($"if (this.endpointCache[endpoint._verb] == null)")
+                    .AddStatement("this.endpointCache[endpoint._verb] = {};")
+                    .Parent
+                    .AddAndUseBlock("if (this.endpointCache[endpoint._verb][data] == null)")
+                    .AddAndUseBlock("return this.call(endpoint, data).then(result =>", isFunctionBlock: true,
+                        terminationString: ";")
+                    .AddStatement("this.endpointCache[endpoint._verb][data] = result;")
+                    .AddStatement("return this.endpointCache[endpoint._verb][data];")
+                    .Parent
+                    .Parent
+                    .AddStatement("const deferred = this.$q.defer();")
+                    .AddStatement("deferred.resolve(this.endpointCache[endpoint._verb][data]);")
+                    .AddStatement("return deferred.promise;");
+            
+            return serviceBlock
+                    .Parent
+                    .Parent;
         }
 
         public void WriteServiceObjectToBlock(TypeScriptBlock serviceBlock, WebApiController webApiController)
@@ -72,6 +96,13 @@ namespace WebApiToTypeScript.Endpoints
                     var interfaceWithCallFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.I{actionName}WithCall";
                     var endpointFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.{actionName}";
 
+                    var cachedBlock = Config.EndpointsSupportCaching &&
+                                      string.Equals(verb.Verb, "GET", StringComparison.InvariantCultureIgnoreCase)
+                        ? new TypeScriptBlock()
+                            .AddAndUseBlock($"callCached<TView>({callArgumentDefinition})")
+                            .AddStatement($"return {Config.ServiceName}.callCached<TView>(this, {callArgumentValue});")
+                        : null; 
+
                     controllerBlock
                         .AddAndUseBlock
                         (
@@ -81,8 +112,10 @@ namespace WebApiToTypeScript.Endpoints
                         )
                         .AddStatement($"var endpoint = new {endpointFullName}(args);")
                         .AddAndUseBlock("return _.extendOwn(endpoint,", isFunctionBlock: true, terminationString: ";")
-                        .AddAndUseBlock($"call<TView>({callArgumentDefinition})")
-                        .AddStatement($"return {Config.ServiceName}.call<TView>(this, {callArgumentValue});");
+                        .AddAndUseBlock($"call<TView>({callArgumentDefinition})", isFunctionBlock: false, terminationString: ",")
+                        .AddStatement($"return {Config.ServiceName}.call<TView>(this, {callArgumentValue});")
+                        .Parent
+                        .AddBlock(cachedBlock);
                 }
             }
         }

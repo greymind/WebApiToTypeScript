@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 
 namespace WebApiToTypeScript.Config
 {
@@ -11,6 +12,9 @@ namespace WebApiToTypeScript.Config
 
         public string EndpointsOutputDirectory { get; set; }
             = "Endpoints";
+
+        public bool EndpointsSupportCaching { get; set; }
+            = true;
 
         public string EndpointsFileName { get; set; }
             = "Endpoints.ts";

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.WebApi;
 
@@ -71,7 +72,7 @@ namespace WebApiToTypeScript.Endpoints
                         var interfaceWithCallBlock = controllerBlock
                             .AddAndUseBlock($"export interface I{actionName}WithCall extends I{actionName}, {IEndpoint}");
 
-                        WriteInterfaceWithCallToBlock(interfaceWithCallBlock, action);
+                        WriteInterfaceWithCallToBlock(interfaceWithCallBlock, action, verb);
 
                         serviceBlock
                             .AddStatement($"{actionName}: (args?: I{actionName}) => I{actionName}WithCall");
@@ -107,7 +108,7 @@ namespace WebApiToTypeScript.Endpoints
             }
         }
 
-        private void WriteInterfaceWithCallToBlock(TypeScriptBlock interfaceWithCallBlock, WebApiAction action)
+        private void WriteInterfaceWithCallToBlock(TypeScriptBlock interfaceWithCallBlock, WebApiAction action, WebApiHttpVerb verb)
         {
             var callArguments = action.BodyParameters;
 
@@ -119,6 +120,10 @@ namespace WebApiToTypeScript.Endpoints
 
             interfaceWithCallBlock
                 .AddStatement($"call<TView>({callArgumentsList}): ng.IPromise<TView>;");
+
+            if (Config.EndpointsSupportCaching && string.Equals(verb.Verb, "GET", StringComparison.InvariantCultureIgnoreCase))
+                interfaceWithCallBlock
+                    .AddStatement($"callCached<TView>({callArgumentsList}): ng.IPromise<TView>;");
         }
 
         private void WriteToStringToBlock(TypeScriptBlock classBlock, WebApiAction action)

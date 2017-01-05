@@ -64,6 +64,7 @@ angular.module('framework').service('AngularEndpointsService', Framework.Endpoin
   
   "GenerateEndpoints": "boolean",  
   "EndpointsOutputDirectory": "string",
+  "EndpointsSupportCaching": "boolean",
   "EndpointsFileName": "string",
   "EndpointsNamespace": "string",
 

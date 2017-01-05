@@ -45,6 +45,14 @@ namespace WebApiToTypeScript.Block
             Outer = outer;
         }
 
+        public TypeScriptBlock AddBlock(TypeScriptBlock block)
+        {
+            if (block != null)
+                CreateChild(block);
+
+            return this;
+        }
+
         public TypeScriptBlock AddBlock(string outer = null, bool isFunctionBlock = false, string terminationString = "")
         {
             var child = CreateChild(outer, isFunctionBlock, terminationString);
@@ -57,6 +65,13 @@ namespace WebApiToTypeScript.Block
             var child = CreateChild(outer, isFunctionBlock, terminationString);
 
             return child;
+        }
+
+        private TypeScriptBlock CreateChild(TypeScriptBlock block)
+        {
+            Children.Add(block);
+
+            return this;
         }
 
         private TypeScriptBlock CreateChild(string outer, bool isFunctionBlock, string terminationString = "")
