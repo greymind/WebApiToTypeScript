@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 
 namespace WebApiToTypeScript.Config
 {

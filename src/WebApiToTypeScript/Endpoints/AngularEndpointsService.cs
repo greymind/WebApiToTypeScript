@@ -31,18 +31,15 @@ namespace WebApiToTypeScript.Endpoints
                 serviceBlock
                     .Parent
                     .AddAndUseBlock("static callCached<TView>(endpoint: IEndpoint, data)")
-                    .AddAndUseBlock($"if (this.endpointCache[endpoint._verb] == null)")
-                    .AddStatement("this.endpointCache[endpoint._verb] = {};")
-                    .Parent
-                    .AddAndUseBlock("if (this.endpointCache[endpoint._verb][data] == null)")
+                    .AddAndUseBlock("if (this.endpointCache[endpoint.toString()] == null)")
                     .AddAndUseBlock("return this.call(endpoint, data).then(result =>", isFunctionBlock: true,
                         terminationString: ";")
-                    .AddStatement("this.endpointCache[endpoint._verb][data] = result;")
-                    .AddStatement("return this.endpointCache[endpoint._verb][data];")
+                    .AddStatement("this.endpointCache[endpoint.toString()] = result;")
+                    .AddStatement("return this.endpointCache[endpoint.toString()];")
                     .Parent
                     .Parent
                     .AddStatement("const deferred = this.$q.defer();")
-                    .AddStatement("deferred.resolve(this.endpointCache[endpoint._verb][data]);")
+                    .AddStatement("deferred.resolve(this.endpointCache[endpoint.toString()]);")
                     .AddStatement("return deferred.promise;");
             
             return serviceBlock
