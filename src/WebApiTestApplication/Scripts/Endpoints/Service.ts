@@ -21,15 +21,17 @@ namespace Endpoints {
         }
     
         static callCached<TView>(endpoint: IEndpoint, data) {
-            if (this.endpointCache[endpoint.toString()] == null) {
-                return this.call(endpoint, data).then(result => {
-                    this.endpointCache[endpoint.toString()] = result;
-                    return this.endpointCache[endpoint.toString()];
+            var cacheKey = endpoint.toString();
+        
+            if (this.endpointCache[cacheKey] == null) {
+                return this.call<TView>(endpoint, data).then(result => {
+                    this.endpointCache[cacheKey] = result;
+                    return this.endpointCache[cacheKey];
                 });
             }
         
             const deferred = this.$q.defer();
-            deferred.resolve(this.endpointCache[endpoint.toString()]);
+            deferred.resolve(this.endpointCache[cacheKey]);
             return deferred.promise;
         }
     

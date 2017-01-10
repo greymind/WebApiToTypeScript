@@ -13,7 +13,7 @@ namespace WebApiToTypeScript.Config
             = "Endpoints";
 
         public bool EndpointsSupportCaching { get; set; }
-            = true;
+            = false;
 
         public string EndpointsFileName { get; set; }
             = "Endpoints.ts";

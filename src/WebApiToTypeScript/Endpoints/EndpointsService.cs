@@ -121,7 +121,7 @@ namespace WebApiToTypeScript.Endpoints
             interfaceWithCallBlock
                 .AddStatement($"call<TView>({callArgumentsList}): ng.IPromise<TView>;");
 
-            if (Config.EndpointsSupportCaching && string.Equals(verb.Verb, "GET", StringComparison.InvariantCultureIgnoreCase))
+            if (Config.EndpointsSupportCaching && string.Equals(verb.Verb, WebApiHttpVerb.Get.Verb, StringComparison.InvariantCultureIgnoreCase))
                 interfaceWithCallBlock
                     .AddStatement($"callCached<TView>({callArgumentsList}): ng.IPromise<TView>;");
         }

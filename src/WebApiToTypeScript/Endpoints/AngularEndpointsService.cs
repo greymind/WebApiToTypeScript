@@ -31,17 +31,18 @@ namespace WebApiToTypeScript.Endpoints
                 serviceBlock
                     .Parent
                     .AddAndUseBlock("static callCached<TView>(endpoint: IEndpoint, data)")
-                    .AddAndUseBlock("if (this.endpointCache[endpoint.toString()] == null)")
-                    .AddAndUseBlock("return this.call(endpoint, data).then(result =>", isFunctionBlock: true,
+                    .AddStatement("var cacheKey = endpoint.toString();")
+                    .AddAndUseBlock("if (this.endpointCache[cacheKey] == null)")
+                    .AddAndUseBlock("return this.call<TView>(endpoint, data).then(result =>", isFunctionBlock: true,
                         terminationString: ";")
-                    .AddStatement("this.endpointCache[endpoint.toString()] = result;")
-                    .AddStatement("return this.endpointCache[endpoint.toString()];")
+                    .AddStatement("this.endpointCache[cacheKey] = result;")
+                    .AddStatement("return this.endpointCache[cacheKey];")
                     .Parent
                     .Parent
                     .AddStatement("const deferred = this.$q.defer();")
-                    .AddStatement("deferred.resolve(this.endpointCache[endpoint.toString()]);")
+                    .AddStatement("deferred.resolve(this.endpointCache[cacheKey]);")
                     .AddStatement("return deferred.promise;");
-            
+
             return serviceBlock
                     .Parent
                     .Parent;
@@ -94,11 +95,11 @@ namespace WebApiToTypeScript.Endpoints
                     var endpointFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.{actionName}";
 
                     var cachedBlock = Config.EndpointsSupportCaching &&
-                                      string.Equals(verb.Verb, "GET", StringComparison.InvariantCultureIgnoreCase)
+                                      string.Equals(verb.Verb, WebApiHttpVerb.Get.Verb, StringComparison.InvariantCultureIgnoreCase)
                         ? new TypeScriptBlock()
                             .AddAndUseBlock($"callCached<TView>({callArgumentDefinition})")
                             .AddStatement($"return {Config.ServiceName}.callCached<TView>(this, {callArgumentValue});")
-                        : null; 
+                        : null;
 
                     controllerBlock
                         .AddAndUseBlock
