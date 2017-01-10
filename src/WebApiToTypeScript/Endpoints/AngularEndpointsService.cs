@@ -94,14 +94,7 @@ namespace WebApiToTypeScript.Endpoints
                     var interfaceWithCallFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.I{actionName}WithCall";
                     var endpointFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.{actionName}";
 
-                    var cachedBlock = Config.EndpointsSupportCaching &&
-                                      string.Equals(verb.Verb, WebApiHttpVerb.Get.Verb, StringComparison.InvariantCultureIgnoreCase)
-                        ? new TypeScriptBlock()
-                            .AddAndUseBlock($"callCached<TView>({callArgumentDefinition})")
-                            .AddStatement($"return {Config.ServiceName}.callCached<TView>(this, {callArgumentValue});")
-                        : null;
-
-                    controllerBlock
+                    var endpointExtendBlock = controllerBlock
                         .AddAndUseBlock
                         (
                             outer: $"{actionName}: (args{optionalString}: {interfaceFullName}): {interfaceWithCallFullName} =>",
@@ -112,8 +105,11 @@ namespace WebApiToTypeScript.Endpoints
                         .AddAndUseBlock("return _.extendOwn(endpoint,", isFunctionBlock: true, terminationString: ";")
                         .AddAndUseBlock($"call<TView>({callArgumentDefinition})", isFunctionBlock: false, terminationString: ",")
                         .AddStatement($"return {Config.ServiceName}.call<TView>(this, {callArgumentValue});")
-                        .Parent
-                        .AddBlock(cachedBlock);
+                        .Parent;
+
+                    if (Config.EndpointsSupportCaching && verb == WebApiHttpVerb.Get)
+                        endpointExtendBlock.AddAndUseBlock($"callCached<TView>({callArgumentDefinition})")
+                            .AddStatement($"return {Config.ServiceName}.callCached<TView>(this, {callArgumentValue});");
                 }
             }
         }
