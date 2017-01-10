@@ -2,6 +2,7 @@
     "WebApiModuleFileName": "./bin/WebApiTestApplication.dll",
 
     "EndpointsOutputDirectory": "./Scripts/Endpoints",
+    "EndpointsSupportCaching": true,
     "EndpointsFileName": "Endpoints.ts",
     "EndpointsNamespace": "Endpoints",
 

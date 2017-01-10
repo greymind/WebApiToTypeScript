@@ -52,6 +52,7 @@ namespace Endpoints {
     
         export interface IGetWithCall extends IGet, IEndpoint {
             call<TView>(): ng.IPromise<TView>;
+            callCached<TView>(): ng.IPromise<TView>;
         }
     
         export class Get implements IGet, IEndpoint {
@@ -74,6 +75,7 @@ namespace Endpoints {
     
         export interface IGet1WithCall extends IGet1, IEndpoint {
             call<TView>(): ng.IPromise<TView>;
+            callCached<TView>(): ng.IPromise<TView>;
         }
     
         export class Get1 implements IGet1, IEndpoint {
@@ -110,6 +112,7 @@ namespace Endpoints {
     
         export interface IGetSomethingWithCall extends IGetSomething, IEndpoint {
             call<TView>(): ng.IPromise<TView>;
+            callCached<TView>(): ng.IPromise<TView>;
         }
     
         export class GetSomething implements IGetSomething, IEndpoint {
@@ -148,6 +151,7 @@ namespace Endpoints {
     
         export interface IGetSomethingElseWithCall extends IGetSomethingElse, IEndpoint {
             call<TView>(): ng.IPromise<TView>;
+            callCached<TView>(): ng.IPromise<TView>;
         }
     
         export class GetSomethingElse implements IGetSomethingElse, IEndpoint {
@@ -315,6 +319,7 @@ namespace Endpoints {
     
         export interface IGetAllWithCall extends IGetAll, IEndpoint {
             call<TView>(): ng.IPromise<TView>;
+            callCached<TView>(): ng.IPromise<TView>;
         }
     
         export class GetAll implements IGetAll, IEndpoint {
@@ -336,6 +341,7 @@ namespace Endpoints {
     
         export interface IGetWithCall extends IGet, IEndpoint {
             call<TView>(): ng.IPromise<TView>;
+            callCached<TView>(): ng.IPromise<TView>;
         }
     
         export class Get implements IGet, IEndpoint {
@@ -374,6 +380,7 @@ namespace Endpoints {
     
         export interface IGettyWithCall extends IGetty, IEndpoint {
             call<TView>(): ng.IPromise<TView>;
+            callCached<TView>(): ng.IPromise<TView>;
         }
     
         export class Getty implements IGetty, IEndpoint {

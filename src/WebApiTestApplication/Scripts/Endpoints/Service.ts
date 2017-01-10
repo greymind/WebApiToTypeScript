@@ -1,10 +1,13 @@
 namespace Endpoints {
     export class AngularEndpointsService {
-        static $inject = ['$http'];
+        static $inject = ['$http', '$q'];
         static $http: ng.IHttpService;
+        static $q: ng.IQService;
+        static endpointCache = {};
     
-        constructor($http: ng.IHttpService) {
+        constructor($http: ng.IHttpService, $q: ng.IQService) {
             AngularEndpointsService.$http = $http;
+            AngularEndpointsService.$q = $q;
         }
     
         static call<TView>(endpoint: IEndpoint, data) {
@@ -17,12 +20,31 @@ namespace Endpoints {
             return call.then(response => response.data);
         }
     
+        static callCached<TView>(endpoint: IEndpoint, data) {
+            var cacheKey = endpoint.toString();
+        
+            if (this.endpointCache[cacheKey] == null) {
+                return this.call<TView>(endpoint, data).then(result => {
+                    this.endpointCache[cacheKey] = result;
+                    return this.endpointCache[cacheKey];
+                });
+            }
+        
+            const deferred = this.$q.defer();
+            deferred.resolve(this.endpointCache[cacheKey]);
+            return deferred.promise;
+        }
+    
         public Test: Endpoints.Test.ITestService = {
             Get: (args: Endpoints.Test.IGet): Endpoints.Test.IGetWithCall => {
                 var endpoint = new Endpoints.Test.Get(args);
                 return _.extendOwn(endpoint, {
                     call<TView>() {
                         return AngularEndpointsService.call<TView>(this, null);
+                    },
+                
+                    callCached<TView>() {
+                        return AngularEndpointsService.callCached<TView>(this, null);
                     }
                 });
             },
@@ -32,6 +54,10 @@ namespace Endpoints {
                 return _.extendOwn(endpoint, {
                     call<TView>() {
                         return AngularEndpointsService.call<TView>(this, null);
+                    },
+                
+                    callCached<TView>() {
+                        return AngularEndpointsService.callCached<TView>(this, null);
                     }
                 });
             },
@@ -41,6 +67,10 @@ namespace Endpoints {
                 return _.extendOwn(endpoint, {
                     call<TView>() {
                         return AngularEndpointsService.call<TView>(this, null);
+                    },
+                
+                    callCached<TView>() {
+                        return AngularEndpointsService.callCached<TView>(this, null);
                     }
                 });
             },
@@ -50,6 +80,10 @@ namespace Endpoints {
                 return _.extendOwn(endpoint, {
                     call<TView>() {
                         return AngularEndpointsService.call<TView>(this, null);
+                    },
+                
+                    callCached<TView>() {
+                        return AngularEndpointsService.callCached<TView>(this, null);
                     }
                 });
             },
@@ -59,7 +93,7 @@ namespace Endpoints {
                 return _.extendOwn(endpoint, {
                     call<TView>(value: Interfaces.IDummyClass) {
                         return AngularEndpointsService.call<TView>(this, value != null ? value : null);
-                    }
+                    },
                 });
             },
         
@@ -68,7 +102,7 @@ namespace Endpoints {
                 return _.extendOwn(endpoint, {
                     call<TView>(value: Interfaces.IDerivedClassWithShadowedProperty) {
                         return AngularEndpointsService.call<TView>(this, value != null ? value : null);
-                    }
+                    },
                 });
             },
         
@@ -77,7 +111,7 @@ namespace Endpoints {
                 return _.extendOwn(endpoint, {
                     call<TView>(value: Interfaces.IDerivedClassWithAnotherShadowedProperty) {
                         return AngularEndpointsService.call<TView>(this, value != null ? value : null);
-                    }
+                    },
                 });
             },
         
@@ -86,7 +120,7 @@ namespace Endpoints {
                 return _.extendOwn(endpoint, {
                     call<TView>(value: string) {
                         return AngularEndpointsService.call<TView>(this, value != null ? `"${value}"` : null);
-                    }
+                    },
                 });
             },
         
@@ -95,7 +129,7 @@ namespace Endpoints {
                 return _.extendOwn(endpoint, {
                     call<TView>() {
                         return AngularEndpointsService.call<TView>(this, null);
-                    }
+                    },
                 });
             }
         }
@@ -106,6 +140,10 @@ namespace Endpoints {
                 return _.extendOwn(endpoint, {
                     call<TView>() {
                         return AngularEndpointsService.call<TView>(this, null);
+                    },
+                
+                    callCached<TView>() {
+                        return AngularEndpointsService.callCached<TView>(this, null);
                     }
                 });
             },
@@ -115,6 +153,10 @@ namespace Endpoints {
                 return _.extendOwn(endpoint, {
                     call<TView>() {
                         return AngularEndpointsService.call<TView>(this, null);
+                    },
+                
+                    callCached<TView>() {
+                        return AngularEndpointsService.callCached<TView>(this, null);
                     }
                 });
             },
@@ -124,6 +166,10 @@ namespace Endpoints {
                 return _.extendOwn(endpoint, {
                     call<TView>() {
                         return AngularEndpointsService.call<TView>(this, null);
+                    },
+                
+                    callCached<TView>() {
+                        return AngularEndpointsService.callCached<TView>(this, null);
                     }
                 });
             },
@@ -133,7 +179,7 @@ namespace Endpoints {
                 return _.extendOwn(endpoint, {
                     call<TView>(value: Interfaces.IMegaClass) {
                         return AngularEndpointsService.call<TView>(this, value != null ? value : null);
-                    }
+                    },
                 });
             }
         }
