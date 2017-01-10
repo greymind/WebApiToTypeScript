@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.WebApi;
 
