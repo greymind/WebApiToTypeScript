@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.Http.Metadata;
+using System.Web.Http.Results;
 using Newtonsoft.Json;
 
 namespace WebApiTestApplication.Controllers
@@ -109,6 +111,20 @@ namespace WebApiTestApplication.Controllers
         public string GetSomethingElse(int id, [FromUri]DummyClass y, string hole)
         {
             return $"{nameof(GetSomethingElse)}: {id} {y.Name} {y.Date.ToShortDateString()} {hole}";
+        }
+
+        [HttpGet]
+        [Route("GetEnumerableString")]
+        public IEnumerable<string> GetEnumerableString()
+        {
+            return new List<string>();
+        }
+
+        [HttpGet]
+        [Route("GetIHttpActionResult")]
+        public IHttpActionResult GetIHttpActionResult()
+        {
+            return new OkResult(new HttpRequestMessage());
         }
 
         [HttpPost]
