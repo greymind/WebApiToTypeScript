@@ -10,10 +10,15 @@ namespace WebApiToTypeScript.Endpoints
         {
             var serviceBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}")
                 .AddAndUseBlock($"export class {Config.ServiceName}")
-                .AddStatement("static $inject = ['$http', '$q'];")
+                .AddStatement
+                (
+                    Config.EndpointsSupportCaching
+                        ? "static $inject = ['$http', '$q'];"
+                        : "static $inject = ['$http'];"
+                )
                 .AddStatement("static $http: ng.IHttpService;")
-                .AddStatement("static $q: ng.IQService;")
-                .AddStatement("static endpointCache = {};")
+                .AddStatement("static $q: ng.IQService;", condition: Config.EndpointsSupportCaching)
+                .AddStatement("static endpointCache = {};", condition: Config.EndpointsSupportCaching)
                 .AddAndUseBlock("constructor($http: ng.IHttpService, $q: ng.IQService)")
                 .AddStatement($"{Config.ServiceName}.$http = $http;")
                 .AddStatement($"{Config.ServiceName}.$q = $q;")
@@ -106,13 +111,20 @@ namespace WebApiToTypeScript.Endpoints
                         )
                         .AddStatement($"var endpoint = new {endpointFullName}(args);")
                         .AddAndUseBlock("return _.extendOwn(endpoint,", isFunctionBlock: true, terminationString: ";")
-                        .AddAndUseBlock($"call{typeScriptTypeForCall}({callArgumentDefinition})", isFunctionBlock: false, terminationString: ",")
+                        .AddAndUseBlock
+                        (
+                            outer: $"call{typeScriptTypeForCall}({callArgumentDefinition})",
+                            isFunctionBlock: false,
+                            terminationString: Config.EndpointsSupportCaching ? "," : string.Empty
+                        )
                         .AddStatement($"return {Config.ServiceName}.call{typeScriptReturnType}(this, {callArgumentValue});")
                         .Parent;
 
                     if (Config.EndpointsSupportCaching && verb == WebApiHttpVerb.Get)
+                    {
                         endpointExtendBlock.AddAndUseBlock($"callCached{typeScriptTypeForCall}({callArgumentDefinition})")
                             .AddStatement($"return {Config.ServiceName}.callCached{typeScriptReturnType}(this, {callArgumentValue});");
+                    }
                 }
             }
         }

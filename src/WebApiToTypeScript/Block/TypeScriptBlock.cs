@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace WebApiToTypeScript.Block
 {
@@ -74,14 +75,17 @@ namespace WebApiToTypeScript.Block
             return child;
         }
 
-        public TypeScriptBlock AddStatement(string statement)
+        public TypeScriptBlock AddStatement(string statement, bool condition = true)
         {
-            var child = new TypeScriptStatement
+            if (condition)
             {
-                Statement = statement
-            };
+                var child = new TypeScriptStatement
+                {
+                    Statement = statement
+                };
 
-            Children.Add(child);
+                Children.Add(child);
+            }
 
             return this;
         }
