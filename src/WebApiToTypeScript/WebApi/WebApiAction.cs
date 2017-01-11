@@ -49,22 +49,25 @@ namespace WebApiToTypeScript.WebApi
 
         public void GetReturnTypes(out string typeScriptReturnType, out string typeScriptTypeForCall)
         {
-            var returnTypeScriptType = TypeService.GetTypeScriptType(Method.ReturnType, "");
-
-            var collectionString = returnTypeScriptType.IsCollection ? "[]" : string.Empty;
-
-            var typeName = returnTypeScriptType.InterfaceName;
-
-            if (!Config.GenerateEndpointsReturnTypes || typeName == "any")
+            if (Config.GenerateEndpointsReturnTypes)
             {
-                typeScriptReturnType = "<TView>";
-                typeScriptTypeForCall = "<TView>";
+                var returnTypeScriptType = TypeService.GetTypeScriptType(Method.ReturnType, "");
+
+                var collectionString = returnTypeScriptType.IsCollection ? "[]" : string.Empty;
+
+                var typeName = returnTypeScriptType.InterfaceName;
+
+                if (typeName != "any")
+                {
+                    typeScriptReturnType = $"<{typeName}{collectionString}>";
+                    typeScriptTypeForCall = "";
+
+                    return;
+                }
             }
-            else
-            {
-                typeScriptReturnType = $"<{typeName}{collectionString}>";
-                typeScriptTypeForCall = "";
-            }
+
+            typeScriptReturnType = "<TView>";
+            typeScriptTypeForCall = "<TView>";
         }
 
         public string GetActionNameForVerb(WebApiHttpVerb verb)
