@@ -155,7 +155,7 @@ namespace WebApiToTypeScript.Types
 
             var typeName = type.FullName;
 
-            var typeMapping = getTypeMapping(parameterName, cSharpType.FullName);
+            var typeMapping = getTypeMapping(parameterName, type.FullName);
 
             if (typeMapping != null)
             {
@@ -227,8 +227,8 @@ namespace WebApiToTypeScript.Types
                 return result;
             }
 
-            var logTypeName = typeDefinition?.FullName ?? cSharpType.FullName;
-            var isValueType = typeDefinition?.IsValueType ?? cSharpType.IsValueType;
+            var logTypeName = typeDefinition?.FullName ?? type.FullName;
+            var isValueType = typeDefinition?.IsValueType ?? type.IsValueType;
 
             LogMessage($"Parameter [{parameterName}] of type [{logTypeName}] unmapped. IsValueType: [{isValueType}]");
             result.TypeName = "any";
