@@ -46,9 +46,8 @@ namespace WebApiToTypeScript.WebApi
 
             BuildQueryStringAndBodyRouteParts();
         }
-        
-        public void GetReturnTypes(out string typeScriptReturnType,
-            out string typeScriptTypeForCall)
+
+        public void GetReturnTypes(out string typeScriptReturnType, out string typeScriptTypeForCall)
         {
             var returnTypeScriptType = TypeService.GetTypeScriptType(Method.ReturnType, "");
 
@@ -56,7 +55,7 @@ namespace WebApiToTypeScript.WebApi
 
             var typeName = returnTypeScriptType.InterfaceName;
 
-            if (typeName == "any")
+            if (!Config.GenerateEndpointsReturnTypes || typeName == "any")
             {
                 typeScriptReturnType = "<TView>";
                 typeScriptTypeForCall = "<TView>";
