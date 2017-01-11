@@ -39,6 +39,8 @@ namespace Endpoints {
             Get1: (args?: IGet1) => IGet1WithCall
             GetSomething: (args?: IGetSomething) => IGetSomethingWithCall
             GetSomethingElse: (args?: IGetSomethingElse) => IGetSomethingElseWithCall
+            GetEnumerableString: (args?: IGetEnumerableString) => IGetEnumerableStringWithCall
+            GetIHttpActionResult: (args?: IGetIHttpActionResult) => IGetIHttpActionResultWithCall
             Post: (args?: IPost) => IPostWithCall
             Post1: (args?: IPost1) => IPost1WithCall
             Post2: (args?: IPost2) => IPost2WithCall
@@ -51,8 +53,8 @@ namespace Endpoints {
         }
     
         export interface IGetWithCall extends IGet, IEndpoint {
-            call<TView>(): ng.IPromise<TView>;
-            callCached<TView>(): ng.IPromise<TView>;
+            call(): ng.IPromise<string[]>;
+            callCached(): ng.IPromise<string[]>;
         }
     
         export class Get implements IGet, IEndpoint {
@@ -74,8 +76,8 @@ namespace Endpoints {
         }
     
         export interface IGet1WithCall extends IGet1, IEndpoint {
-            call<TView>(): ng.IPromise<TView>;
-            callCached<TView>(): ng.IPromise<TView>;
+            call(): ng.IPromise<string>;
+            callCached(): ng.IPromise<string>;
         }
     
         export class Get1 implements IGet1, IEndpoint {
@@ -111,8 +113,8 @@ namespace Endpoints {
         }
     
         export interface IGetSomethingWithCall extends IGetSomething, IEndpoint {
-            call<TView>(): ng.IPromise<TView>;
-            callCached<TView>(): ng.IPromise<TView>;
+            call(): ng.IPromise<string>;
+            callCached(): ng.IPromise<string>;
         }
     
         export class GetSomething implements IGetSomething, IEndpoint {
@@ -150,8 +152,8 @@ namespace Endpoints {
         }
     
         export interface IGetSomethingElseWithCall extends IGetSomethingElse, IEndpoint {
-            call<TView>(): ng.IPromise<TView>;
-            callCached<TView>(): ng.IPromise<TView>;
+            call(): ng.IPromise<string>;
+            callCached(): ng.IPromise<string>;
         }
     
         export class GetSomethingElse implements IGetSomethingElse, IEndpoint {
@@ -183,12 +185,50 @@ namespace Endpoints {
             }
         }
     
+        export interface IGetEnumerableString {
+        }
+    
+        export interface IGetEnumerableStringWithCall extends IGetEnumerableString, IEndpoint {
+            call(): ng.IPromise<string[]>;
+            callCached(): ng.IPromise<string[]>;
+        }
+    
+        export class GetEnumerableString implements IGetEnumerableString, IEndpoint {
+            _verb = 'GET';
+        
+            constructor(args?: IGetEnumerableString) {
+            }
+        
+            toString = (): string => {
+                return `/api/Test/${this.hole}/actions/GetEnumerableString`;
+            }
+        }
+    
+        export interface IGetIHttpActionResult {
+        }
+    
+        export interface IGetIHttpActionResultWithCall extends IGetIHttpActionResult, IEndpoint {
+            call<TView>(): ng.IPromise<TView>;
+            callCached<TView>(): ng.IPromise<TView>;
+        }
+    
+        export class GetIHttpActionResult implements IGetIHttpActionResult, IEndpoint {
+            _verb = 'GET';
+        
+            constructor(args?: IGetIHttpActionResult) {
+            }
+        
+            toString = (): string => {
+                return `/api/Test/${this.hole}/actions/GetIHttpActionResult`;
+            }
+        }
+    
         export interface IPost {
             hole: string;
         }
     
         export interface IPostWithCall extends IPost, IEndpoint {
-            call<TView>(value: Interfaces.IDummyClass): ng.IPromise<TView>;
+            call(value: Interfaces.IDummyClass): ng.IPromise<string>;
         }
     
         export class Post implements IPost, IEndpoint {
@@ -209,7 +249,7 @@ namespace Endpoints {
         }
     
         export interface IPost1WithCall extends IPost1, IEndpoint {
-            call<TView>(value: Interfaces.IDerivedClassWithShadowedProperty): ng.IPromise<TView>;
+            call(value: Interfaces.IDerivedClassWithShadowedProperty): ng.IPromise<string>;
         }
     
         export class Post1 implements IPost1, IEndpoint {
@@ -230,7 +270,7 @@ namespace Endpoints {
         }
     
         export interface IPost2WithCall extends IPost2, IEndpoint {
-            call<TView>(value: Interfaces.IDerivedClassWithAnotherShadowedProperty): ng.IPromise<TView>;
+            call(value: Interfaces.IDerivedClassWithAnotherShadowedProperty): ng.IPromise<string>;
         }
     
         export class Post2 implements IPost2, IEndpoint {
@@ -252,7 +292,7 @@ namespace Endpoints {
         }
     
         export interface IPutWithCall extends IPut, IEndpoint {
-            call<TView>(value: string): ng.IPromise<TView>;
+            call(value: string): ng.IPromise<string>;
         }
     
         export class Put implements IPut, IEndpoint {
@@ -276,7 +316,7 @@ namespace Endpoints {
         }
     
         export interface IDeleteWithCall extends IDelete, IEndpoint {
-            call<TView>(): ng.IPromise<TView>;
+            call(): ng.IPromise<string>;
         }
     
         export class Delete implements IDelete, IEndpoint {
@@ -318,8 +358,8 @@ namespace Endpoints {
         }
     
         export interface IGetAllWithCall extends IGetAll, IEndpoint {
-            call<TView>(): ng.IPromise<TView>;
-            callCached<TView>(): ng.IPromise<TView>;
+            call(): ng.IPromise<string>;
+            callCached(): ng.IPromise<string>;
         }
     
         export class GetAll implements IGetAll, IEndpoint {
@@ -340,8 +380,8 @@ namespace Endpoints {
         }
     
         export interface IGetWithCall extends IGet, IEndpoint {
-            call<TView>(): ng.IPromise<TView>;
-            callCached<TView>(): ng.IPromise<TView>;
+            call(): ng.IPromise<string>;
+            callCached(): ng.IPromise<string>;
         }
     
         export class Get implements IGet, IEndpoint {
@@ -379,8 +419,8 @@ namespace Endpoints {
         }
     
         export interface IGettyWithCall extends IGetty, IEndpoint {
-            call<TView>(): ng.IPromise<TView>;
-            callCached<TView>(): ng.IPromise<TView>;
+            call(): ng.IPromise<string>;
+            callCached(): ng.IPromise<string>;
         }
     
         export class Getty implements IGetty, IEndpoint {
@@ -414,7 +454,7 @@ namespace Endpoints {
         }
     
         export interface IPostWithCall extends IPost, IEndpoint {
-            call<TView>(value: Interfaces.IMegaClass): ng.IPromise<TView>;
+            call(value: Interfaces.IMegaClass): ng.IPromise<string>;
         }
     
         export class Post implements IPost, IEndpoint {

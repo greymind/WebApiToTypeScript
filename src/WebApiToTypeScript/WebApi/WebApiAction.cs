@@ -46,6 +46,27 @@ namespace WebApiToTypeScript.WebApi
 
             BuildQueryStringAndBodyRouteParts();
         }
+        
+        public void GetReturnTypes(out string typeScriptReturnType,
+            out string typeScriptTypeForCall)
+        {
+            var returnTypeScriptType = TypeService.GetTypeScriptType(Method.ReturnType, "");
+
+            var collectionString = returnTypeScriptType.IsCollection ? "[]" : string.Empty;
+
+            var typeName = returnTypeScriptType.InterfaceName;
+
+            if (typeName == "any")
+            {
+                typeScriptReturnType = "<TView>";
+                typeScriptTypeForCall = "<TView>";
+            }
+            else
+            {
+                typeScriptReturnType = $"<{typeName}{collectionString}>";
+                typeScriptTypeForCall = "";
+            }
+        }
 
         public string GetActionNameForVerb(WebApiHttpVerb verb)
         {

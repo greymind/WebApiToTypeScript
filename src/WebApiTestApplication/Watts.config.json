@@ -1,41 +1,42 @@
 ﻿{
-    "WebApiModuleFileName": "./bin/WebApiTestApplication.dll",
+  "WebApiModuleFileName": "./bin/WebApiTestApplication.dll",
 
-    "EndpointsOutputDirectory": "./Scripts/Endpoints",
-    "EndpointsSupportCaching": true,
-    "EndpointsFileName": "Endpoints.ts",
-    "EndpointsNamespace": "Endpoints",
+  "GenerateEndpointsReturnTypes": true,
 
-    "GenerateService": true,
-    "ServiceOutputDirectory": "./Scripts/Endpoints",
-    "ServiceFileName": "Service.ts",
-    "ServiceNamespace": "Endpoints",
+  "EndpointsOutputDirectory": "./Scripts/Endpoints",
+  "EndpointsSupportCaching": true,
+  "EndpointsFileName": "Endpoints.ts",
+  "EndpointsNamespace": "Endpoints",
 
-    "GenerateEnums": true,
-    "GenerateEnumDescriptions":  true, 
-    "EnumsOutputDirectory": "./Scripts/Enums",
-    "EnumsFileName": "Enums.ts",
-    "EnumsNamespace": "Enums",
+  "GenerateService": true,
+  "ServiceOutputDirectory": "./Scripts/Endpoints",
+  "ServiceFileName": "Service.ts",
+  "ServiceNamespace": "Endpoints",
 
-    "GenerateInterfaces": true,
-    "InterfacesOutputDirectory": "./Scripts/Interfaces",
-    "InterfacesFileName": "Interfaces.ts",
-    "InterfacesNamespace": "Interfaces",
-    "InterfaceMatches": [
-        {
-            "Match": "WebApiTestApplication.Controllers.*Chain.*$"
-        }
-    ],
+  "GenerateEnums": true,
+  "GenerateEnumDescriptions": true,
+  "EnumsOutputDirectory": "./Scripts/Enums",
+  "EnumsFileName": "Enums.ts",
+  "EnumsNamespace": "Enums",
 
-    "ScanOtherModules": true,
-    "WriteNamespaceAsModule": false,
+  "GenerateInterfaces": true,
+  "InterfacesOutputDirectory": "./Scripts/Interfaces",
+  "InterfacesFileName": "Interfaces.ts",
+  "InterfacesNamespace": "Interfaces",
 
-    "TypeMappings": [
-        {
-            "WebApiTypeName": "EncryptedInt",
-            "TypeScriptTypeName": "string",
-            "TreatAsAttribute": true,
-            "TreatAsConstraint": true
-        }
-    ]
+  "ScanOtherModules": true,
+  "WriteNamespaceAsModule": false,
+
+  "TypeMappings": [
+    {
+      "WebApiTypeName": "EncryptedInt",
+      "TypeScriptTypeName": "string",
+      "TreatAsAttribute": true,
+      "TreatAsConstraint": true
+    },
+    {
+      "WebApiTypeName": "System.Web.Http.IHttpActionResult",
+      "TypeScriptTypeName": "any"
+    }
+  ]
 }

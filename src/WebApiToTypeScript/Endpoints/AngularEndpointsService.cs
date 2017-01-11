@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.WebApi;
 
@@ -94,6 +93,10 @@ namespace WebApiToTypeScript.Endpoints
                     var interfaceWithCallFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.I{actionName}WithCall";
                     var endpointFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.{actionName}";
 
+                    string typeScriptReturnType, typeScriptTypeForCall;
+
+                    action.GetReturnTypes(out typeScriptReturnType, out typeScriptTypeForCall);
+
                     var endpointExtendBlock = controllerBlock
                         .AddAndUseBlock
                         (
@@ -103,13 +106,13 @@ namespace WebApiToTypeScript.Endpoints
                         )
                         .AddStatement($"var endpoint = new {endpointFullName}(args);")
                         .AddAndUseBlock("return _.extendOwn(endpoint,", isFunctionBlock: true, terminationString: ";")
-                        .AddAndUseBlock($"call<TView>({callArgumentDefinition})", isFunctionBlock: false, terminationString: ",")
-                        .AddStatement($"return {Config.ServiceName}.call<TView>(this, {callArgumentValue});")
+                        .AddAndUseBlock($"call{typeScriptTypeForCall}({callArgumentDefinition})", isFunctionBlock: false, terminationString: ",")
+                        .AddStatement($"return {Config.ServiceName}.call{typeScriptReturnType}(this, {callArgumentValue});")
                         .Parent;
 
                     if (Config.EndpointsSupportCaching && verb == WebApiHttpVerb.Get)
-                        endpointExtendBlock.AddAndUseBlock($"callCached<TView>({callArgumentDefinition})")
-                            .AddStatement($"return {Config.ServiceName}.callCached<TView>(this, {callArgumentValue});");
+                        endpointExtendBlock.AddAndUseBlock($"callCached{typeScriptTypeForCall}({callArgumentDefinition})")
+                            .AddStatement($"return {Config.ServiceName}.callCached{typeScriptReturnType}(this, {callArgumentValue});");
                 }
             }
         }

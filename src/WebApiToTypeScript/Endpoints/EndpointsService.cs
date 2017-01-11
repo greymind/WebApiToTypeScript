@@ -117,12 +117,16 @@ namespace WebApiToTypeScript.Endpoints
 
             var callArgumentsList = string.Join(", ", callArgumentStrings);
 
+            string typeScriptReturnType, typeScriptTypeForCall;
+
+            action.GetReturnTypes(out typeScriptReturnType, out typeScriptTypeForCall);
+
             interfaceWithCallBlock
-                .AddStatement($"call<TView>({callArgumentsList}): ng.IPromise<TView>;");
+                .AddStatement($"call{typeScriptTypeForCall}({callArgumentsList}): ng.IPromise{typeScriptReturnType};");
 
             if (Config.EndpointsSupportCaching && verb == WebApiHttpVerb.Get)
                 interfaceWithCallBlock
-                    .AddStatement($"callCached<TView>({callArgumentsList}): ng.IPromise<TView>;");
+                    .AddStatement($"callCached{typeScriptTypeForCall}({callArgumentsList}): ng.IPromise{typeScriptReturnType};");
         }
 
         private void WriteToStringToBlock(TypeScriptBlock classBlock, WebApiAction action)
