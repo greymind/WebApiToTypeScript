@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>WebApiToTypeScript</id>
-    <version>1.9.1</version>
+    <version>1.9.2</version>
     <authors>Balakrishnan (Balki) Ranganathan</authors>
     <owners>Balakrishnan (Balki) Ranganathan</owners>
     <licenseUrl>https://raw.githubusercontent.com/greymind/WebApiToTypeScript/master/LICENSE</licenseUrl>
