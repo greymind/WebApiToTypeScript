@@ -70,6 +70,8 @@ namespace WebApiTestApplication.Controllers
         public int Number { get; set; }
         public string Name { get; set; }
         public string[] List { get; set; }
+        [JsonIgnore]
+        public string JsonIgnoredProperty { get; set; }
     }
 
     public class DerivedClassWithShadowedProperty : AnotherClass

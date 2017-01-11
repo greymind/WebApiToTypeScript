@@ -334,7 +334,7 @@ namespace WebApiToTypeScript.Interfaces
                 });
 
             var properties = typeDefinition.Properties
-                .Where(p => p.GetMethod != null && p.GetMethod.IsPublic && !p.IsSpecialName)
+                .Where(p => p.GetMethod != null && p.GetMethod.IsPublic && !p.IsSpecialName && !Helpers.HasCustomAttribute(p, "JsonIgnoreAttribute"))
                 .Select(p => new MemberWithCSharpType
                 {
                     Name = p.Name,
