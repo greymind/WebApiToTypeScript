@@ -117,16 +117,39 @@ namespace WebApiTestApplication.Controllers
 
         [HttpGet]
         [Route("GetEnumerableString")]
-        public IEnumerable<string> GetEnumerableString()
+        public IEnumerable<string> GetEnumerableString(string hole)
         {
             return new List<string>();
         }
 
         [HttpGet]
         [Route("GetIHttpActionResult")]
-        public IHttpActionResult GetIHttpActionResult()
+        public IHttpActionResult GetIHttpActionResult(string hole)
         {
             return new OkResult(new HttpRequestMessage());
+        }
+
+        [HttpGet]
+        [Route("GetVoidTask")]
+        public async Task GetVoidTask(string hole)
+        {
+            await Task.Delay(0);
+        }
+
+        [HttpGet]
+        [Route("GetStringTask")]
+        public async Task<string> GetStringTask(string hole)
+        {
+            await Task.Delay(0);
+            return "";
+        }
+
+        [HttpGet]
+        [Route("GetEnumerableStringTask")]
+        public async Task<IEnumerable<string>> GetEnumerableStringTask(string hole)
+        {
+            await Task.Delay(0);
+            return new List<string>();
         }
 
         [HttpPost]

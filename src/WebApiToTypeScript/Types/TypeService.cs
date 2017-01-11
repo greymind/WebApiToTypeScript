@@ -16,7 +16,7 @@ namespace WebApiToTypeScript.Types
         private Dictionary<string, List<Type>> PrimitiveTypesMapping { get; }
             = new Dictionary<string, List<Type>>();
 
-        private List<string> ReservedWords { get; set;  }
+        private List<string> ReservedWords { get; set; }
             = new List<string>();
 
         public List<TypeDefinition> Types { get; }
@@ -151,7 +151,8 @@ namespace WebApiToTypeScript.Types
         {
             var result = new TypeScriptType();
 
-            var type = cSharpType;
+            var type = StripTask(cSharpType) ?? cSharpType;
+
             var typeName = type.FullName;
 
             var typeMapping = getTypeMapping(parameterName, cSharpType.FullName);
@@ -161,20 +162,20 @@ namespace WebApiToTypeScript.Types
                 var tsTypeName = typeMapping.TypeScriptTypeName;
                 result.TypeName = tsTypeName;
                 result.InterfaceName = tsTypeName;
-                result.IsPrimitive = TypeService.IsPrimitiveTypeScriptType(result.TypeName);
+                result.IsPrimitive = IsPrimitiveTypeScriptType(result.TypeName);
                 result.IsEnum = tsTypeName.StartsWith($"{Config.EnumsNamespace}")
                     || result.IsPrimitive;
 
                 return result;
             }
 
-            typeName = TypeService.StripNullable(type) ?? typeName;
+            typeName = StripNullable(type) ?? typeName;
 
-            var collectionType = TypeService.StripCollection(type);
+            var collectionType = StripCollection(type);
             result.IsCollection = collectionType != null;
             typeName = collectionType ?? typeName;
 
-            var typeDefinition = TypeService.GetTypeDefinition(typeName);
+            var typeDefinition = GetTypeDefinition(typeName);
 
             if (typeDefinition?.IsEnum ?? false)
             {
@@ -197,7 +198,7 @@ namespace WebApiToTypeScript.Types
                 return result;
             }
 
-            var primitiveType = TypeService.GetPrimitiveTypeScriptType(typeName);
+            var primitiveType = GetPrimitiveTypeScriptType(typeName);
 
             if (!string.IsNullOrEmpty(primitiveType))
             {
@@ -312,6 +313,23 @@ namespace WebApiToTypeScript.Types
             return null;
         }
 
+        public TypeReference StripTask(TypeReference type)
+        {
+            var taskType = "System.Threading.Tasks.Task";
+
+            var genericType = type as GenericInstanceType;
+            if (genericType != null && genericType.FullName.StartsWith(taskType))
+            {
+                return genericType.GenericArguments.Single();
+            }
+            else if (type.FullName.StartsWith(taskType))
+            {
+                return this.Types.First(x => x.FullName == "System.Void");
+            }
+
+            return null;
+        }
+
         private void LoadReservedWords()
         {
             ReservedWords = new List<string>
@@ -328,6 +346,7 @@ namespace WebApiToTypeScript.Types
             mapping["boolean"] = new List<Type> { typeof(bool) };
             mapping["number"] = new List<Type> { typeof(byte), typeof(short), typeof(int), typeof(long), typeof(float), typeof(double), typeof(decimal) };
             mapping["any"] = new List<Type> { typeof(object) };
+            mapping["void"] = new List<Type> { typeof(void) };
         }
     }
 }

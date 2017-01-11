@@ -88,7 +88,7 @@ namespace Endpoints {
                 });
             },
         
-            GetEnumerableString: (args?: Endpoints.Test.IGetEnumerableString): Endpoints.Test.IGetEnumerableStringWithCall => {
+            GetEnumerableString: (args: Endpoints.Test.IGetEnumerableString): Endpoints.Test.IGetEnumerableStringWithCall => {
                 var endpoint = new Endpoints.Test.GetEnumerableString(args);
                 return _.extendOwn(endpoint, {
                     call() {
@@ -101,7 +101,7 @@ namespace Endpoints {
                 });
             },
         
-            GetIHttpActionResult: (args?: Endpoints.Test.IGetIHttpActionResult): Endpoints.Test.IGetIHttpActionResultWithCall => {
+            GetIHttpActionResult: (args: Endpoints.Test.IGetIHttpActionResult): Endpoints.Test.IGetIHttpActionResultWithCall => {
                 var endpoint = new Endpoints.Test.GetIHttpActionResult(args);
                 return _.extendOwn(endpoint, {
                     call<TView>() {
@@ -110,6 +110,45 @@ namespace Endpoints {
                 
                     callCached<TView>() {
                         return AngularEndpointsService.callCached<TView>(this, null);
+                    }
+                });
+            },
+        
+            GetVoidTask: (args: Endpoints.Test.IGetVoidTask): Endpoints.Test.IGetVoidTaskWithCall => {
+                var endpoint = new Endpoints.Test.GetVoidTask(args);
+                return _.extendOwn(endpoint, {
+                    call() {
+                        return AngularEndpointsService.call<void>(this, null);
+                    },
+                
+                    callCached() {
+                        return AngularEndpointsService.callCached<void>(this, null);
+                    }
+                });
+            },
+        
+            GetStringTask: (args: Endpoints.Test.IGetStringTask): Endpoints.Test.IGetStringTaskWithCall => {
+                var endpoint = new Endpoints.Test.GetStringTask(args);
+                return _.extendOwn(endpoint, {
+                    call() {
+                        return AngularEndpointsService.call<string>(this, null);
+                    },
+                
+                    callCached() {
+                        return AngularEndpointsService.callCached<string>(this, null);
+                    }
+                });
+            },
+        
+            GetEnumerableStringTask: (args: Endpoints.Test.IGetEnumerableStringTask): Endpoints.Test.IGetEnumerableStringTaskWithCall => {
+                var endpoint = new Endpoints.Test.GetEnumerableStringTask(args);
+                return _.extendOwn(endpoint, {
+                    call() {
+                        return AngularEndpointsService.call<string[]>(this, null);
+                    },
+                
+                    callCached() {
+                        return AngularEndpointsService.callCached<string[]>(this, null);
                     }
                 });
             },

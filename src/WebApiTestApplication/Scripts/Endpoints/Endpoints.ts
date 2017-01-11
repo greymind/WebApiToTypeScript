@@ -41,6 +41,9 @@ namespace Endpoints {
             GetSomethingElse: (args?: IGetSomethingElse) => IGetSomethingElseWithCall
             GetEnumerableString: (args?: IGetEnumerableString) => IGetEnumerableStringWithCall
             GetIHttpActionResult: (args?: IGetIHttpActionResult) => IGetIHttpActionResultWithCall
+            GetVoidTask: (args?: IGetVoidTask) => IGetVoidTaskWithCall
+            GetStringTask: (args?: IGetStringTask) => IGetStringTaskWithCall
+            GetEnumerableStringTask: (args?: IGetEnumerableStringTask) => IGetEnumerableStringTaskWithCall
             Post: (args?: IPost) => IPostWithCall
             Post1: (args?: IPost1) => IPost1WithCall
             Post2: (args?: IPost2) => IPost2WithCall
@@ -186,6 +189,7 @@ namespace Endpoints {
         }
     
         export interface IGetEnumerableString {
+            hole: string;
         }
     
         export interface IGetEnumerableStringWithCall extends IGetEnumerableString, IEndpoint {
@@ -195,8 +199,10 @@ namespace Endpoints {
     
         export class GetEnumerableString implements IGetEnumerableString, IEndpoint {
             _verb = 'GET';
+            hole: string;
         
-            constructor(args?: IGetEnumerableString) {
+            constructor(args: IGetEnumerableString) {
+                this.hole = args != null ? args.hole : null;
             }
         
             toString = (): string => {
@@ -205,6 +211,7 @@ namespace Endpoints {
         }
     
         export interface IGetIHttpActionResult {
+            hole: string;
         }
     
         export interface IGetIHttpActionResultWithCall extends IGetIHttpActionResult, IEndpoint {
@@ -214,12 +221,80 @@ namespace Endpoints {
     
         export class GetIHttpActionResult implements IGetIHttpActionResult, IEndpoint {
             _verb = 'GET';
+            hole: string;
         
-            constructor(args?: IGetIHttpActionResult) {
+            constructor(args: IGetIHttpActionResult) {
+                this.hole = args != null ? args.hole : null;
             }
         
             toString = (): string => {
                 return `/api/Test/${this.hole}/actions/GetIHttpActionResult`;
+            }
+        }
+    
+        export interface IGetVoidTask {
+            hole: string;
+        }
+    
+        export interface IGetVoidTaskWithCall extends IGetVoidTask, IEndpoint {
+            call(): ng.IPromise<void>;
+            callCached(): ng.IPromise<void>;
+        }
+    
+        export class GetVoidTask implements IGetVoidTask, IEndpoint {
+            _verb = 'GET';
+            hole: string;
+        
+            constructor(args: IGetVoidTask) {
+                this.hole = args != null ? args.hole : null;
+            }
+        
+            toString = (): string => {
+                return `/api/Test/${this.hole}/actions/GetVoidTask`;
+            }
+        }
+    
+        export interface IGetStringTask {
+            hole: string;
+        }
+    
+        export interface IGetStringTaskWithCall extends IGetStringTask, IEndpoint {
+            call(): ng.IPromise<string>;
+            callCached(): ng.IPromise<string>;
+        }
+    
+        export class GetStringTask implements IGetStringTask, IEndpoint {
+            _verb = 'GET';
+            hole: string;
+        
+            constructor(args: IGetStringTask) {
+                this.hole = args != null ? args.hole : null;
+            }
+        
+            toString = (): string => {
+                return `/api/Test/${this.hole}/actions/GetStringTask`;
+            }
+        }
+    
+        export interface IGetEnumerableStringTask {
+            hole: string;
+        }
+    
+        export interface IGetEnumerableStringTaskWithCall extends IGetEnumerableStringTask, IEndpoint {
+            call(): ng.IPromise<string[]>;
+            callCached(): ng.IPromise<string[]>;
+        }
+    
+        export class GetEnumerableStringTask implements IGetEnumerableStringTask, IEndpoint {
+            _verb = 'GET';
+            hole: string;
+        
+            constructor(args: IGetEnumerableStringTask) {
+                this.hole = args != null ? args.hole : null;
+            }
+        
+            toString = (): string => {
+                return `/api/Test/${this.hole}/actions/GetEnumerableStringTask`;
             }
         }
     
