@@ -78,4 +78,62 @@ namespace Interfaces {
             return this;
         }
     }
+
+    export interface IChain1Generic1<T> {
+        value: T;
+    }
+
+    export class Chain1Generic1<T> implements IChain1Generic1<T>, Endpoints.IHaveQueryParams {
+        value: T;
+    
+        getQueryParams() {
+            return this;
+        }
+    }
+
+    export interface IChain1Generic2<T1, T2> {
+        value11: T1;
+        value12: T2;
+    }
+
+    export class Chain1Generic2<T1, T2> implements IChain1Generic2<T1, T2>, Endpoints.IHaveQueryParams {
+        value11: T1;
+        value12: T2;
+    
+        getQueryParams() {
+            return this;
+        }
+    }
+
+    export interface IChain2Generic1<TValue> extends IChain1Generic2<TValue, number> {
+        value2: TValue;
+    }
+
+    export class Chain2Generic1<TValue> extends Chain1Generic2<TValue, number> implements IChain2Generic1<TValue>, Endpoints.IHaveQueryParams {
+        value2: TValue;
+    
+        constructor() {
+            super();
+        }
+    
+        getQueryParams() {
+            return this;
+        }
+    }
+
+    export interface IChain3 extends IChain2Generic1<Interfaces.MegaClass> {
+        value3: any;
+    }
+
+    export class Chain3 extends Chain2Generic1<Interfaces.MegaClass> implements IChain3, Endpoints.IHaveQueryParams {
+        value3: any;
+    
+        constructor() {
+            super();
+        }
+    
+        getQueryParams() {
+            return this;
+        }
+    }
 }

@@ -23,6 +23,11 @@
   "InterfacesOutputDirectory": "./Scripts/Interfaces",
   "InterfacesFileName": "Interfaces.ts",
   "InterfacesNamespace": "Interfaces",
+  "InterfaceMatches": [
+    {
+      "Match": "WebApiTestApplication.Controllers.*Chain.*$"
+    }
+  ],
 
   "ScanOtherModules": true,
   "WriteNamespaceAsModule": false,
