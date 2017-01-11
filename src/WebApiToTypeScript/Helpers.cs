@@ -84,5 +84,12 @@ namespace WebApiToTypeScript
             return parameter.HasCustomAttributes
                 && parameter.CustomAttributes.Any(a => a.AttributeType.Name == attributeName);
         }
+
+        public static bool HasCustomAttribute(PropertyDefinition property, string attributeName)
+        {
+            return property.HasCustomAttributes
+                && property.CustomAttributes.Any(a => a.AttributeType.Name == attributeName);
+        }
+
     }
 }

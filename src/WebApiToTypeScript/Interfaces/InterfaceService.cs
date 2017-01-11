@@ -334,7 +334,7 @@ namespace WebApiToTypeScript.Interfaces
                 });
 
             var properties = typeDefinition.Properties
-                .Where(p => p.GetMethod != null && p.GetMethod.IsPublic && !p.IsSpecialName && DoesntContainJsonIgnoreAttribute(p))
+                .Where(p => p.GetMethod != null && p.GetMethod.IsPublic && !p.IsSpecialName && !Helpers.HasCustomAttribute(p, "JsonIgnoreAttribute"))
                 .Select(p => new MemberWithCSharpType
                 {
                     Name = p.Name,
@@ -392,12 +392,6 @@ namespace WebApiToTypeScript.Interfaces
                 .Add(interfaceNode);
 
             return interfaceNode;
-        }
-
-        private bool DoesntContainJsonIgnoreAttribute(PropertyDefinition p)
-        {
-            return p.CustomAttributes
-                .All(a => a.AttributeType.Name != "JsonIgnoreAttribute");
         }
     }
 }
