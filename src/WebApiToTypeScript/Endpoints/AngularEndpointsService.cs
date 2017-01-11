@@ -19,9 +19,14 @@ namespace WebApiToTypeScript.Endpoints
                 .AddStatement("static $http: ng.IHttpService;")
                 .AddStatement("static $q: ng.IQService;", condition: Config.EndpointsSupportCaching)
                 .AddStatement("static endpointCache = {};", condition: Config.EndpointsSupportCaching)
-                .AddAndUseBlock("constructor($http: ng.IHttpService, $q: ng.IQService)")
+                .AddAndUseBlock
+                (
+                    Config.EndpointsSupportCaching
+                        ? "constructor($http: ng.IHttpService, $q: ng.IQService)"
+                        : "constructor($http: ng.IHttpService)"
+                )
                 .AddStatement($"{Config.ServiceName}.$http = $http;")
-                .AddStatement($"{Config.ServiceName}.$q = $q;")
+                .AddStatement($"{Config.ServiceName}.$q = $q;", condition: Config.EndpointsSupportCaching)
                 .Parent
                 .AddAndUseBlock("static call<TView>(endpoint: IEndpoint, data)")
                 .AddAndUseBlock($"var call = {Config.ServiceName}.$http<TView>(", isFunctionBlock: true, terminationString: ";")
@@ -32,6 +37,7 @@ namespace WebApiToTypeScript.Endpoints
                 .AddStatement("return call.then(response => response.data);");
 
             if (Config.EndpointsSupportCaching)
+            {
                 serviceBlock
                     .Parent
                     .AddAndUseBlock("static callCached<TView>(endpoint: IEndpoint, data)")
@@ -46,6 +52,7 @@ namespace WebApiToTypeScript.Endpoints
                     .AddStatement("const deferred = this.$q.defer();")
                     .AddStatement("deferred.resolve(this.endpointCache[cacheKey]);")
                     .AddStatement("return deferred.promise;");
+            }
 
             return serviceBlock
                     .Parent
