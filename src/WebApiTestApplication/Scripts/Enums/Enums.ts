@@ -14,4 +14,18 @@ namespace Enums {
             }
         }
     }
+
+    export enum MyEnum {
+        Ok = 1,
+        No = 2,
+    }
+
+    export namespace MyEnum {
+        export function getDescription(enumValue: MyEnum) {
+            switch (enumValue) {
+                case MyEnum.Ok: return "Ok";
+                case MyEnum.No: return "No";
+            }
+        }
+    }
 }

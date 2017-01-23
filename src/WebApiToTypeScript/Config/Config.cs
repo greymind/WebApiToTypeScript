@@ -54,6 +54,9 @@ namespace WebApiToTypeScript.Config
         public string EnumsNamespace { get; set; }
             = "Enums";
 
+        public List<MatchConfig> EnumMatches { get; set; }
+            = new List<MatchConfig>();
+
         public bool GenerateInterfaces { get; set; }
             = true;
 
@@ -69,8 +72,8 @@ namespace WebApiToTypeScript.Config
         public bool InterfaceMembersInCamelCase { get; set; }
             = true;
 
-        public List<InterfaceMatch> InterfaceMatches { get; set; }
-            = new List<InterfaceMatch>();
+        public List<MatchConfig> InterfaceMatches { get; set; }
+            = new List<MatchConfig>();
 
         public bool GenerateViews { get; set; }
             = false;

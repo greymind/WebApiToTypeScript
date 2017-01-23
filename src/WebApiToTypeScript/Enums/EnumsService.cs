@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -48,7 +49,7 @@ namespace WebApiToTypeScript.Enums
 
             foreach (var typeDefinition in sortedEnums)
             {
-                CreateEnumForType(enumsBlock, typeDefinition);
+                WriteEnumForType(enumsBlock, typeDefinition);
                 if (Config.GenerateEnumDescriptions)
                     CreateGetDescriptionExtensionForType(enumsBlock, typeDefinition);
             }
@@ -59,7 +60,7 @@ namespace WebApiToTypeScript.Enums
             return enumsBlock;
         }
 
-        private void CreateEnumForType(TypeScriptBlock enumsBlock, TypeDefinition typeDefinition)
+        private void WriteEnumForType(TypeScriptBlock enumsBlock, TypeDefinition typeDefinition)
         {
             var fields = typeDefinition.Fields
                 .Where(f => f.HasConstant && !f.IsSpecialName);
@@ -104,6 +105,32 @@ namespace WebApiToTypeScript.Enums
                     : regexToFindUppercases.Replace(field.Name, " ");
 
             return fieldDescription;
+        }
+
+        internal void AddMatchingEnums()
+        {
+            foreach (var interfaceMatch in Config.EnumMatches)
+            {
+                var matchConfigExists = !string.IsNullOrEmpty(interfaceMatch.Match);
+
+                if (!matchConfigExists)
+                    return;
+
+                var matchRegEx = new Regex(interfaceMatch.Match);
+
+                var excludeMatchConfigExists = !string.IsNullOrEmpty(interfaceMatch.ExcludeMatch);
+                var excludeMatchRegEx = excludeMatchConfigExists ? new Regex(interfaceMatch.ExcludeMatch) : null;
+
+                var matchingTypes = TypeService
+                    .Types
+                    .Where(type => type.IsEnum && matchRegEx.IsMatch(type.FullName)
+                        && (!excludeMatchConfigExists || !excludeMatchRegEx.IsMatch(type.FullName)));
+
+                foreach (var matchingType in matchingTypes)
+                {
+                    AddEnum(matchingType);
+                }
+            }
         }
     }
 }

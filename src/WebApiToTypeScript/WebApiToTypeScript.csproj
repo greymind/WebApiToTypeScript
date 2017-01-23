@@ -64,7 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\Config.cs" />
-    <Compile Include="Config\InterfaceMatch.cs" />
+    <Compile Include="Config\MatchConfig.cs" />
     <Compile Include="Config\ResourceConfig.cs" />
     <Compile Include="Config\ViewConfig.cs" />
     <Compile Include="Endpoints\AngularEndpointsService.cs" />

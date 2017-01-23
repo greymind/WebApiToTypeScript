@@ -1,6 +1,6 @@
 ﻿namespace WebApiToTypeScript.Config
 {
-    public class InterfaceMatch
+    public class MatchConfig
     {
         public string Match { get; set; }
         public string ExcludeMatch { get; set; }

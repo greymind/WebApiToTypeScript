@@ -116,6 +116,7 @@ namespace WebApiToTypeScript
                 StartAnalysis("enumerations");
 
                 var enumsBlock = EnumsService.CreateEnumsBlock();
+                EnumsService.AddMatchingEnums();
                 EnumsService.WriteEnumsToBlock(enumsBlock);
 
                 StopAnalysis();

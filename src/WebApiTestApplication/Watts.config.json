@@ -18,6 +18,11 @@
   "EnumsOutputDirectory": "./Scripts/Enums",
   "EnumsFileName": "Enums.ts",
   "EnumsNamespace": "Enums",
+  "EnumMatches": [
+    {
+      "Match": "WebApiTestApplication.Enums.*$"
+    }
+  ],
 
   "GenerateInterfaces": true,
   "InterfacesOutputDirectory": "./Scripts/Interfaces",
