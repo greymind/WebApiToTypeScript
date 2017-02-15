@@ -56,8 +56,8 @@ namespace Endpoints {
         }
     
         export interface IGetWithCall extends IGet, IEndpoint {
-            call(): ng.IPromise<string[]>;
-            callCached(): ng.IPromise<string[]>;
+            call(httpConfig?): ng.IPromise<string[]>;
+            callCached(httpConfig?): ng.IPromise<string[]>;
         }
     
         export class Get implements IGet, IEndpoint {
@@ -79,8 +79,8 @@ namespace Endpoints {
         }
     
         export interface IGet1WithCall extends IGet1, IEndpoint {
-            call(): ng.IPromise<string>;
-            callCached(): ng.IPromise<string>;
+            call(httpConfig?): ng.IPromise<string>;
+            callCached(httpConfig?): ng.IPromise<string>;
         }
     
         export class Get1 implements IGet1, IEndpoint {
@@ -116,8 +116,8 @@ namespace Endpoints {
         }
     
         export interface IGetSomethingWithCall extends IGetSomething, IEndpoint {
-            call(): ng.IPromise<string>;
-            callCached(): ng.IPromise<string>;
+            call(httpConfig?): ng.IPromise<string>;
+            callCached(httpConfig?): ng.IPromise<string>;
         }
     
         export class GetSomething implements IGetSomething, IEndpoint {
@@ -155,8 +155,8 @@ namespace Endpoints {
         }
     
         export interface IGetSomethingElseWithCall extends IGetSomethingElse, IEndpoint {
-            call(): ng.IPromise<string>;
-            callCached(): ng.IPromise<string>;
+            call(httpConfig?): ng.IPromise<string>;
+            callCached(httpConfig?): ng.IPromise<string>;
         }
     
         export class GetSomethingElse implements IGetSomethingElse, IEndpoint {
@@ -193,8 +193,8 @@ namespace Endpoints {
         }
     
         export interface IGetEnumerableStringWithCall extends IGetEnumerableString, IEndpoint {
-            call(): ng.IPromise<string[]>;
-            callCached(): ng.IPromise<string[]>;
+            call(httpConfig?): ng.IPromise<string[]>;
+            callCached(httpConfig?): ng.IPromise<string[]>;
         }
     
         export class GetEnumerableString implements IGetEnumerableString, IEndpoint {
@@ -215,8 +215,8 @@ namespace Endpoints {
         }
     
         export interface IGetIHttpActionResultWithCall extends IGetIHttpActionResult, IEndpoint {
-            call<TView>(): ng.IPromise<TView>;
-            callCached<TView>(): ng.IPromise<TView>;
+            call<TView>(httpConfig?): ng.IPromise<TView>;
+            callCached<TView>(httpConfig?): ng.IPromise<TView>;
         }
     
         export class GetIHttpActionResult implements IGetIHttpActionResult, IEndpoint {
@@ -237,8 +237,8 @@ namespace Endpoints {
         }
     
         export interface IGetVoidTaskWithCall extends IGetVoidTask, IEndpoint {
-            call(): ng.IPromise<void>;
-            callCached(): ng.IPromise<void>;
+            call(httpConfig?): ng.IPromise<void>;
+            callCached(httpConfig?): ng.IPromise<void>;
         }
     
         export class GetVoidTask implements IGetVoidTask, IEndpoint {
@@ -259,8 +259,8 @@ namespace Endpoints {
         }
     
         export interface IGetStringTaskWithCall extends IGetStringTask, IEndpoint {
-            call(): ng.IPromise<string>;
-            callCached(): ng.IPromise<string>;
+            call(httpConfig?): ng.IPromise<string>;
+            callCached(httpConfig?): ng.IPromise<string>;
         }
     
         export class GetStringTask implements IGetStringTask, IEndpoint {
@@ -281,8 +281,8 @@ namespace Endpoints {
         }
     
         export interface IGetEnumerableStringTaskWithCall extends IGetEnumerableStringTask, IEndpoint {
-            call(): ng.IPromise<string[]>;
-            callCached(): ng.IPromise<string[]>;
+            call(httpConfig?): ng.IPromise<string[]>;
+            callCached(httpConfig?): ng.IPromise<string[]>;
         }
     
         export class GetEnumerableStringTask implements IGetEnumerableStringTask, IEndpoint {
@@ -303,7 +303,7 @@ namespace Endpoints {
         }
     
         export interface IPostWithCall extends IPost, IEndpoint {
-            call(value: Interfaces.IDummyClass): ng.IPromise<string>;
+            call(value: Interfaces.IDummyClass, httpConfig?): ng.IPromise<string>;
         }
     
         export class Post implements IPost, IEndpoint {
@@ -324,7 +324,7 @@ namespace Endpoints {
         }
     
         export interface IPost1WithCall extends IPost1, IEndpoint {
-            call(value: Interfaces.IDerivedClassWithShadowedProperty): ng.IPromise<string>;
+            call(value: Interfaces.IDerivedClassWithShadowedProperty, httpConfig?): ng.IPromise<string>;
         }
     
         export class Post1 implements IPost1, IEndpoint {
@@ -345,7 +345,7 @@ namespace Endpoints {
         }
     
         export interface IPost2WithCall extends IPost2, IEndpoint {
-            call(value: Interfaces.IDerivedClassWithAnotherShadowedProperty): ng.IPromise<string>;
+            call(value: Interfaces.IDerivedClassWithAnotherShadowedProperty, httpConfig?): ng.IPromise<string>;
         }
     
         export class Post2 implements IPost2, IEndpoint {
@@ -367,7 +367,7 @@ namespace Endpoints {
         }
     
         export interface IPutWithCall extends IPut, IEndpoint {
-            call(value: string): ng.IPromise<string>;
+            call(value: string, httpConfig?): ng.IPromise<string>;
         }
     
         export class Put implements IPut, IEndpoint {
@@ -391,7 +391,7 @@ namespace Endpoints {
         }
     
         export interface IDeleteWithCall extends IDelete, IEndpoint {
-            call(): ng.IPromise<string>;
+            call(httpConfig?): ng.IPromise<string>;
         }
     
         export class Delete implements IDelete, IEndpoint {
@@ -433,8 +433,8 @@ namespace Endpoints {
         }
     
         export interface IGetAllWithCall extends IGetAll, IEndpoint {
-            call(): ng.IPromise<string>;
-            callCached(): ng.IPromise<string>;
+            call(httpConfig?): ng.IPromise<string>;
+            callCached(httpConfig?): ng.IPromise<string>;
         }
     
         export class GetAll implements IGetAll, IEndpoint {
@@ -455,8 +455,8 @@ namespace Endpoints {
         }
     
         export interface IGetWithCall extends IGet, IEndpoint {
-            call(): ng.IPromise<string>;
-            callCached(): ng.IPromise<string>;
+            call(httpConfig?): ng.IPromise<string>;
+            callCached(httpConfig?): ng.IPromise<string>;
         }
     
         export class Get implements IGet, IEndpoint {
@@ -494,8 +494,8 @@ namespace Endpoints {
         }
     
         export interface IGettyWithCall extends IGetty, IEndpoint {
-            call(): ng.IPromise<string>;
-            callCached(): ng.IPromise<string>;
+            call(httpConfig?): ng.IPromise<string>;
+            callCached(httpConfig?): ng.IPromise<string>;
         }
     
         export class Getty implements IGetty, IEndpoint {
@@ -529,7 +529,7 @@ namespace Endpoints {
         }
     
         export interface IPostWithCall extends IPost, IEndpoint {
-            call(value: Interfaces.IMegaClass): ng.IPromise<string>;
+            call(value: Interfaces.IMegaClass, httpConfig?): ng.IPromise<string>;
         }
     
         export class Post implements IPost, IEndpoint {
