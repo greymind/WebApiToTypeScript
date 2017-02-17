@@ -116,8 +116,8 @@ namespace WebApiToTypeScript.Endpoints
                 .SingleOrDefault();
 
             var callArgumentsList = string.IsNullOrWhiteSpace(callArgument)
-                ? "httpConfig?: angular.IRequestShortcutConfig"
-                : $"{callArgument}, httpConfig?: angular.IRequestShortcutConfig";
+                ? "httpConfig?: ng.IRequestShortcutConfig"
+                : $"{callArgument}, httpConfig?: ng.IRequestShortcutConfig";
 
             string typeScriptReturnType, typeScriptTypeForCall;
 

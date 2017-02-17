@@ -28,7 +28,7 @@ namespace WebApiToTypeScript.Endpoints
                 .AddStatement($"{Config.ServiceName}.$http = $http;")
                 .AddStatement($"{Config.ServiceName}.$q = $q;", condition: Config.EndpointsSupportCaching)
                 .Parent
-                .AddAndUseBlock("static call<TView>(endpoint: IEndpoint, data, httpConfig?: angular.IRequestShortcutConfig)")
+                .AddAndUseBlock("static call<TView>(endpoint: IEndpoint, data, httpConfig?: ng.IRequestShortcutConfig)")
                 .AddAndUseBlock("const config = ")
                 .AddStatement("method: endpoint._verb,")
                 .AddStatement("url: endpoint.toString(),")
@@ -43,7 +43,7 @@ namespace WebApiToTypeScript.Endpoints
             {
                 serviceBlock
                     .Parent
-                    .AddAndUseBlock("static callCached<TView>(endpoint: IEndpoint, data, httpConfig?: angular.IRequestShortcutConfig)")
+                    .AddAndUseBlock("static callCached<TView>(endpoint: IEndpoint, data, httpConfig?: ng.IRequestShortcutConfig)")
                     .AddStatement("var cacheKey = endpoint.toString();")
                     .AddAndUseBlock("if (this.endpointCache[cacheKey] == null)")
                     .AddAndUseBlock("return this.call<TView>(endpoint, data, httpConfig).then(result =>", isFunctionBlock: true,

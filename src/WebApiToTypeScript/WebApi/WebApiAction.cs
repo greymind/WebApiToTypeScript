@@ -112,15 +112,15 @@ namespace WebApiToTypeScript.WebApi
             var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
 
             if (!isFormBody)
-                return "httpConfig?: angular.IRequestShortcutConfig";
+                return "httpConfig?: ng.IRequestShortcutConfig";
 
             var bodyParam = BodyParameters
                 .Select(a => a.GetParameterString(withOptionals: false, interfaceName: true))
                 .SingleOrDefault();
 
             return string.IsNullOrWhiteSpace(bodyParam)
-                ? "httpConfig?: angular.IRequestShortcutConfig"
-                : $"{bodyParam}, httpConfig?: angular.IRequestShortcutConfig";
+                ? "httpConfig?: ng.IRequestShortcutConfig"
+                : $"{bodyParam}, httpConfig?: ng.IRequestShortcutConfig";
         }
 
         public string GetConstructorParameterNamesList()
