@@ -28,22 +28,25 @@ namespace WebApiToTypeScript.Endpoints
                 .AddStatement($"{Config.ServiceName}.$http = $http;")
                 .AddStatement($"{Config.ServiceName}.$q = $q;", condition: Config.EndpointsSupportCaching)
                 .Parent
-                .AddAndUseBlock("static call<TView>(endpoint: IEndpoint, data)")
-                .AddAndUseBlock($"var call = {Config.ServiceName}.$http<TView>(", isFunctionBlock: true, terminationString: ";")
+                .AddAndUseBlock("static call<TView>(endpoint: IEndpoint, data, httpConfig?: angular.IRequestShortcutConfig)")
+                .AddAndUseBlock("const config = ")
                 .AddStatement("method: endpoint._verb,")
                 .AddStatement("url: endpoint.toString(),")
                 .AddStatement("data: data")
                 .Parent
+                .AddStatement("httpConfig && _.extend(config, httpConfig);")
+                .AddStatement("")
+                .AddStatement($"const call = {Config.ServiceName}.$http<TView>(config);")
                 .AddStatement("return call.then(response => response.data);");
 
             if (Config.EndpointsSupportCaching)
             {
                 serviceBlock
                     .Parent
-                    .AddAndUseBlock("static callCached<TView>(endpoint: IEndpoint, data)")
+                    .AddAndUseBlock("static callCached<TView>(endpoint: IEndpoint, data, httpConfig?: angular.IRequestShortcutConfig)")
                     .AddStatement("var cacheKey = endpoint.toString();")
                     .AddAndUseBlock("if (this.endpointCache[cacheKey] == null)")
-                    .AddAndUseBlock("return this.call<TView>(endpoint, data).then(result =>", isFunctionBlock: true,
+                    .AddAndUseBlock("return this.call<TView>(endpoint, data, httpConfig).then(result =>", isFunctionBlock: true,
                         terminationString: ";")
                     .AddStatement("this.endpointCache[cacheKey] = result;")
                     .AddStatement("return this.endpointCache[cacheKey];")

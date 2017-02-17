@@ -111,11 +111,13 @@ namespace WebApiToTypeScript.Endpoints
         {
             var callArguments = action.BodyParameters;
 
-            var callArgumentStrings = callArguments
+            var callArgument = callArguments
                 .Select(a => a.GetParameterString(withOptionals: false, interfaceName: true))
                 .SingleOrDefault();
 
-            var callArgumentsList = string.Join(", ", callArgumentStrings);
+            var callArgumentsList = string.IsNullOrWhiteSpace(callArgument)
+                ? "httpConfig?: angular.IRequestShortcutConfig"
+                : $"{callArgument}, httpConfig?: angular.IRequestShortcutConfig";
 
             string typeScriptReturnType, typeScriptTypeForCall;
 

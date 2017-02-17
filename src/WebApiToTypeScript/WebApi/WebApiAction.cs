@@ -103,8 +103,8 @@ namespace WebApiToTypeScript.WebApi
                 .SingleOrDefault();
 
             return (!isFormBody || string.IsNullOrEmpty(callArgumentValueString))
-                 ? "null"
-                 : callArgumentValueString;
+                 ? "null, httpConfig"
+                 : $"{callArgumentValueString}, httpConfig";
         }
 
         public string GetCallArgumentDefinition(WebApiHttpVerb verb)
@@ -112,11 +112,15 @@ namespace WebApiToTypeScript.WebApi
             var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
 
             if (!isFormBody)
-                return string.Empty;
+                return "httpConfig?: angular.IRequestShortcutConfig";
 
-            return BodyParameters
+            var bodyParam = BodyParameters
                 .Select(a => a.GetParameterString(withOptionals: false, interfaceName: true))
                 .SingleOrDefault();
+
+            return string.IsNullOrWhiteSpace(bodyParam)
+                ? "httpConfig?: angular.IRequestShortcutConfig"
+                : $"{bodyParam}, httpConfig?: angular.IRequestShortcutConfig";
         }
 
         public string GetConstructorParameterNamesList()
