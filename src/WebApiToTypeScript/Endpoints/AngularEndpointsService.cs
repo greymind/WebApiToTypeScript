@@ -66,7 +66,7 @@ namespace WebApiToTypeScript.Endpoints
                 .First();
 
             var controllerBlock = serviceBlock
-                .AddStatement($"public {webApiController.Name}: {Config.EndpointsNamespace}.{webApiController.Name}.I{webApiController.Name}Service;");
+                .AddStatement($"public {webApiController.Name}: {Config.EndpointsNamespace}.{webApiController.Name}.I{webApiController.Name}Service = <any>{{}};");
 
             var actions = webApiController.Actions;
 
