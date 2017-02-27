@@ -1,10 +1,10 @@
 ﻿{
   "WebApiModuleFileName": "./bin/WebApiTestApplication.dll",
 
+  "GenerateEndpoints": true,
   "GenerateEndpointsReturnTypes": true,
-
-  "EndpointsOutputDirectory": "./Scripts/Endpoints",
   "EndpointsSupportCaching": true,
+  "EndpointsOutputDirectory": "./Scripts/Endpoints",
   "EndpointsFileName": "Endpoints.ts",
   "EndpointsNamespace": "Endpoints",
 
