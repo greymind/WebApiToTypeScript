@@ -82,7 +82,13 @@ namespace WebApiToTypeScript
                         EndpointsService.WriteEndpointClassToBlock(endpointBlock, webApiController);
 
                     if (Config.GenerateService)
-                        AngularEndpointsService.WriteServiceObjectToBlock(serviceBlock.Children.First() as TypeScriptBlock, webApiController);
+                    {
+                        var classBlock = serviceBlock.Children
+                            .OfType<TypeScriptBlock>()
+                            .First();
+
+                        AngularEndpointsService.WriteServiceObjectToBlock(classBlock, webApiController);
+                    }
                 }
 
                 if (Config.GenerateEndpoints || Config.GenerateService)

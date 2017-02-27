@@ -8,7 +8,7 @@ namespace WebApiToTypeScript.Endpoints
     {
         public TypeScriptBlock CreateServiceBlock()
         {
-            var serviceBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}")
+            var constructorBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}")
                 .AddAndUseBlock($"export class {Config.ServiceName}")
                 .AddStatement
                 (
@@ -16,19 +16,17 @@ namespace WebApiToTypeScript.Endpoints
                         ? "static $inject = ['$http', '$q'];"
                         : "static $inject = ['$http'];"
                 )
-                .AddStatement("static $http: ng.IHttpService;")
-                .AddStatement("static $q: ng.IQService;", condition: Config.EndpointsSupportCaching)
                 .AddStatement("static endpointCache = {};", condition: Config.EndpointsSupportCaching)
                 .AddAndUseBlock
                 (
                     Config.EndpointsSupportCaching
                         ? "constructor($http: ng.IHttpService, $q: ng.IQService)"
                         : "constructor($http: ng.IHttpService)"
-                )
-                .AddStatement($"{Config.ServiceName}.$http = $http;")
-                .AddStatement($"{Config.ServiceName}.$q = $q;", condition: Config.EndpointsSupportCaching)
+                );
+
+            var serviceBlock = constructorBlock
                 .Parent
-                .AddAndUseBlock("static call<TView>(endpoint: IEndpoint, data, httpConfig?: ng.IRequestShortcutConfig)")
+                .AddAndUseBlock("static call<TView>(httpService: ng.IHttpService, endpoint: IEndpoint, data, httpConfig?: ng.IRequestShortcutConfig)")
                 .AddAndUseBlock("const config = ")
                 .AddStatement("method: endpoint._verb,")
                 .AddStatement("url: endpoint.toString(),")
@@ -36,63 +34,49 @@ namespace WebApiToTypeScript.Endpoints
                 .Parent
                 .AddStatement("httpConfig && _.extend(config, httpConfig);")
                 .AddStatement("")
-                .AddStatement($"const call = {Config.ServiceName}.$http<TView>(config);")
+                .AddStatement($"const call = httpService<TView>(config);")
                 .AddStatement("return call.then(response => response.data);");
 
             if (Config.EndpointsSupportCaching)
             {
                 serviceBlock
                     .Parent
-                    .AddAndUseBlock("static callCached<TView>(endpoint: IEndpoint, data, httpConfig?: ng.IRequestShortcutConfig)")
+                    .AddAndUseBlock("static callCached<TView>(httpService: ng.IHttpService, qService: ng.IQService, endpoint: IEndpoint, data, httpConfig?: ng.IRequestShortcutConfig)")
                     .AddStatement("var cacheKey = endpoint.toString();")
                     .AddAndUseBlock("if (this.endpointCache[cacheKey] == null)")
-                    .AddAndUseBlock("return this.call<TView>(endpoint, data, httpConfig).then(result =>", isFunctionBlock: true,
-                        terminationString: ";")
+                    .AddAndUseBlock("return this.call<TView>(httpService, endpoint, data, httpConfig).then(result =>", isFunctionBlock: true, terminationString: ";")
                     .AddStatement("this.endpointCache[cacheKey] = result;")
                     .AddStatement("return this.endpointCache[cacheKey];")
                     .Parent
                     .Parent
-                    .AddStatement("const deferred = this.$q.defer();")
+                    .AddStatement("const deferred = qService.defer();")
                     .AddStatement("deferred.resolve(this.endpointCache[cacheKey]);")
                     .AddStatement("return deferred.promise;");
             }
 
             return serviceBlock
-                    .Parent
-                    .Parent;
+                .Parent
+                .Parent;
         }
 
         public void WriteServiceObjectToBlock(TypeScriptBlock serviceBlock, WebApiController webApiController)
         {
-            TypeScriptBlock controllerBlock = null;
+            var constructorBlock = serviceBlock.Children
+                .OfType<TypeScriptBlock>()
+                .First();
 
-            if (Config.GenerateService)
-            {
-                controllerBlock = serviceBlock
-                    .AddAndUseBlock($"public {webApiController.Name}: {Config.EndpointsNamespace}.{webApiController.Name}.I{webApiController.Name}Service =");
-            }
-            else
-            {
-                controllerBlock = serviceBlock
-                    .AddAndUseBlock($"public {webApiController.Name} =");
-            }
+            var controllerBlock = serviceBlock
+                .AddStatement($"public {webApiController.Name}: {Config.EndpointsNamespace}.{webApiController.Name}.I{webApiController.Name}Service;");
 
             var actions = webApiController.Actions;
 
-            for (var a = 0; a < actions.Count; a++)
+            foreach (var action in actions)
             {
-                var action = actions[a];
-
                 var constructorParameterMappings = action.GetConstructorParameterMappings();
 
-                for (var v = 0; v < action.Verbs.Count; v++)
+                foreach (var verb in action.Verbs)
                 {
-                    var verb = action.Verbs[v];
-
                     var actionName = action.GetActionNameForVerb(verb);
-
-                    var isLastActionAndVerb = a == actions.Count - 1
-                        && v == action.Verbs.Count - 1;
 
                     var areAllParametersOptional = constructorParameterMappings
                         .All(m => m.IsOptional);
@@ -112,12 +96,12 @@ namespace WebApiToTypeScript.Endpoints
 
                     action.GetReturnTypes(out typeScriptReturnType, out typeScriptTypeForCall);
 
-                    var endpointExtendBlock = controllerBlock
+                    var endpointExtendBlock = constructorBlock
                         .AddAndUseBlock
                         (
-                            outer: $"{actionName}: (args{optionalString}: {interfaceFullName}): {interfaceWithCallFullName} =>",
+                            outer: $"this.{webApiController.Name}.{actionName} = (args{optionalString}: {interfaceFullName}): {interfaceWithCallFullName} =>",
                             isFunctionBlock: false,
-                            terminationString: !isLastActionAndVerb ? "," : string.Empty
+                            terminationString: ";"
                         )
                         .AddStatement($"var endpoint = new {endpointFullName}(args);")
                         .AddAndUseBlock("return _.extendOwn(endpoint,", isFunctionBlock: true, terminationString: ";")
@@ -127,13 +111,13 @@ namespace WebApiToTypeScript.Endpoints
                             isFunctionBlock: false,
                             terminationString: Config.EndpointsSupportCaching ? "," : string.Empty
                         )
-                        .AddStatement($"return {Config.ServiceName}.call{typeScriptReturnType}(this, {callArgumentValue});")
+                        .AddStatement($"return {Config.ServiceName}.call{typeScriptReturnType}($http, this, {callArgumentValue});")
                         .Parent;
 
                     if (Config.EndpointsSupportCaching && verb == WebApiHttpVerb.Get)
                     {
                         endpointExtendBlock.AddAndUseBlock($"callCached{typeScriptTypeForCall}({callArgumentDefinition})")
-                            .AddStatement($"return {Config.ServiceName}.callCached{typeScriptReturnType}(this, {callArgumentValue});");
+                            .AddStatement($"return {Config.ServiceName}.callCached{typeScriptReturnType}($http, $q, this, {callArgumentValue});");
                     }
                 }
             }
