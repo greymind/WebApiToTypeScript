@@ -72,6 +72,11 @@ namespace WebApiToTypeScript.Endpoints
 
             foreach (var action in actions)
             {
+                if (action.BodyParameters.Count > 1)
+                {
+                    continue;
+                }
+
                 var constructorParameterMappings = action.GetConstructorParameterMappings();
 
                 foreach (var verb in action.Verbs)

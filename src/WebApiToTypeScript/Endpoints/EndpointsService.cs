@@ -57,6 +57,18 @@ namespace WebApiToTypeScript.Endpoints
 
             foreach (var action in actions)
             {
+                if (action.BodyParameters.Count > 1)
+                {
+                    LogMessage($"Multiple conflicting call parameters detected in action [{action.Name}] of controller [{webApiController.Name}]!");
+                    LogMessage("Please use [FromBody] or [FromUri] on all non-primitives!");
+
+                    var parameters = action.BodyParameters.Select(bp => $"[{bp.Name}]");
+                    LogMessage($"Parameters: {string.Join(" ", parameters)}");
+                    LogMessage("");
+
+                    continue;
+                }
+
                 foreach (var verb in action.Verbs)
                 {
                     var actionName = action.GetActionNameForVerb(verb);
@@ -109,10 +121,11 @@ namespace WebApiToTypeScript.Endpoints
 
         private void WriteInterfaceWithCallToBlock(TypeScriptBlock interfaceWithCallBlock, WebApiAction action, WebApiHttpVerb verb)
         {
-            var callArguments = action.BodyParameters;
+            var callArguments = action.BodyParameters
+                .Select(a => a.GetParameterString(withOptionals: false, interfaceName: true));
+
 
             var callArgument = callArguments
-                .Select(a => a.GetParameterString(withOptionals: false, interfaceName: true))
                 .SingleOrDefault();
 
             var callArgumentsList = string.IsNullOrWhiteSpace(callArgument)
