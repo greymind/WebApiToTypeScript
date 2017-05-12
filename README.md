@@ -94,11 +94,17 @@ angular.module('framework').service('AngularEndpointsService', Framework.Endpoin
   ],
 
   "GenerateViews": "boolean",
-  "ViewsSourceDirectory": "string",
+  "ViewConfigs": [
+    {
+      "SourceDirectory": "string",
+      "Namespace": "string",
+      "OutputFilename": "string",
+      "Prefix": "string",
+      "UrlEncodePath": "boolean"
+    }
+  ],
   "ViewsPattern": "string",
   "ViewsOutputDirectory": "string",
-  "ViewsFileName": "string",
-  "ViewsNamespace": "string",
   "UseViewsGroupingNamespace": "boolean",
 
   "ScanOtherModules": "boolean",

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Web;
 using WebApiToTypeScript.Block;
+using WebApiToTypeScript.Config;
 
 namespace WebApiToTypeScript.Views
 {
@@ -16,7 +18,7 @@ namespace WebApiToTypeScript.Views
                 var featureViews = new List<ViewNode>();
 
                 var viewsBlock = CreateViewsBlock(viewConfig.Namespace);
-                AddViewsFromDirectory(viewConfig.SourceDirectory, featureViews);
+                AddViewsFromDirectory(viewConfig, featureViews);
                 WriteViewsToBlock(featureViews, viewsBlock);
 
                 yield return new ViewsBlock
@@ -42,8 +44,12 @@ namespace WebApiToTypeScript.Views
             return viewsBlock;
         }
 
-        public void AddViewsFromDirectory(string sourceDirectory, List<ViewNode> featureViews)
+        public void AddViewsFromDirectory(ViewConfig viewConfig, List<ViewNode> featureViews)
         {
+            var prefix = viewConfig.Prefix ?? string.Empty;
+            var urlEncode = viewConfig.UrlEncodePath;
+
+            var sourceDirectory = viewConfig.SourceDirectory;
             var viewsSourceDirectory = Path.GetFullPath(sourceDirectory);
 
             var viewFiles = Directory.GetFiles(viewsSourceDirectory, $"*{Config.ViewsPattern}*", SearchOption.AllDirectories);
@@ -109,10 +115,16 @@ namespace WebApiToTypeScript.Views
                     ? Regex.Replace(fullViewNameInPascalCase, $"^{parentFolderName}", string.Empty)
                     : fullViewNameInPascalCase;
 
+                var formattedPath = featureViewPath.Replace(@"\", "/");
+
+                var path = urlEncode
+                    ? HttpUtility.UrlEncode(formattedPath)
+                    : formattedPath;
+
                 viewNode.ViewEntries.Add(new ViewEntry
                 {
                     Name = viewName,
-                    Path = featureViewPath.Replace(@"\", "/")
+                    Path = $"{prefix}{path}"
                 });
             }
         }
