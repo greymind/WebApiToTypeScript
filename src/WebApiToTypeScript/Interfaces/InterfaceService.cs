@@ -91,7 +91,7 @@ namespace WebApiToTypeScript.Interfaces
             }
             else
             {
-                var baseClass = typeDefinition.BaseType as TypeDefinition;
+                var baseClass = TypeService.GetTypeDefinition(typeDefinition.BaseType.FullName);
                 var isBaseClassNotObject = baseClass != null && baseClass.FullName != "System.Object";
 
                 if (isBaseClassNotObject && baseClass != typeDefinition)
