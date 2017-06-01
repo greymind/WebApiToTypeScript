@@ -60,6 +60,9 @@ namespace WebApiToTypeScript.Config
         public bool GenerateInterfaces { get; set; }
             = true;
 
+        public bool GenerateInterfaceClasses { get; set; }
+            = true;
+
         public string InterfacesOutputDirectory { get; set; }
             = "Interfaces";
 
