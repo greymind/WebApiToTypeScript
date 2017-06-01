@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Mono.Cecil;
 using WebApiToTypeScript.Config;
+using System.Diagnostics;
 
 namespace WebApiToTypeScript.Types
 {
@@ -286,7 +287,7 @@ namespace WebApiToTypeScript.Types
             return null;
         }
 
-        public string StripCollection(TypeReference type)
+        private string StripCollection(TypeReference type)
         {
             if (type.IsArray)
             {

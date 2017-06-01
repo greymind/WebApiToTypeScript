@@ -20,7 +20,7 @@ namespace WebApiToTypeScript.Resources
                 var resourceBlock = CreateResourceBlock();
 
                 var block = resourceBlock
-                    .AddAndUseBlock($"export class {resourceFilename}");
+                    .AddAndUseBlock($"export var {resourceFilename} = ");
 
                 var resourceReader = new ResXResourceReader(resourceConfig.SourcePath);
                 var dictionary = resourceReader.GetEnumerator();
@@ -64,14 +64,13 @@ namespace WebApiToTypeScript.Resources
                             .Replace("{", "${");
 
                         block
-                            .AddAndUseBlock($"static {dictionary.Key}({paramsString})")
+                            .AddAndUseBlock($"{dictionary.Key} : function({paramsString})", terminationString: ",")
                             .AddStatement($"return `{transformedValue}`;");
                     }
                     else
                     {
                         block
-                            .AddAndUseBlock($"static get {dictionary.Key}()")
-                            .AddStatement($"return `{originalValue}`;");
+                            .AddStatement($"{dictionary.Key} : `{originalValue}`,");
                     }
                 }
 

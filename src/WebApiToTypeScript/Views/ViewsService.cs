@@ -131,17 +131,23 @@ namespace WebApiToTypeScript.Views
 
         private void WriteViewEntry(TypeScriptBlock viewsBlock, ViewNode featureViewNode, bool isChild = false)
         {
-            var viewNamespace = Config.UseViewsGroupingNamespace && !isChild
-                ? ".Views"
+            var namespaceBlock = !isChild ? $"export namespace {featureViewNode.Name}" : $"{featureViewNode.Name} : ";
+            var featureBlock = viewsBlock
+                .AddAndUseBlock(namespaceBlock, terminationString: isChild ? "," : "");
+
+            var viewGroup = Config.UseViewsGroupingNamespace && !isChild
+                ? "Views"
                 : string.Empty;
 
-            var featureBlock = viewsBlock
-                .AddAndUseBlock($"export namespace {featureViewNode.Name}{viewNamespace}");
+            if (!string.IsNullOrEmpty(viewGroup))
+            {
+                featureBlock = featureBlock.AddAndUseBlock($"export var {viewGroup} = ");
+            }
 
             foreach (var viewEntry in featureViewNode.ViewEntries)
             {
                 featureBlock
-                    .AddStatement($"export const {viewEntry.Name} = '{viewEntry.Path}';");
+                    .AddStatement($"{viewEntry.Name} : '{viewEntry.Path}',");
             }
 
             foreach (var childView in featureViewNode.ChildViews)
