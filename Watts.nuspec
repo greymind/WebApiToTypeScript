@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>WebApiToTypeScript</id>
-    <version>1.11.1</version>
+    <version>2.0.0</version>
     <authors>Balakrishnan (Balki) Ranganathan</authors>
     <owners>Balakrishnan (Balki) Ranganathan</owners>
     <licenseUrl>https://raw.githubusercontent.com/greymind/WebApiToTypeScript/master/LICENSE</licenseUrl>
@@ -10,7 +10,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A tool for code generating TypeScript endpoints, interfaces, enums, resources and view paths for your ASP.NET Web API controllers/web apps</description>
     <summary>A tool for code generating TypeScript endpoints, interfaces, enums, resources and view paths for your ASP.NET Web API controllers/web apps</summary>
-    <releaseNotes>Fix getting base types in certain cases</releaseNotes>
+    <releaseNotes>Optimize code for execution and size when compiling TypeScript to ES5.</releaseNotes>
     <copyright>Copyright (c) 2016-2017 Balakrishnan (Balki) Ranganathan</copyright>
     <tags>WebAPI TypeScript Endpoint Enum Interface Code Generation Angular Service Balki Greymind Watts</tags>
   </metadata>
