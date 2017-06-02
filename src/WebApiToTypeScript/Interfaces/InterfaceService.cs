@@ -67,7 +67,7 @@ namespace WebApiToTypeScript.Interfaces
         public InterfaceNode AddInterfaceNode(TypeDefinition typeDefinition)
         {
             Debug.Assert(typeDefinition != null);
-
+            
             var interfaceNode = SearchForInterfaceNode(InterfaceNode, typeDefinition);
 
             if (interfaceNode != null)
@@ -212,13 +212,9 @@ namespace WebApiToTypeScript.Interfaces
                 LogMessage($"Interface name [{blockTypeName}] of type [{typeDefinition.FullName}] is invalid!");
                 return;
             }
-
-            var iHaveQueryParams = Config.GenerateEndpoints || Config.GenerateService
-                ? $", {Config.EndpointsNamespace}.{nameof(IHaveQueryParams)}"
-                : string.Empty;
-
+            
             var classImplementsString =
-                $" implements I{blockTypeName}{implementsString}{iHaveQueryParams}";
+                $" implements I{blockTypeName}{implementsString}";
 
             var parameterOrInstanceString = iHaveGenericParameters
                 ? implementsString

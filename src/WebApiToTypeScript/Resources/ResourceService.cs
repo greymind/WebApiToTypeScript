@@ -17,10 +17,14 @@ namespace WebApiToTypeScript.Resources
             foreach (var resourceConfig in Config.ResourceConfigs)
             {
                 var resourceFilename = Path.GetFileNameWithoutExtension(resourceConfig.SourcePath);
+                var resourceInterface = $"I{resourceFilename}";
                 var resourceBlock = CreateResourceBlock();
 
-                var block = resourceBlock
-                    .AddAndUseBlock($"export var {resourceFilename} = ");
+                var interfaceBlock = resourceBlock
+                    .AddAndUseBlock($"export interface {resourceInterface}");
+
+                var varBlock = resourceBlock
+                    .AddAndUseBlock($"export var {resourceFilename} : {resourceInterface} = ");
 
                 var resourceReader = new ResXResourceReader(resourceConfig.SourcePath);
                 var dictionary = resourceReader.GetEnumerator();
@@ -63,13 +67,19 @@ namespace WebApiToTypeScript.Resources
                             .Aggregate(originalValue, (current, parameterTransform) => current.Replace(parameterTransform.Source, parameterTransform.Destination))
                             .Replace("{", "${");
 
-                        block
+                        interfaceBlock
+                            .AddStatement($"{dictionary.Key} : ({paramsString}) => string;");
+
+                        varBlock
                             .AddAndUseBlock($"{dictionary.Key} : function({paramsString})", terminationString: ",")
                             .AddStatement($"return `{transformedValue}`;");
                     }
                     else
                     {
-                        block
+                        interfaceBlock
+                            .AddStatement($"{dictionary.Key} : string;");
+
+                        varBlock
                             .AddStatement($"{dictionary.Key} : `{originalValue}`,");
                     }
                 }

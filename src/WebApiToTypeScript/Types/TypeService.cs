@@ -214,7 +214,7 @@ namespace WebApiToTypeScript.Types
             {
                 if (!Config.GenerateInterfaces)
                 {
-                    result.TypeName = $"{WebApiToTypeScript.IHaveQueryParams}";
+                    result.TypeName = $"any";
                     result.InterfaceName = "any";
                 }
                 else

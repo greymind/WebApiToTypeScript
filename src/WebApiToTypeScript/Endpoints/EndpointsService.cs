@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.WebApi;
 
@@ -8,15 +9,13 @@ namespace WebApiToTypeScript.Endpoints
     {
         public TypeScriptBlock CreateEndpointBlock()
         {
-            return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}")
+            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}");
+
+            block
                 .AddAndUseBlock($"export interface {IEndpoint}")
                 .AddStatement("_verb: string;")
                 .AddStatement("toString(): string;")
                 .Parent
-                .AddAndUseBlock($"export interface {IHaveQueryParams}")
-                .AddStatement("getQueryParams(): Object")
-                .Parent
-
                 .AddAndUseBlock("function addParameter(parameters: string[], key: string, value: any)")
                 .AddAndUseBlock("if (value == null)")
                 .AddStatement("return;")
@@ -25,25 +24,21 @@ namespace WebApiToTypeScript.Endpoints
                 .AddStatement($"var encodedItems = _.map(value, (item: any) => encodeURIComponent(item.toString()));")
                 .AddStatement($"_(encodedItems).each(item => parameters.push(`${{key}}=${{item}}`));")
                 .Parent
+                .AddAndUseBlock("else if (_.isObject(value) && value.getQueryParams)")
+                .AddStatement(@"addParameter(parameters, key, value.getQueryParams());")
+                .Parent
+                .AddAndUseBlock("else if (_.isObject(value))")
+                .AddStatement(@"Object.keys(value).forEach((key) => { addParameter(parameters, key, value[key]); });")
+                .Parent
                 .AddAndUseBlock("else")
-                .AddStatement($"parameters.push(`${{key}}=${{encodeURIComponent(value.toString())}}`);")
-                .Parent
-                .Parent
+                .AddStatement($"parameters.push(`${{key}}=${{encodeURIComponent(value.toString())}}`);");
 
-                .AddAndUseBlock("function addObjectParameters(parameters: string[], obj: IHaveQueryParams)")
-                .AddAndUseBlock("if (obj == null)")
-                .AddStatement("return;")
-                .Parent
-                .AddStatement("var params = obj.getQueryParams();")
-                .AddAndUseBlock($"Object.keys(params).forEach((key) =>", isFunctionBlock: true, terminationString: ";")
-                .AddStatement("addParameter(parameters, key, params[key]);")
-                .Parent
-                .Parent;
+            return block;
         }
 
-        public void WriteEndpointClassToBlock(TypeScriptBlock endpointBlock, WebApiController webApiController)
+        public void WriteEndpointClassToBlock(TypeScriptBlock endpointsBlock, WebApiController webApiController)
         {
-            var controllerBlock = endpointBlock
+            var controllerBlock = endpointsBlock
                 .AddAndUseBlock($"export {Config.NamespaceOrModuleName} {webApiController.Name}");
 
             TypeScriptBlock serviceBlock = null;
@@ -78,6 +73,13 @@ namespace WebApiToTypeScript.Endpoints
 
                     WriteInterfaceToBlock(interfaceBlock, action);
 
+                    var endpointBlock = controllerBlock
+                        .AddAndUseBlock($"export interface I{actionName}Endpoint extends I{actionName}, IEndpoint");
+
+                    var ctorBlock = controllerBlock
+                        .AddAndUseBlock($"export interface I{actionName}Ctor")
+                        .AddStatement($"new(args?: I{actionName}): I{actionName}Endpoint");
+                    
                     if (Config.GenerateService)
                     {
                         var interfaceWithCallBlock = controllerBlock
@@ -89,22 +91,25 @@ namespace WebApiToTypeScript.Endpoints
                             .AddStatement($"{actionName}: (args?: I{actionName}) => I{actionName}WithCall");
                     }
 
-                    var classBlock = controllerBlock
-                        .AddAndUseBlock($"export class {actionName} implements I{actionName}, {IEndpoint}")
-                        .AddStatement($"_verb = '{verb.VerbMethod}';");
+                    var ctorImplBlock = controllerBlock
+                        .AddAndUseBlock($"export var {actionName} : I{actionName}Ctor = <any>(function(args?: I{actionName})", false, ");")
+                        .AddStatement($"this._verb = '{verb.VerbMethod}';");
 
                     var constructorParameterMappings = action.GetConstructorParameterMappings();
-                    foreach (var constructorParameterMapping in constructorParameterMappings)
+                    foreach (var mapping in constructorParameterMappings)
                     {
-                        classBlock
-                            .AddStatement($"{constructorParameterMapping.String};");
+                        ctorImplBlock.AddStatement($"this.{mapping.Name} = args != null ? args.{mapping.Name} : null;");
+                        if (mapping.TypeMapping?.AutoInitialize ?? false)
+                        {
+                            ctorImplBlock
+                                .AddAndUseBlock($"if (this.{mapping.Name} == null)")
+                                .AddStatement($"this.{mapping.Name} = new {mapping.TypeMapping.TypeScriptTypeName}();");
+                        }
                     }
+                    
+                    WriteGetQueryStringToBlock(controllerBlock, actionName, action);
 
-                    WriteConstructorToBlock(classBlock, action, verb);
-
-                    WriteGetQueryStringToBlock(classBlock, action);
-
-                    WriteToStringToBlock(classBlock, action);
+                    WriteToStringToBlock(controllerBlock, actionName, action);
                 }
             }
         }
@@ -123,8 +128,7 @@ namespace WebApiToTypeScript.Endpoints
         {
             var callArguments = action.BodyParameters
                 .Select(a => a.GetParameterString(withOptionals: false, interfaceName: true));
-
-
+            
             var callArgument = callArguments
                 .SingleOrDefault();
 
@@ -144,10 +148,10 @@ namespace WebApiToTypeScript.Endpoints
                     .AddStatement($"callCached{typeScriptTypeForCall}({callArgumentsList}): ng.IPromise{typeScriptReturnType};");
         }
 
-        private void WriteToStringToBlock(TypeScriptBlock classBlock, WebApiAction action)
+        private void WriteToStringToBlock(TypeScriptBlock classBlock, string actionName, WebApiAction action)
         {
             var toStringBlock = classBlock
-                .AddAndUseBlock("toString = (): string =>");
+                .AddAndUseBlock($"{actionName}.prototype.toString = function(): string");
 
             var queryString = action.QueryStringParameters.Any()
                 ? " + this.getQueryString()"
@@ -157,7 +161,7 @@ namespace WebApiToTypeScript.Endpoints
                 .AddStatement($"return `{action.Controller.BaseEndpoint}{action.Endpoint}`{queryString};");
         }
 
-        private void WriteGetQueryStringToBlock(TypeScriptBlock classBlock, WebApiAction action)
+        private void WriteGetQueryStringToBlock(TypeScriptBlock classBlock, string actionName, WebApiAction action)
         {
             var queryStringParameters = action.QueryStringParameters;
 
@@ -165,7 +169,7 @@ namespace WebApiToTypeScript.Endpoints
                 return;
 
             var queryStringBlock = classBlock
-                .AddAndUseBlock("private getQueryString = (): string =>")
+                .AddAndUseBlock($"{actionName}.prototype.getQueryString = function(): string")
                 .AddStatement("var parameters: string[] = [];");
 
             foreach (var routePart in queryStringParameters)
@@ -176,16 +180,7 @@ namespace WebApiToTypeScript.Endpoints
 
                 var argumentType = routePart.GetTypeScriptType();
 
-                if (argumentType.IsPrimitive || argumentType.IsEnum)
-                {
-                    block
-                        .AddStatement($"addParameter(parameters, '{argumentName}', this.{argumentName});");
-                }
-                else
-                {
-                    block
-                        .AddStatement($"addObjectParameters(parameters, this.{argumentName});");
-                }
+                block.AddStatement($"addParameter(parameters, '{argumentName}', this.{argumentName});");
             }
 
             queryStringBlock
@@ -193,36 +188,6 @@ namespace WebApiToTypeScript.Endpoints
                 .AddStatement("return '?' + parameters.join('&');")
                 .Parent
                 .AddStatement("return '';");
-        }
-
-        private void WriteConstructorToBlock(TypeScriptBlock classBlock, WebApiAction action, WebApiHttpVerb verb)
-        {
-            var actionName = action.GetActionNameForVerb(verb);
-
-            var constructorParameterMappings = action.GetConstructorParameterMappings();
-
-            var areAllParametersOptional = constructorParameterMappings
-                .All(m => m.IsOptional);
-
-            var optionalString = areAllParametersOptional
-                ? "?"
-                : string.Empty;
-
-            var constructorBlock = classBlock
-                .AddAndUseBlock($"constructor(args{optionalString}: I{actionName})");
-
-            foreach (var mapping in constructorParameterMappings)
-            {
-                constructorBlock
-                    .AddStatement($"this.{mapping.Name} = args != null ? args.{mapping.Name} : null;");
-
-                if (mapping.TypeMapping?.AutoInitialize ?? false)
-                {
-                    constructorBlock
-                        .AddAndUseBlock($"if (this.{mapping.Name} == null)")
-                        .AddStatement($"this.{mapping.Name} = new {mapping.TypeMapping.TypeScriptTypeName}();");
-                }
-            }
         }
     }
 }
