@@ -304,14 +304,7 @@ namespace WebApiToTypeScript.Interfaces
                     classBlock
                        .AddAndUseBlock("constructor()")
                        .AddStatement("super();");
-                }
-
-                if (Config.GenerateEndpoints || Config.GenerateService)
-                {
-                    classBlock
-                        .AddAndUseBlock("getQueryParams()")
-                        .AddStatement("return this;");
-                }
+                }               
             }
         }
 

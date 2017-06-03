@@ -10,7 +10,11 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A tool for code generating TypeScript endpoints, interfaces, enums, resources and view paths for your ASP.NET Web API controllers/web apps</description>
     <summary>A tool for code generating TypeScript endpoints, interfaces, enums, resources and view paths for your ASP.NET Web API controllers/web apps</summary>
-    <releaseNotes>Optimize code for execution and size when compiling TypeScript to ES5.</releaseNotes>
+    <releaseNotes>
+      Optimize code for execution and size when compiling TypeScript to ES5. Rendering of endpoints to query string is changed, 
+      and default getQueryParams has been removed.
+      However, endpoints can still override it's params if user explicitly implements getQueryParams method.
+    </releaseNotes>
     <copyright>Copyright (c) 2016-2017 Balakrishnan (Balki) Ranganathan</copyright>
     <tags>WebAPI TypeScript Endpoint Enum Interface Code Generation Angular Service Balki Greymind Watts</tags>
   </metadata>

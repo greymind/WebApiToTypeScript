@@ -17,7 +17,7 @@ namespace Watts
             }
             else if (args.Length > 0 && File.Exists(args[0]))
             {
-                watts.ConfigFilePath = args[1];
+                watts.ConfigFilePath = args[0];
             }
 
             int status = 0;
