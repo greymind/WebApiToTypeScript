@@ -67,7 +67,7 @@ namespace WebApiToTypeScript.Interfaces
         public InterfaceNode AddInterfaceNode(TypeDefinition typeDefinition)
         {
             Debug.Assert(typeDefinition != null);
-
+            
             var interfaceNode = SearchForInterfaceNode(InterfaceNode, typeDefinition);
 
             if (interfaceNode != null)
@@ -212,13 +212,9 @@ namespace WebApiToTypeScript.Interfaces
                 LogMessage($"Interface name [{blockTypeName}] of type [{typeDefinition.FullName}] is invalid!");
                 return;
             }
-
-            var iHaveQueryParams = Config.GenerateEndpoints || Config.GenerateService
-                ? $", {Config.EndpointsNamespace}.{nameof(IHaveQueryParams)}"
-                : string.Empty;
-
+            
             var classImplementsString =
-                $" implements I{blockTypeName}{implementsString}{iHaveQueryParams}";
+                $" implements I{blockTypeName}{implementsString}";
 
             var parameterOrInstanceString = iHaveGenericParameters
                 ? implementsString
@@ -227,8 +223,12 @@ namespace WebApiToTypeScript.Interfaces
             var interfaceBlock = interfacesBlock
                 .AddAndUseBlock($"export interface I{blockTypeName}{parameterOrInstanceString}{interfaceExtendsString}");
 
-            var classBlock = interfacesBlock
-                .AddAndUseBlock($"export class {blockTypeName}{parameterOrInstanceString}{classExtendsString}{classImplementsString}");
+            TypeScriptBlock classBlock = null;
+            if (Config.GenerateInterfaceClasses)
+            {
+                classBlock = interfacesBlock
+                                    .AddAndUseBlock($"export class {blockTypeName}{parameterOrInstanceString}{classExtendsString}{classImplementsString}");
+            }
 
             var things = GetMembers(typeDefinition);
 
@@ -290,22 +290,21 @@ namespace WebApiToTypeScript.Interfaces
                 interfaceBlock
                     .AddStatement($"{thingName}: {interfaceName}{collectionString};");
 
-                classBlock
-                    .AddStatement($"{thingName}: {typeName}{collectionString};");
+                if (Config.GenerateInterfaceClasses)
+                {
+                    classBlock
+                        .AddStatement($"{thingName}: {typeName}{collectionString};");
+                }
             }
 
-            if (hasBaseClass)
+            if (Config.GenerateInterfaceClasses)
             {
-                classBlock
-                   .AddAndUseBlock("constructor()")
-                   .AddStatement("super();");
-            }
-
-            if (Config.GenerateEndpoints || Config.GenerateService)
-            {
-                classBlock
-                    .AddAndUseBlock("getQueryParams()")
-                    .AddStatement("return this;");
+                if (hasBaseClass)
+                {
+                    classBlock
+                       .AddAndUseBlock("constructor()")
+                       .AddStatement("super();");
+                }               
             }
         }
 

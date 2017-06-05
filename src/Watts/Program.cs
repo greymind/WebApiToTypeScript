@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 
 namespace Watts
 {
@@ -6,22 +8,34 @@ namespace Watts
     {
         private static int Main(string[] args)
         {
-            if (args.Length != 1)
+            var watts = new WebApiToTypeScript.WebApiToTypeScript();
+            if (args.Length == 0)
             {
-                Console.WriteLine("Usage: Watts.exe <\"Path/To/Config.json\">");
-                return 1;
+                var path = Path.Combine(Environment.CurrentDirectory, "watts.config.json");
+                if (File.Exists(path))
+                    watts.ConfigFilePath = path;
+            }
+            else if (args.Length > 0 && File.Exists(args[0]))
+            {
+                watts.ConfigFilePath = args[0];
             }
 
-            var watts = new WebApiToTypeScript.WebApiToTypeScript
+            int status = 0;
+            if (watts.ConfigFilePath == null)
             {
-                ConfigFilePath = args[0]
-            };
+                Console.WriteLine("Usage: Watts.exe <\"Path/To/Config.json\">");
+                status = -1;
+            }
+            else
+            {
+                status = watts.Execute() ? 0 : -1;
+            }
 
-            watts.Execute();
-
-#if DEBUG
-            Console.ReadLine();
-#endif
+            if (Debugger.IsAttached)
+            {
+                Console.WriteLine("Press any key to continue . . .");
+                Console.ReadLine();
+            }
 
             return 0;
         }

@@ -3,6 +3,7 @@
     public class TypeMapping
     {
         public string WebApiTypeName { get; set; }
+
         public string TypeScriptTypeName { get; set; }
 
         public bool TreatAsAttribute { get; set; }
@@ -15,5 +16,10 @@
             = false;
 
         public string Match { get; set; }
+
+        public override string ToString()
+        {
+            return $"{WebApiTypeName} -> {TypeScriptTypeName}";
+        }
     }
 }

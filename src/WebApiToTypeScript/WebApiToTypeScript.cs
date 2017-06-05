@@ -20,8 +20,7 @@ namespace WebApiToTypeScript
     public class WebApiToTypeScript : AppDomainIsolatedTask
     {
         private Stopwatch stopwatch;
-
-        public const string IHaveQueryParams = nameof(IHaveQueryParams);
+                
         public const string IEndpoint = nameof(IEndpoint);
 
         public static Config.Config Config { get; private set; }

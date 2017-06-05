@@ -78,5 +78,10 @@ namespace WebApiToTypeScript.WebApi
             return (typeMatches && !matchExists)
                 || (typeMatches && doesPatternMatch);
         }
+
+        public override string ToString()
+        {
+            return this.ParameterName;
+        }
     }
 }

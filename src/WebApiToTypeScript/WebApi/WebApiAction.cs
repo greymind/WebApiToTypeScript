@@ -144,7 +144,7 @@ namespace WebApiToTypeScript.WebApi
             return constructorParametersList;
         }
 
-        public IOrderedEnumerable<ConstructorParameterMapping> GetConstructorParameterMappings()
+        public ConstructorParameterMapping[] GetConstructorParameterMappings()
         {
             var tempConstructorParameters = Method.Parameters
                 .Select(p => new
@@ -172,10 +172,11 @@ namespace WebApiToTypeScript.WebApi
                     IsOptional = routePart.IsOptional && TypeService.IsParameterOptional(routePart.Parameter),
                     TypeMapping = routePart.GetTypeMapping(),
                     Name = routePart.Parameter.Name,
-                    StringWithOptionals = routePart.GetParameterString(),
-                    String = routePart.GetParameterString(withOptionals: false)
+                    StringWithOptionals = routePart.GetParameterString(interfaceName: true),
+                    String = routePart.GetParameterString(withOptionals: false, interfaceName: true)
                 })
-                .OrderBy(p => p.IsOptional);
+                .OrderBy(p => p.IsOptional)
+                .ToArray();
 
             return constructorParameterMappings;
         }
