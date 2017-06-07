@@ -2,6 +2,7 @@ param()
 
 function Activate() {
     $msbuildPath = "C:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe"
+    $msbuildPath = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe"
     $solutionPath = (Resolve-Path ".\src\Watts\Watts.csproj")
 
     Write-Host "Building release $solutionPath..."
