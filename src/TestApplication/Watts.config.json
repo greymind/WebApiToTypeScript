@@ -1,0 +1,62 @@
+﻿{
+    "WebApiModuleFileName": "./bin/TestApplication.dll",
+
+    "GenerateEndpoints": true,
+    "GenerateEndpointsReturnTypes": true,
+    "EndpointsSupportCaching": true,
+    "EndpointsOutputDirectory": "./Scripts/Generated",
+    "EndpointsFileName": "Endpoints.ts",
+    "EndpointsNamespace": "Endpoints",
+
+    "GenerateService": true,
+    "ServiceOutputDirectory": "./Scripts/Generated",
+    "ServiceFileName": "Service.ts",
+    "ServiceNamespace": "Endpoints",
+
+    "GenerateEnums": true,
+    "GenerateEnumDescriptions": true,
+    "EnumsOutputDirectory": "./Scripts/Generated",
+    "EnumsFileName": "Enums.ts",
+    "EnumsNamespace": "Enums",
+    "EnumMatches": [
+        {
+            "Match": "TestApplication.Enums.*$"
+        }
+    ],
+
+    "GenerateInterfaces": true,
+    "InterfacesOutputDirectory": "./Scripts/Generated",
+    "InterfacesFileName": "Interfaces.ts",
+    "InterfacesNamespace": "Interfaces",
+    "InterfaceMatches": [
+        {
+            "Match": "TestApplication.Controllers.*Chain.*$"
+        }
+    ],
+
+    "GenerateResources": true,
+    "ResourcesOutputDirectory": "./Scripts/Generated",
+    "ResourcesNamespace": "Resources",
+    "ResourceConfigs": [
+        {
+            "SourcePath": "./Resources/ResJavascript.resx",
+            "OutputFilename": "ResJavascript.ts"
+        }
+    ],
+
+    "ScanOtherModules": true,
+    "WriteNamespaceAsModule": false,
+
+    "TypeMappings": [
+        {
+            "WebApiTypeName": "EncryptedInt",
+            "TypeScriptTypeName": "string",
+            "TreatAsAttribute": true,
+            "TreatAsConstraint": true
+        },
+        {
+            "WebApiTypeName": "System.Web.Http.IHttpActionResult",
+            "TypeScriptTypeName": "any"
+        }
+    ]
+}
