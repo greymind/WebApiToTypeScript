@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.12
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApiTestApplication", "WebApiTestApplication\WebApiTestApplication.csproj", "{DB2DFBE4-3E74-47FC-8C27-59D3796085E7}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApiToTypeScript", "WebApiToTypeScript\WebApiToTypeScript.csproj", "{9E94A78B-6ADA-4EB8-8477-BD2947227E58}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Watts", "Watts\Watts.csproj", "{7876A6E8-F5E8-418D-A48A-4747DD507C9D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApplication", "TestApplication\TestApplication.csproj", "{FB5EBC73-7FEA-490C-A32B-A55E369824A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +15,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{DB2DFBE4-3E74-47FC-8C27-59D3796085E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DB2DFBE4-3E74-47FC-8C27-59D3796085E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DB2DFBE4-3E74-47FC-8C27-59D3796085E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DB2DFBE4-3E74-47FC-8C27-59D3796085E7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9E94A78B-6ADA-4EB8-8477-BD2947227E58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9E94A78B-6ADA-4EB8-8477-BD2947227E58}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9E94A78B-6ADA-4EB8-8477-BD2947227E58}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -27,6 +23,10 @@ Global
 		{7876A6E8-F5E8-418D-A48A-4747DD507C9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7876A6E8-F5E8-418D-A48A-4747DD507C9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7876A6E8-F5E8-418D-A48A-4747DD507C9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB5EBC73-7FEA-490C-A32B-A55E369824A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB5EBC73-7FEA-490C-A32B-A55E369824A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB5EBC73-7FEA-490C-A32B-A55E369824A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB5EBC73-7FEA-490C-A32B-A55E369824A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
