@@ -13,7 +13,7 @@ namespace WebApiToTypeScript.Config
             = false;
 
         public string EndpointsOutputDirectory { get; set; }
-            = "Endpoints";
+            = "Generated";
 
         public bool EndpointsSupportCaching { get; set; }
             = false;
@@ -28,7 +28,7 @@ namespace WebApiToTypeScript.Config
             = false;
 
         public string ServiceOutputDirectory { get; set; }
-            = "Endpoints";
+            = "Generated";
 
         public string ServiceFileName { get; set; }
             = "Service.ts";
@@ -46,7 +46,7 @@ namespace WebApiToTypeScript.Config
             = false;
 
         public string EnumsOutputDirectory { get; set; }
-            = "Enums";
+            = "Generated";
 
         public string EnumsFileName { get; set; }
             = "Enums.ts";
@@ -64,7 +64,7 @@ namespace WebApiToTypeScript.Config
             = true;
 
         public string InterfacesOutputDirectory { get; set; }
-            = "Interfaces";
+            = "Generated";
 
         public string InterfacesFileName { get; set; }
             = "Interfaces.ts";
@@ -88,7 +88,7 @@ namespace WebApiToTypeScript.Config
             = ".view.";
 
         public string ViewsOutputDirectory { get; set; }
-            = "Views";
+            = "Generated";
 
         public bool UseViewsGroupingNamespace { get; set; }
             = true;
@@ -103,7 +103,7 @@ namespace WebApiToTypeScript.Config
             = "Resources";
 
         public string ResourcesOutputDirectory { get; set; }
-            = "Resources";
+            = "Generated";
 
         public bool ScanOtherModules { get; set; }
             = true;

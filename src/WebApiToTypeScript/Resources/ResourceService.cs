@@ -42,18 +42,20 @@ namespace WebApiToTypeScript.Resources
 
                         var source = match.Groups[1].Value;
 
-                        int integer;
-                        var isInteger = int.TryParse(source, out integer);
+                        var isInteger = int.TryParse(source, out int integer);
 
                         var destination = isInteger
                             ? $"slot{source}"
                             : source;
 
-                        parameters.Add(new ParameterTransform
+                        if (!parameters.Any(p => p.Source == source))
                         {
-                            Source = source,
-                            Destination = destination
-                        });
+                            parameters.Add(new ParameterTransform
+                            {
+                                Source = source,
+                                Destination = destination
+                            });
+                        }
                     }
 
                     var originalValue = dictionary.Value.ToString()
@@ -64,8 +66,7 @@ namespace WebApiToTypeScript.Resources
                         var paramsString = string.Join(", ", parameters.Select(p => $"{p.Destination}: string"));
 
                         var transformedValue = parameters
-                            .Aggregate(originalValue, (current, parameterTransform) => current.Replace(parameterTransform.Source, parameterTransform.Destination))
-                            .Replace("{", "${");
+                            .Aggregate(originalValue, (current, parameterTransform) => current.Replace($"{{{parameterTransform.Source}}}", $"${{{parameterTransform.Destination}}}"));
 
                         interfaceBlock
                             .AddStatement($"{dictionary.Key} : ({paramsString}) => string;");
