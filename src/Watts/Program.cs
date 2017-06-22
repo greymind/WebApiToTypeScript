@@ -33,8 +33,8 @@ namespace Watts
 
             if (Debugger.IsAttached)
             {
-                Console.WriteLine("Press any key to continue . . .");
-                Console.ReadLine();
+                Console.Write("Press any key to continue . . . ");
+                Console.ReadKey();
             }
 
             return 0;
