@@ -46,7 +46,7 @@ namespace WebApiToTypeScript.Views
 
         public void AddViewsFromDirectory(ViewConfig viewConfig, List<ViewNode> featureViews)
         {
-            var prefix = (viewConfig.Prefix ?? string.Empty).ToLower();
+            var prefix = (viewConfig.Prefix ?? string.Empty);
             var urlEncode = viewConfig.UrlEncodePath;
 
             var sourceDirectory = viewConfig.SourceDirectory;
@@ -117,14 +117,19 @@ namespace WebApiToTypeScript.Views
 
                 var formattedPath = featureViewPath.Replace(@"\", "/");
 
-                var path = (urlEncode
+                var path = urlEncode
                     ? HttpUtility.UrlEncode(formattedPath)
-                    : formattedPath).ToLower();
+                    : formattedPath;
+
+                var viewPath = $"{prefix}{path}";
+
+                if (viewConfig.GenerateAsLowercase)
+                    viewPath = viewPath.ToLower();
 
                 viewNode.ViewEntries.Add(new ViewEntry
                 {
                     Name = viewName,
-                    Path = $"{prefix}{path}"
+                    Path = viewPath
                 });
             }
         }

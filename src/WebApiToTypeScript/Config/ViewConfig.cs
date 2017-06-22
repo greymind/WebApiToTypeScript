@@ -11,5 +11,8 @@
 
         public bool UrlEncodePath { get; set; }
             = false;
+
+        public bool GenerateAsLowercase { get; set; }
+            = false;
     }
 }
