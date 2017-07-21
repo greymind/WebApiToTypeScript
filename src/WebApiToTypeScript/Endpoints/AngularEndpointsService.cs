@@ -9,42 +9,51 @@ namespace WebApiToTypeScript.Endpoints
         public TypeScriptBlock CreateServiceBlock()
         {
             var constructorBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}")
+                .AddStatement("type BeforeCallHandler = (endpoint: IEndpoint, data, config: ng.IRequestConfig) => ng.IPromise<void>;")
+                .AddStatement("type AfterCallHandler = <TView> (endpoint: IEndpoint, data, config: ng.IRequestConfig, response: TView) => ng.IPromise<void>;")
                 .AddAndUseBlock($"export class {Config.ServiceName}")
-                .AddStatement
-                (
-                    Config.EndpointsSupportCaching
-                        ? "static $inject = ['$http', '$q'];"
-                        : "static $inject = ['$http'];"
-                )
+                .AddStatement("static $inject = ['$http', '$q'];")
                 .AddStatement("static endpointCache = {};", condition: Config.EndpointsSupportCaching)
-                .AddAndUseBlock
-                (
-                    Config.EndpointsSupportCaching
-                        ? "constructor($http: ng.IHttpService, $q: ng.IQService)"
-                        : "constructor($http: ng.IHttpService)"
-                );
+                .AddAndUseBlock("constructor($http: ng.IHttpService, $q: ng.IQService)");
 
             var serviceBlock = constructorBlock
                 .Parent
-                .AddAndUseBlock("static call<TView>(httpService: ng.IHttpService, endpoint: IEndpoint, data, httpConfig?: ng.IRequestShortcutConfig)")
-                .AddAndUseBlock("const config = ")
+                .AddAndUseBlock("static call<TView>(httpService: ng.IHttpService, qService: ng.IQService, endpoint: IEndpoint, data, httpConfig?: ng.IRequestShortcutConfig)")
+                .AddAndUseBlock("const config =")
                 .AddStatement("method: endpoint._verb,")
                 .AddStatement("url: endpoint.toString(),")
                 .AddStatement("data: data")
                 .Parent
                 .AddStatement("httpConfig && _.extend(config, httpConfig);")
                 .AddStatement("")
+                .AddAndUseBlock($"return qService.all({Config.ServiceName}.onBeforeCallHandlers.map(onBeforeCall => onBeforeCall.handler(endpoint, data, config))).then(before =>", isFunctionBlock: true, terminationString: ";")
                 .AddStatement($"const call = httpService<TView>(config);")
-                .AddStatement("return call.then(response => response.data);");
+                .AddAndUseBlock("return call.then(response =>", isFunctionBlock: true, terminationString: ";")
+                .AddStatement("let result = response.data;")
+                .AddStatement($"return qService.all({Config.ServiceName}.onAfterCallHandlers.map(onAfterCall => onAfterCall.handler<TView>(endpoint, data, config, result))).then(after => result);")
+                .Parent
+                .Parent
+                .Parent
+                .AddStatement("private static onBeforeCallHandlers: ({ name: string; handler: BeforeCallHandler; })[] = []")
+                .AddStatement("private static onAfterCallHandlers: ({ name: string; handler: AfterCallHandler; })[] = []")
+                .AddAndUseBlock("static AddBeforeCallHandler = (name: string, handler: BeforeCallHandler) =>")
+                .AddStatement($"{Config.ServiceName}.onBeforeCallHandlers = _.filter({Config.ServiceName}.onBeforeCallHandlers, h => h.name != name);")
+                .AddStatement($"{Config.ServiceName}.onBeforeCallHandlers.push({{ name: name, handler: handler }});")
+                .AddStatement($"return () => {Config.ServiceName}.onBeforeCallHandlers = _.filter({Config.ServiceName}.onBeforeCallHandlers, h => h.name != name);")
+                .Parent
+                .AddAndUseBlock("static AddAfterCallHandler = (name: string, handler: AfterCallHandler) =>")
+                .AddStatement($"{Config.ServiceName}.onAfterCallHandlers = _.filter({Config.ServiceName}.onAfterCallHandlers, h => h.name != name);")
+                .AddStatement($"{Config.ServiceName}.onAfterCallHandlers.push({{ name: name, handler: handler }});")
+                .AddStatement($"return () => {Config.ServiceName}.onAfterCallHandlers = _.filter({Config.ServiceName}.onAfterCallHandlers, h => h.name != name);")
+                .Parent;
 
             if (Config.EndpointsSupportCaching)
             {
                 serviceBlock
-                    .Parent
                     .AddAndUseBlock("static callCached<TView>(httpService: ng.IHttpService, qService: ng.IQService, endpoint: IEndpoint, data, httpConfig?: ng.IRequestShortcutConfig)")
                     .AddStatement("var cacheKey = endpoint.toString();")
                     .AddAndUseBlock("if (this.endpointCache[cacheKey] == null)")
-                    .AddAndUseBlock("return this.call<TView>(httpService, endpoint, data, httpConfig).then(result =>", isFunctionBlock: true, terminationString: ";")
+                    .AddAndUseBlock("return this.call<TView>(httpService, qService, endpoint, data, httpConfig).then(result =>", isFunctionBlock: true, terminationString: ";")
                     .AddStatement("this.endpointCache[cacheKey] = result;")
                     .AddStatement("return this.endpointCache[cacheKey];")
                     .Parent
@@ -55,7 +64,6 @@ namespace WebApiToTypeScript.Endpoints
             }
 
             return serviceBlock
-                .Parent
                 .Parent;
         }
 
@@ -116,7 +124,7 @@ namespace WebApiToTypeScript.Endpoints
                             isFunctionBlock: false,
                             terminationString: Config.EndpointsSupportCaching ? "," : string.Empty
                         )
-                        .AddStatement($"return {Config.ServiceName}.call{typeScriptReturnType}($http, this, {callArgumentValue});")
+                        .AddStatement($"return {Config.ServiceName}.call{typeScriptReturnType}($http, $q, this, {callArgumentValue});")
                         .Parent;
 
                     if (Config.EndpointsSupportCaching && verb == WebApiHttpVerb.Get)
