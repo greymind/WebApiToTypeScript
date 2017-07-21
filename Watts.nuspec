@@ -12,7 +12,7 @@
     <summary>A tool for code generating TypeScript endpoints, interfaces, enums, resources and view paths for your ASP.NET Web API controllers/web apps</summary>
     <releaseNotes>Issue 34: Add call before and after handlers</releaseNotes>
     <copyright>Copyright (c) 2016-2017 Balakrishnan (Balki) Ranganathan</copyright>
-    <tags>WebAPI TypeScript Endpoint Enum Interface Code Generation Angular Service Balki Greymind Watts</tags>
+    <tags>WebAPI TypeScript Endpoint Enum Interface Code Generation Angular Service Balki Greymind Watts Web API</tags>
   </metadata>
   <files>
     <file src="src\Watts\bin\Release\**\*.dll" target="tools" />
