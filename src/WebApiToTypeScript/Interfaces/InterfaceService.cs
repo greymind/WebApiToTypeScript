@@ -67,7 +67,7 @@ namespace WebApiToTypeScript.Interfaces
         public InterfaceNode AddInterfaceNode(TypeDefinition typeDefinition)
         {
             Debug.Assert(typeDefinition != null);
-            
+
             var interfaceNode = SearchForInterfaceNode(InterfaceNode, typeDefinition);
 
             if (interfaceNode != null)
@@ -212,7 +212,7 @@ namespace WebApiToTypeScript.Interfaces
                 LogMessage($"Interface name [{blockTypeName}] of type [{typeDefinition.FullName}] is invalid!");
                 return;
             }
-            
+
             var classImplementsString =
                 $" implements I{blockTypeName}{implementsString}";
 
@@ -227,7 +227,7 @@ namespace WebApiToTypeScript.Interfaces
             if (Config.GenerateInterfaceClasses)
             {
                 classBlock = interfacesBlock
-                                    .AddAndUseBlock($"export class {blockTypeName}{parameterOrInstanceString}{classExtendsString}{classImplementsString}");
+                    .AddAndUseBlock($"export class {blockTypeName}{parameterOrInstanceString}{classExtendsString}{classImplementsString}");
             }
 
             var things = GetMembers(typeDefinition);
@@ -279,9 +279,30 @@ namespace WebApiToTypeScript.Interfaces
                     }
                 }
 
-                var thingName = Config.InterfaceMembersInCamelCase
-                    ? Helpers.ToCamelCaseFromPascalCase(thing.Name)
-                    : thing.Name;
+                var thingName = thing.Name;
+
+                var jsonProperty = thing.CustomAttributes.SingleOrDefault(a => a.AttributeType.Name == "JsonPropertyAttribute");
+
+                if (jsonProperty != null)
+                {
+                    try
+                    {
+                        thingName = jsonProperty?.HasProperties ?? false
+                            ? jsonProperty.Properties.Single(p => p.Name == "PropertyName").Argument.Value.ToString()
+                            : jsonProperty?.HasConstructorArguments ?? false
+                                ? jsonProperty.ConstructorArguments.Single().Value.ToString()
+                                : thing.Name;
+                    }
+                    catch
+                    {
+                        // This is to suppress a assembly load execption which I am unsure of why it is happening
+                    }
+                }
+
+                if (Config.InterfaceMembersInCamelCase)
+                {
+                    thingName = Helpers.ToCamelCaseFromPascalCase(thingName);
+                }
 
                 var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
 
@@ -304,7 +325,7 @@ namespace WebApiToTypeScript.Interfaces
                     classBlock
                        .AddAndUseBlock("constructor()")
                        .AddStatement("super();");
-                }               
+                }
             }
         }
 
@@ -329,7 +350,8 @@ namespace WebApiToTypeScript.Interfaces
                 .Select(p => new MemberWithCSharpType
                 {
                     Name = p.Name,
-                    CSharpType = TypeService.GetCSharpType(p.FieldType)
+                    CSharpType = TypeService.GetCSharpType(p.FieldType),
+                    CustomAttributes = p.CustomAttributes.ToList()
                 });
 
             var properties = typeDefinition.Properties
@@ -337,7 +359,8 @@ namespace WebApiToTypeScript.Interfaces
                 .Select(p => new MemberWithCSharpType
                 {
                     Name = p.Name,
-                    CSharpType = TypeService.GetCSharpType(p.PropertyType)
+                    CSharpType = TypeService.GetCSharpType(p.PropertyType),
+                    CustomAttributes = p.CustomAttributes.ToList()
                 });
 
             return fields.Union(properties)
