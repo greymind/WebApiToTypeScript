@@ -166,6 +166,7 @@ namespace WebApiToTypeScript.Types
 
             var type = StripTask(cSharpType) ?? cSharpType;
 
+            // This typemapping thing needs to get better
             var typeName = type.FullName;
 
             {
