@@ -87,6 +87,7 @@ angular.module('framework').service('AngularEndpointsService', Framework.Endpoin
   "InterfacesFileName": "string",
   "InterfacesNamespace": "string",
   "InterfaceMembersInCamelCase": "boolean",
+  "InterfaceCamelCaseCustomAttribute": "string",
   "InterfaceMatches": [
     "Match": "string",
     "ExcludeMatch": "string",
