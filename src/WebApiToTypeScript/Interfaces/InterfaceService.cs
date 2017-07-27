@@ -84,21 +84,40 @@ namespace WebApiToTypeScript.Interfaces
             if (baseType.IsGenericInstance)
             {
                 var genericBaseType = baseType as GenericInstanceType;
-                var elementType = genericBaseType?.ElementType as TypeDefinition;
+                var elementType = TypeService.GetTypeDefinition(genericBaseType?.ElementType?.FullName);
+                var typeMapping = TypeService.GetTypeMapping("", elementType?.FullName);
 
-                if (elementType != null && elementType != typeDefinition)
+                if (elementType != null && elementType != typeDefinition
+                    && typeMapping != null
+                    && !TypeService.IsPrimitiveTypeScriptType(typeMapping.TypeScriptTypeName))
+                {
                     baseInterfaceNode = AddInterfaceNode(elementType);
+                }
             }
             else
             {
                 var baseClass = TypeService.GetTypeDefinition(typeDefinition.BaseType.FullName);
                 var isBaseClassNotObject = baseClass != null && baseClass.FullName != "System.Object";
+                var typeMapping = TypeService.GetTypeMapping("", baseClass?.FullName);
 
-                if (isBaseClassNotObject && baseClass != typeDefinition)
+                if (isBaseClassNotObject && baseClass != typeDefinition
+                    && typeMapping != null
+                    && !TypeService.IsPrimitiveTypeScriptType(typeMapping.TypeScriptTypeName))
+                {
                     baseInterfaceNode = AddInterfaceNode(baseClass);
+                }
+
             }
 
             interfaceNode = AdjustBaseClass(interfaceNode, baseInterfaceNode);
+
+            var nestedTypes = typeDefinition.NestedTypes
+                .Where(t => !t.IsNestedPrivate);
+
+            foreach (var nestedType in nestedTypes)
+            {
+                AddInterfaceNode(nestedType);
+            }
 
             var things = GetMembers(typeDefinition)
                 .Where(m => !m.CSharpType.IsGenericParameter);
@@ -172,6 +191,7 @@ namespace WebApiToTypeScript.Interfaces
 
             var hasBaseClass = interfaceNode.BaseInterface?.TypeDefinition != null;
             var baseTypeName = CleanName(interfaceNode.BaseInterface?.TypeDefinition?.Name);
+            var things = GetMembers(typeDefinition);
 
             if (hasBaseClass)
             {
@@ -229,8 +249,6 @@ namespace WebApiToTypeScript.Interfaces
                 classBlock = interfacesBlock
                     .AddAndUseBlock($"export class {blockTypeName}{parameterOrInstanceString}{classExtendsString}{classImplementsString}");
             }
-
-            var things = GetMembers(typeDefinition);
 
             foreach (var thing in things)
             {
