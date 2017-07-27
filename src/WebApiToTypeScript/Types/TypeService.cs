@@ -111,7 +111,7 @@ namespace WebApiToTypeScript.Types
             {
                 yield return baseType;
 
-                var baseTypeDefinition = baseType as TypeDefinition;
+                var baseTypeDefinition = GetTypeDefinition(baseType.FullName);
                 baseType = baseTypeDefinition?.BaseType;
             }
         }
@@ -273,8 +273,11 @@ namespace WebApiToTypeScript.Types
             throw new NotSupportedException("Maybe it is a generic class, or a yet unsupported collection, or chain thereof?");
         }
 
-        private TypeMapping GetTypeMapping(string parameterName, string typeFullName)
+        public TypeMapping GetTypeMapping(string parameterName, string typeFullName)
         {
+            if (typeFullName == null)
+                return null;
+
             var typeMapping = Config.TypeMappings
                 .FirstOrDefault(t => MatchTypeMapping(parameterName, typeFullName, t));
 
