@@ -88,8 +88,7 @@ namespace WebApiToTypeScript.Interfaces
                 var typeMapping = TypeService.GetTypeMapping("", elementType?.FullName);
 
                 if (elementType != null && elementType != typeDefinition
-                    && typeMapping != null
-                    && !TypeService.IsPrimitiveTypeScriptType(typeMapping.TypeScriptTypeName))
+                    && typeMapping == null)
                 {
                     baseInterfaceNode = AddInterfaceNode(elementType);
                 }
@@ -101,12 +100,10 @@ namespace WebApiToTypeScript.Interfaces
                 var typeMapping = TypeService.GetTypeMapping("", baseClass?.FullName);
 
                 if (isBaseClassNotObject && baseClass != typeDefinition
-                    && typeMapping != null
-                    && !TypeService.IsPrimitiveTypeScriptType(typeMapping.TypeScriptTypeName))
+                    && typeMapping == null)
                 {
                     baseInterfaceNode = AddInterfaceNode(baseClass);
                 }
-
             }
 
             interfaceNode = AdjustBaseClass(interfaceNode, baseInterfaceNode);
@@ -317,7 +314,8 @@ namespace WebApiToTypeScript.Interfaces
                     }
                 }
 
-                if (Config.InterfaceMembersInCamelCase)
+                if (Config.InterfaceMembersInCamelCase
+                    || typeDefinition.CustomAttributes.Any(a => a.AttributeType.Name == Config.InterfaceCamelCaseCustomAttribute))
                 {
                     thingName = Helpers.ToCamelCaseFromPascalCase(thingName);
                 }

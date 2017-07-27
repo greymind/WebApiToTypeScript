@@ -75,6 +75,9 @@ namespace WebApiToTypeScript.Config
         public bool InterfaceMembersInCamelCase { get; set; }
             = true;
 
+        public string InterfaceCamelCaseCustomAttribute { get; set; }
+            = null;
+
         public List<MatchConfig> InterfaceMatches { get; set; }
             = new List<MatchConfig>();
 

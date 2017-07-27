@@ -242,7 +242,8 @@ namespace WebApiToTypeScript.Types
                 return result;
             }
 
-            if (!typeDefinition?.IsValueType ?? false)
+            if (typeDefinition != null
+                && !typeDefinition.IsPrimitive)
             {
                 if (!Config.GenerateInterfaces)
                 {
