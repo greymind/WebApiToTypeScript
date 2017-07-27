@@ -1,11 +1,10 @@
-﻿using System;
+﻿using Mono.Cecil;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Mono.Cecil;
 using WebApiToTypeScript.Config;
-using System.Diagnostics;
 
 namespace WebApiToTypeScript.Types
 {
@@ -148,6 +147,19 @@ namespace WebApiToTypeScript.Types
             return GetTypeScriptType(cSharpType, parameterName, GetTypeMapping);
         }
 
+        private TypeScriptType MapTypeMappingToTypeScriptType(TypeMapping typeMapping, TypeScriptType typeScriptType)
+        {
+            var typeScriptTypeName = typeMapping.TypeScriptTypeName;
+
+            typeScriptType.TypeName = typeScriptTypeName;
+            typeScriptType.InterfaceName = typeScriptTypeName;
+            typeScriptType.IsPrimitive = IsPrimitiveTypeScriptType(typeScriptType.TypeName);
+            typeScriptType.IsEnum = typeScriptTypeName.StartsWith($"{Config.EnumsNamespace}")
+                || typeScriptType.IsPrimitive;
+
+            return typeScriptType;
+        }
+
         public TypeScriptType GetTypeScriptType(TypeReference cSharpType, string parameterName, Func<string, string, TypeMapping> getTypeMapping)
         {
             var result = new TypeScriptType();
@@ -156,25 +168,44 @@ namespace WebApiToTypeScript.Types
 
             var typeName = type.FullName;
 
-            var typeMapping = getTypeMapping(parameterName, type.FullName);
-
-            if (typeMapping != null)
             {
-                var tsTypeName = typeMapping.TypeScriptTypeName;
-                result.TypeName = tsTypeName;
-                result.InterfaceName = tsTypeName;
-                result.IsPrimitive = IsPrimitiveTypeScriptType(result.TypeName);
-                result.IsEnum = tsTypeName.StartsWith($"{Config.EnumsNamespace}")
-                    || result.IsPrimitive;
+                var typeMapping = getTypeMapping(parameterName, typeName);
 
-                return result;
+                if (typeMapping != null)
+                {
+                    return MapTypeMappingToTypeScriptType(typeMapping, result);
+                }
             }
 
-            typeName = StripNullable(type) ?? typeName;
+            var strippedTypeName = StripNullable(type);
 
-            var collectionType = StripCollection(type);
-            result.IsCollection = collectionType != null;
-            typeName = collectionType ?? typeName;
+            if (strippedTypeName != null)
+            {
+                var typeMapping = getTypeMapping(parameterName, strippedTypeName);
+
+                if (typeMapping != null)
+                {
+                    return MapTypeMappingToTypeScriptType(typeMapping, result);
+                }
+            }
+
+            typeName = strippedTypeName ?? typeName;
+
+            var collectionTypeName = StripCollection(type);
+
+            if (collectionTypeName != null)
+            {
+                result.IsCollection = true;
+
+                var typeMapping = getTypeMapping(parameterName, collectionTypeName);
+
+                if (typeMapping != null)
+                {
+                    return MapTypeMappingToTypeScriptType(typeMapping, result);
+                }
+            }
+
+            typeName = collectionTypeName ?? typeName;
 
             var typeDefinition = GetTypeDefinition(typeName);
 

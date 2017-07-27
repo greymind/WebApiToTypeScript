@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Mono.Cecil;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Mono.Cecil;
 using WebApiToTypeScript.Config;
 using WebApiToTypeScript.Types;
 
@@ -52,15 +52,14 @@ namespace WebApiToTypeScript.WebApi
                 return null;
 
             var typeMapping = Config.TypeMappings
-                .FirstOrDefault(MatchTypeMapping);
+                .FirstOrDefault(tm => MatchTypeMapping(parameterName, typeFullName, tm));
 
             return typeMapping;
         }
 
-        private bool MatchTypeMapping(TypeMapping typeMapping)
+        private bool MatchTypeMapping(string parameterName, string typeFullName, TypeMapping typeMapping)
         {
-            var parameterName = Parameter.Name;
-            var typeFullName = Parameter.ParameterType.FullName;
+            parameterName = parameterName ?? Parameter.Name;
 
             var doesTypeNameMatch = typeFullName.StartsWith(typeMapping.WebApiTypeName);
 
