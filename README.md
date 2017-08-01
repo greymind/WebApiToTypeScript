@@ -12,7 +12,7 @@ A tool for code generating TypeScript endpoints for your ASP.NET Web API control
 * Generates resources files based on .resx files
 
 ## Examples
-Take a look at the generated files and sample test files [here](https://github.com/greymind/WebApiToTypeScript/tree/master/src/WebApiTestApplication/Scripts)
+Take a look at the generated files and sample test files [here](https://github.com/greymind/WebApiToTypeScript/tree/master/src/TestApplication/Scripts/Generated)
 
 ## Getting the tool from NuGet
 [https://www.nuget.org/packages/WebApiToTypeScript/](https://www.nuget.org/packages/WebApiToTypeScript/)
