@@ -124,12 +124,5 @@ angular.module('framework').service('AngularEndpointsService', Framework.Endpoin
 }
 ```
 
-## Team
-* [Balakrishnan (Balki) Ranganathan](https://github.com/greymind)
-* [Augustin Juricic](https://github.com/omittones)
-* [Dominik Borovic](https://github.com/dborovic)
-* [Darko Sperac](https://github.com/dsperac)
-* [Mario Brizic](https://github.com/mbrizic)
-
 ## License
 MIT
