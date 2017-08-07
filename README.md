@@ -49,7 +49,7 @@ You can build just the C# parts of the solution by adding a condition to the Typ
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets') AND '$(SkipTypeScript)'=='False'" />
 ```
 ```
-Path\To\msbuild.exe /t:build /p:SkipTypeScript:True Path\To\Project.csproj
+Path\To\msbuild.exe /t:build /p:SkipTypeScript=True Path\To\Project.csproj
 ```
 
 ## Using Angular Endpoints Service
