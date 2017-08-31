@@ -91,5 +91,16 @@ namespace WebApiToTypeScript
                 && property.CustomAttributes.Any(a => a.AttributeType.Name == attributeName);
         }
 
+        public static string GetCollectionPostfix(int collectionLevel)
+        {
+            var postfix = string.Empty;
+
+            for (int i = 0; i < collectionLevel; i++)
+            {
+                postfix += "[]";
+            }
+
+            return postfix;
+        }
     }
 }

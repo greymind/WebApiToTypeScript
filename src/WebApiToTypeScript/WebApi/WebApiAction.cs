@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Mono.Cecil;
+using System.Collections.Generic;
 using System.Linq;
-using Mono.Cecil;
 using WebApiToTypeScript.Types;
 
 namespace WebApiToTypeScript.WebApi
@@ -53,7 +53,7 @@ namespace WebApiToTypeScript.WebApi
             {
                 var returnTypeScriptType = TypeService.GetTypeScriptType(Method.ReturnType, "");
 
-                var collectionString = returnTypeScriptType.IsCollection ? "[]" : string.Empty;
+                var collectionString = Helpers.GetCollectionPostfix(returnTypeScriptType.CollectionLevel);
 
                 var typeName = returnTypeScriptType.InterfaceName;
 
@@ -205,10 +205,8 @@ namespace WebApiToTypeScript.WebApi
 
                 if (!isPrimitive)
                 {
-                    var typeService = new TypeService();
-                    var nullableType = typeService.StripNullable(actionParameter.ParameterType);
-                    var isNullable = nullableType != null;
-                    isPrimitive = isNullable && typeService.GetPrimitiveTypeScriptType(nullableType) != null;
+                    var strippedType = TypeService.StripGenerics(actionParameter.ParameterType, actionParameter.Name, out bool isNullable, out int collectionLevel);
+                    isPrimitive = isNullable && TypeService.GetPrimitiveTypeScriptType(strippedType.FullName) != null;
                 }
 
                 if (isBodyAllowed

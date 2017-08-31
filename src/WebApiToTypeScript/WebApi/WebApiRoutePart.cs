@@ -32,7 +32,7 @@ namespace WebApiToTypeScript.WebApi
             var isOptional = withOptionals && IsOptional && TypeService.IsParameterOptional(Parameter);
             var typeScriptType = GetTypeScriptType();
 
-            var collectionString = typeScriptType.IsCollection ? "[]" : string.Empty;
+            var collectionString = Helpers.GetCollectionPostfix(typeScriptType.CollectionLevel);
 
             var typeName = interfaceName
                 ? typeScriptType.InterfaceName
