@@ -122,22 +122,20 @@ namespace WebApiToTypeScript.Types
                 .FirstOrDefault(t => t.FullName == typeName);
         }
 
-        public CSharpType GetCSharpType(TypeReference type)
+        public CSharpType GetCSharpType(TypeReference type, string memberFullName)
         {
             var result = new CSharpType();
 
-            result.IsValueType = type.IsValueType;
+            var strippedType = StripGenerics(type, memberFullName, out bool isNullable, out int collectionLevel) ?? type;
+            result.IsNullable = isNullable;
+            result.CollectionLevel = collectionLevel;
 
-            var nullableType = StripNullable(type);
-            result.IsNullable = nullableType != null;
+            result.IsValueType = strippedType.IsValueType;
 
-            var collectionType = StripCollection(type);
-            result.IsCollection = collectionType != null;
+            result.IsGenericParameter = strippedType.IsGenericParameter;
+            result.GenericParameterName = strippedType.Name;
 
-            result.IsGenericParameter = type.IsGenericParameter;
-            result.GenericParameterName = type.Name;
-
-            result.TypeDefinition = GetTypeDefinition(nullableType ?? collectionType ?? type.FullName);
+            result.TypeDefinition = GetTypeDefinition(strippedType.FullName);
 
             return result;
         }
@@ -164,49 +162,17 @@ namespace WebApiToTypeScript.Types
         {
             var result = new TypeScriptType();
 
-            var type = StripTask(cSharpType) ?? cSharpType;
+            var type = StripGenerics(cSharpType, parameterName, out bool isNullable, out int collectionLevel);
+            result.CollectionLevel = collectionLevel;
 
-            // This typemapping thing needs to get better
+            var typeMapping = getTypeMapping(parameterName, type.FullName);
+
+            if (typeMapping != null)
+            {
+                return MapTypeMappingToTypeScriptType(typeMapping, result);
+            }
+
             var typeName = type.FullName;
-
-            {
-                var typeMapping = getTypeMapping(parameterName, typeName);
-
-                if (typeMapping != null)
-                {
-                    return MapTypeMappingToTypeScriptType(typeMapping, result);
-                }
-            }
-
-            var strippedTypeName = StripNullable(type);
-
-            if (strippedTypeName != null)
-            {
-                var typeMapping = getTypeMapping(parameterName, strippedTypeName);
-
-                if (typeMapping != null)
-                {
-                    return MapTypeMappingToTypeScriptType(typeMapping, result);
-                }
-            }
-
-            typeName = strippedTypeName ?? typeName;
-
-            var collectionTypeName = StripCollection(type);
-
-            if (collectionTypeName != null)
-            {
-                result.IsCollection = true;
-
-                var typeMapping = getTypeMapping(parameterName, collectionTypeName);
-
-                if (typeMapping != null)
-                {
-                    return MapTypeMappingToTypeScriptType(typeMapping, result);
-                }
-            }
-
-            typeName = collectionTypeName ?? typeName;
 
             var typeDefinition = GetTypeDefinition(typeName);
 
@@ -309,62 +275,71 @@ namespace WebApiToTypeScript.Types
                 .Contains(typeScriptTypeName);
         }
 
-        public string StripNullable(TypeReference type)
+        public TypeReference StripGenerics(TypeReference type, string memberFullName, out bool isNullable, out int collectionLevel)
         {
-            var genericType = type as GenericInstanceType;
-            if (genericType != null
-                && genericType.FullName.StartsWith("System.Nullable`1")
-                && genericType.HasGenericArguments
-                && genericType.GenericArguments.Count == 1)
-            {
-                return genericType.GenericArguments.Single().FullName;
-            }
-
-            return null;
-        }
-
-        private string StripCollection(TypeReference type)
-        {
-            if (type.IsArray)
-            {
-                return type.GetElementType().FullName;
-            }
-
-            var genericCollectionTypes = new[]
+            var genericCollectionTypeFullNames = new[]
             {
                 "System.Collections.Generic.IList`1",
                 "System.Collections.Generic.List`1",
                 "System.Collections.Generic.IEnumerable`1",
-                "System.Collections.Generic.Enumerable`1"
+                "System.Collections.Generic.Enumerable`1",
+                "System.Collections.Generic.IReadOnlyList`1",
             };
 
-            var genericType = type as GenericInstanceType;
-            if (genericType != null
-                && genericCollectionTypes.Any(gct => genericType.FullName.StartsWith(gct))
-                && genericType.HasGenericArguments
-                && genericType.GenericArguments.Count == 1)
+            var genericNullableTypeFullName = "System.Nullable`1";
+
+            var taskTypeFullName = "System.Threading.Tasks.Task";
+            var genericTaskTypeFullName = $"{taskTypeFullName}`1";
+
+            isNullable = false;
+            collectionLevel = 0;
+
+            var loopType = type;
+
+            while (true)
             {
-                return genericType.GenericArguments.Single().FullName;
+                if (loopType is GenericInstanceType genericType
+                    && genericType.HasGenericArguments)
+                {
+                    if (genericType.GenericArguments.Count != 1)
+                    {
+                        LogMessage($"Multiple generic arguments for member [{memberFullName}]. This is currently unsupported!");
+                        return null;
+                    }
+                    else if (genericCollectionTypeFullNames.Any(gct => genericType.ElementType.FullName == gct))
+                    {
+                        collectionLevel++;
+
+                        loopType = genericType.GenericArguments.Single();
+                        continue;
+                    }
+                    else if (genericType.ElementType.FullName == genericNullableTypeFullName)
+                    {
+                        isNullable = true;
+
+                        loopType = genericType.GenericArguments.Single();
+                        continue;
+                    }
+                    else if (genericType.ElementType.FullName == genericTaskTypeFullName)
+                    {
+                        loopType = genericType.GenericArguments.Single();
+                        continue;
+                    }
+                }
+                else if (loopType.IsArray)
+                {
+                    collectionLevel++;
+
+                    loopType = loopType.GetElementType();
+                    continue;
+                }
+                else if (loopType.FullName == taskTypeFullName)
+                {
+                    return this.Types.First(x => x.FullName == "System.Void");
+                }
+
+                return loopType;
             }
-
-            return null;
-        }
-
-        public TypeReference StripTask(TypeReference type)
-        {
-            var taskType = "System.Threading.Tasks.Task";
-
-            var genericType = type as GenericInstanceType;
-            if (genericType != null && genericType.FullName.StartsWith(taskType))
-            {
-                return genericType.GenericArguments.Single();
-            }
-            else if (type.FullName.StartsWith(taskType))
-            {
-                return this.Types.First(x => x.FullName == "System.Void");
-            }
-
-            return null;
         }
 
         private void LoadReservedWords()

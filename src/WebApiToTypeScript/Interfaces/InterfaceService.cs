@@ -320,7 +320,7 @@ namespace WebApiToTypeScript.Interfaces
                     thingName = Helpers.ToCamelCaseFromPascalCase(thingName);
                 }
 
-                var collectionString = thing.CSharpType.IsCollection ? "[]" : string.Empty;
+                var collectionString = Helpers.GetCollectionPostfix(thing.CSharpType.CollectionLevel);
 
                 thingName = TypeService.FixIfReservedWord(thingName);
 
@@ -363,11 +363,11 @@ namespace WebApiToTypeScript.Interfaces
         {
             var fields = typeDefinition.Fields
                 .Where(f => f.IsPublic && !f.IsSpecialName && !f.IsStatic)
-                .Select(p => new MemberWithCSharpType
+                .Select(f => new MemberWithCSharpType
                 {
-                    Name = p.Name,
-                    CSharpType = TypeService.GetCSharpType(p.FieldType),
-                    CustomAttributes = p.CustomAttributes.ToList()
+                    Name = f.Name,
+                    CSharpType = TypeService.GetCSharpType(f.FieldType, f.FullName),
+                    CustomAttributes = f.CustomAttributes.ToList()
                 });
 
             var properties = typeDefinition.Properties
@@ -375,7 +375,7 @@ namespace WebApiToTypeScript.Interfaces
                 .Select(p => new MemberWithCSharpType
                 {
                     Name = p.Name,
-                    CSharpType = TypeService.GetCSharpType(p.PropertyType),
+                    CSharpType = TypeService.GetCSharpType(p.PropertyType, p.FullName),
                     CustomAttributes = p.CustomAttributes.ToList()
                 });
 
