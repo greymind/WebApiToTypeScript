@@ -10,9 +10,6 @@ namespace WebApiToTypeScript.Interfaces
 {
     public class InterfaceService : ServiceAware
     {
-        private readonly Regex genericNameRegEx
-            = new Regex("(.*)(`(\\d*))");
-
         private InterfaceNode InterfaceNode { get; }
             = new InterfaceNode();
 
@@ -187,7 +184,7 @@ namespace WebApiToTypeScript.Interfaces
             }
 
             var hasBaseClass = interfaceNode.BaseInterface?.TypeDefinition != null;
-            var baseTypeName = CleanName(interfaceNode.BaseInterface?.TypeDefinition?.Name);
+            var baseTypeName = TypeService.CleanGenericName(interfaceNode.BaseInterface?.TypeDefinition?.Name);
             var things = GetMembers(typeDefinition);
 
             if (hasBaseClass)
@@ -222,7 +219,7 @@ namespace WebApiToTypeScript.Interfaces
                 ? $" extends {baseTypeName}{extendsString}"
                 : string.Empty;
 
-            var blockTypeName = CleanName(typeDefinition.Name);
+            var blockTypeName = TypeService.CleanGenericName(typeDefinition.Name);
 
             if (!TypeService.IsValidTypeName(blockTypeName))
             {
@@ -263,6 +260,35 @@ namespace WebApiToTypeScript.Interfaces
                 {
                     typeName = interfaceName = thing.CSharpType.GenericParameterName;
                 }
+                else if (thing.CSharpType.IsGenericInstance)
+                {
+                    var baseTypeScriptType = TypeService.GetTypeScriptType(thing.CSharpType.TypeDefinition, thing.Name);
+
+                    if (baseTypeScriptType.IsMappedType)
+                    {
+                        typeName = baseTypeScriptType.TypeName;
+                        interfaceName = baseTypeScriptType.InterfaceName;
+                    }
+                    else
+                    {
+                        var typeNames = string.Join(", ", thing.CSharpType.GenericArgumentTypes
+                            .Select(t =>
+                            {
+                                var genericArgumentTypeScriptType = TypeService.GetTypeScriptType(t, thing.Name);
+                                return genericArgumentTypeScriptType.TypeName;
+                            }));
+
+                        var interfaceNames = string.Join(", ", thing.CSharpType.GenericArgumentTypes
+                            .Select(t =>
+                            {
+                                var genericArgumentTypeScriptType = TypeService.GetTypeScriptType(t, thing.Name);
+                                return genericArgumentTypeScriptType.InterfaceName;
+                            }));
+
+                        typeName = $"{baseTypeScriptType.TypeName}<{typeNames}>";
+                        interfaceName = $"{baseTypeScriptType.InterfaceName}<{interfaceNames}>";
+                    }
+                }
                 else
                 {
                     if (thingType.IsInterface)
@@ -272,8 +298,8 @@ namespace WebApiToTypeScript.Interfaces
                     {
                         var typeScriptType = TypeService.GetTypeScriptType(union[0], thing.Name);
 
-                        interfaceName = typeScriptType.InterfaceName;
                         typeName = typeScriptType.TypeName;
+                        interfaceName = typeScriptType.InterfaceName;
                     }
                     else
                     {
@@ -345,13 +371,6 @@ namespace WebApiToTypeScript.Interfaces
             }
         }
 
-        private string CleanName(string dirtyName)
-        {
-            return string.IsNullOrEmpty(dirtyName)
-                ? string.Empty
-                : genericNameRegEx.Replace(dirtyName, "$1Generic$3");
-        }
-
         private string WrapInAngledBrackets(string genericString)
         {
             return string.IsNullOrEmpty(genericString)
@@ -380,7 +399,7 @@ namespace WebApiToTypeScript.Interfaces
                 });
 
             return fields.Union(properties)
-                .Where(t => t.CSharpType.IsGenericParameter || t.CSharpType.TypeDefinition != null)
+                .Where(t => t.CSharpType.IsValid)
                 .ToList();
         }
 

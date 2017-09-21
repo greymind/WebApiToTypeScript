@@ -10,8 +10,11 @@ namespace WebApiToTypeScript.Types
 {
     public class TypeService : ServiceAware
     {
-        private Regex ValidTypeNameRegex { get; }
+        private readonly Regex ValidTypeNameRegex
             = new Regex("^[a-zA-Z_][a-zA-Z0-9_]*$");
+
+        private readonly Regex GenericNameRegEx
+            = new Regex("(.+)(`(\\d+))");
 
         private Dictionary<string, List<Type>> PrimitiveTypesMapping { get; }
             = new Dictionary<string, List<Type>>();
@@ -132,10 +135,32 @@ namespace WebApiToTypeScript.Types
 
             result.IsValueType = strippedType.IsValueType;
 
-            result.IsGenericParameter = strippedType.IsGenericParameter;
-            result.GenericParameterName = strippedType.Name;
+            if (strippedType.IsGenericParameter)
+            {
+                result.IsGenericParameter = true;
+                result.GenericParameterName = strippedType.Name;
+            }
+            else if (strippedType is GenericInstanceType genericType
+                && genericType.HasGenericArguments)
+            {
+                result.IsGenericInstance = true;
+                result.GenericArgumentTypes = genericType.GenericArguments.ToArray();
 
-            result.TypeDefinition = GetTypeDefinition(strippedType.FullName);
+                result.TypeDefinition = GetTypeDefinition(genericType.ElementType.FullName);
+            }
+            else
+            {
+                result.TypeDefinition = GetTypeDefinition(strippedType.FullName);
+            }
+
+            if (!result.IsValid)
+            {
+                // Ignore Expressions for now
+                if (memberFullName.StartsWith("System.Linq.Expressions.Expression`1"))
+                    return result;
+
+                LogMessage($"Cannot get C# type for {memberFullName}!");
+            }
 
             return result;
         }
@@ -151,9 +176,12 @@ namespace WebApiToTypeScript.Types
 
             typeScriptType.TypeName = typeScriptTypeName;
             typeScriptType.InterfaceName = typeScriptTypeName;
+
             typeScriptType.IsPrimitive = IsPrimitiveTypeScriptType(typeScriptType.TypeName);
             typeScriptType.IsEnum = typeScriptTypeName.StartsWith($"{Config.EnumsNamespace}")
                 || typeScriptType.IsPrimitive;
+
+            typeScriptType.IsMappedType = true;
 
             return typeScriptType;
         }
@@ -220,8 +248,10 @@ namespace WebApiToTypeScript.Types
                 {
                     InterfaceService.AddInterfaceNode(typeDefinition);
 
-                    result.TypeName = $"{Config.InterfacesNamespace}.{typeDefinition.Name}";
-                    result.InterfaceName = $"{Config.InterfacesNamespace}.I{typeDefinition.Name}";
+                    var cleanTypeName = CleanGenericName(typeDefinition.Name);
+
+                    result.TypeName = $"{Config.InterfacesNamespace}.{cleanTypeName}";
+                    result.InterfaceName = $"{Config.InterfacesNamespace}.I{cleanTypeName}";
                 }
 
                 return result;
@@ -326,11 +356,11 @@ namespace WebApiToTypeScript.Types
                         continue;
                     }
                 }
-                else if (loopType.IsArray)
+                else if (loopType is ArrayType arrayType)
                 {
                     collectionLevel++;
 
-                    loopType = loopType.GetElementType();
+                    loopType = arrayType.ElementType;
                     continue;
                 }
                 else if (loopType.FullName == taskTypeFullName)
@@ -340,6 +370,13 @@ namespace WebApiToTypeScript.Types
 
                 return loopType;
             }
+        }
+
+        public string CleanGenericName(string maybeGenericTypeName)
+        {
+            return string.IsNullOrEmpty(maybeGenericTypeName)
+                ? string.Empty
+                : GenericNameRegEx.Replace(maybeGenericTypeName, "$1Generic$3");
         }
 
         private void LoadReservedWords()
