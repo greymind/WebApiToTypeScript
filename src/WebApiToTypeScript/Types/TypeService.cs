@@ -16,6 +16,14 @@ namespace WebApiToTypeScript.Types
         private readonly Regex GenericNameRegEx
             = new Regex("(.+)(`(\\d+))");
 
+        private readonly string[] TypesToTreatAsObjects = new string[]
+        {
+            "System.Linq.Expressions.Expression`1",
+            "System.Collections.Generic.IDictionary`2",
+            "System.Collections.Generic.Dictionary`2",
+            "System.Func`",
+        };
+
         private Dictionary<string, List<Type>> PrimitiveTypesMapping { get; }
             = new Dictionary<string, List<Type>>();
 
@@ -24,6 +32,9 @@ namespace WebApiToTypeScript.Types
 
         public List<TypeDefinition> Types { get; }
             = new List<TypeDefinition>();
+
+        public TypeDefinition VoidType => this.Types.First(x => x.FullName == "System.Void");
+        public TypeDefinition ObjectType => this.Types.First(x => x.FullName == "System.Object");
 
         public TypeService()
         {
@@ -143,10 +154,17 @@ namespace WebApiToTypeScript.Types
             else if (strippedType is GenericInstanceType genericType
                 && genericType.HasGenericArguments)
             {
-                result.IsGenericInstance = true;
-                result.GenericArgumentTypes = genericType.GenericArguments.ToArray();
+                if (TypesToTreatAsObjects.Any(i => genericType.FullName.StartsWith(i)))
+                {
+                    result.TypeDefinition = ObjectType;
+                }
+                else
+                {
+                    result.IsGenericInstance = true;
+                    result.GenericArgumentTypes = genericType.GenericArguments.ToArray();
 
-                result.TypeDefinition = GetTypeDefinition(genericType.ElementType.FullName);
+                    result.TypeDefinition = GetTypeDefinition(genericType.ElementType.FullName);
+                }
             }
             else
             {
@@ -155,10 +173,6 @@ namespace WebApiToTypeScript.Types
 
             if (!result.IsValid)
             {
-                // Ignore Expressions for now
-                if (memberFullName.StartsWith("System.Linq.Expressions.Expression`1"))
-                    return result;
-
                 LogMessage($"Cannot get C# type for {memberFullName}!");
             }
 
@@ -313,6 +327,8 @@ namespace WebApiToTypeScript.Types
                 "System.Collections.Generic.List`1",
                 "System.Collections.Generic.IEnumerable`1",
                 "System.Collections.Generic.Enumerable`1",
+                "System.Collections.Generic.ICollection`1",
+                "System.Linq.IQueryable`1",
                 "System.Collections.Generic.IReadOnlyList`1",
             };
 
@@ -331,7 +347,11 @@ namespace WebApiToTypeScript.Types
                 if (loopType is GenericInstanceType genericType
                     && genericType.HasGenericArguments)
                 {
-                    if (genericType.GenericArguments.Count != 1)
+                    if (TypesToTreatAsObjects.Any(i => memberFullName.StartsWith(i)))
+                    {
+                        return ObjectType;
+                    }
+                    else if (genericType.GenericArguments.Count != 1)
                     {
                         LogMessage($"Multiple generic arguments for member [{memberFullName}]. This is currently unsupported!");
                         return null;
@@ -365,7 +385,7 @@ namespace WebApiToTypeScript.Types
                 }
                 else if (loopType.FullName == taskTypeFullName)
                 {
-                    return this.Types.First(x => x.FullName == "System.Void");
+                    return VoidType;
                 }
 
                 return loopType;
