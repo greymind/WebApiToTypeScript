@@ -13,5 +13,16 @@ namespace WebApiToTypeScript.Types
 
         public bool IsGenericParameter { get; set; }
         public string GenericParameterName { get; set; }
+
+        public bool IsGenericInstance { get; set; }
+        public TypeReference[] GenericArgumentTypes { get; set; }
+
+        public bool IsValid
+        {
+            get
+            {
+                return IsGenericParameter || TypeDefinition != null;
+            }
+        }
     }
 }
