@@ -24,6 +24,9 @@ namespace WebApiToTypeScript.Config
         public string EndpointsNamespace { get; set; }
             = "Endpoints";
 
+        public string EndpointsPrefix { get; set; }
+            = "";
+
         public bool GenerateService { get; set; }
             = false;
 
@@ -32,6 +35,9 @@ namespace WebApiToTypeScript.Config
 
         public string ServiceFileName { get; set; }
             = "Service.ts";
+
+        public bool ServiceUseAngularNext { get; set; }
+            = false;
 
         public string ServiceNamespace { get; set; }
             = "Endpoints";
