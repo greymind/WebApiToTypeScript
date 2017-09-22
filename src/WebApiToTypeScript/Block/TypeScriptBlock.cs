@@ -31,6 +31,9 @@ namespace WebApiToTypeScript.Block
 
         public string Outer { get; set; }
 
+        public List<ITypeScriptCode> Header { get; set; }
+            = new List<ITypeScriptCode>();
+
         public List<ITypeScriptCode> Children { get; set; }
             = new List<ITypeScriptCode>();
 
@@ -75,6 +78,21 @@ namespace WebApiToTypeScript.Block
             return child;
         }
 
+        public TypeScriptBlock AddHeader(string statement, bool condition = true)
+        {
+            if (condition)
+            {
+                var child = new TypeScriptStatement
+                {
+                    Statement = statement
+                };
+
+                Header.Add(child);
+            }
+
+            return this;
+        }
+
         public TypeScriptBlock AddStatement(string statement, bool condition = true)
         {
             if (condition)
@@ -102,6 +120,21 @@ namespace WebApiToTypeScript.Block
             {
                 Indent = indent
             };
+
+            for (var c = 0; c < Header.Count; c++)
+            {
+                var head = Header[c];
+
+                var childIndent = stringBuilder.Indent;
+                var headString = head.ToString(childIndent);
+
+                stringBuilder.AppendWithoutIndent(headString);
+
+                var nextChild = c < Header.Count - 1 ? Header[c + 1] : null;
+                var isThisTheLastChild = c == Header.Count - 1;
+
+                AppendNewLineIfApplicable(nextChild, head, isThisTheLastChild, stringBuilder);
+            }
 
             if (!string.IsNullOrEmpty(Outer))
             {

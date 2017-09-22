@@ -102,9 +102,18 @@ namespace WebApiToTypeScript.WebApi
                 })
                 .SingleOrDefault();
 
-            return (!isFormBody || string.IsNullOrEmpty(callArgumentValueString))
+            if(Config.ServiceUseAngularNext)
+            {
+                return (!isFormBody || string.IsNullOrEmpty(callArgumentValueString))
+                 ? "null"
+                 : $"{callArgumentValueString}";
+            }
+            else
+            {
+                return (!isFormBody || string.IsNullOrEmpty(callArgumentValueString))
                  ? "null, httpConfig"
                  : $"{callArgumentValueString}, httpConfig";
+            }            
         }
 
         public string GetCallArgumentDefinition(WebApiHttpVerb verb)
@@ -112,15 +121,24 @@ namespace WebApiToTypeScript.WebApi
             var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
 
             if (!isFormBody)
-                return "httpConfig?: ng.IRequestShortcutConfig";
+                return Config.ServiceUseAngularNext ? "" : "httpConfig?: ng.IRequestShortcutConfig";
 
             var bodyParam = BodyParameters
                 .Select(a => a.GetParameterString(withOptionals: false, interfaceName: true))
                 .SingleOrDefault();
 
-            return string.IsNullOrWhiteSpace(bodyParam)
+            if (Config.ServiceUseAngularNext)
+            {
+                return string.IsNullOrWhiteSpace(bodyParam)
+                ? ""
+                : $"{bodyParam}";
+            }
+            else
+            {
+                return string.IsNullOrWhiteSpace(bodyParam)
                 ? "httpConfig?: ng.IRequestShortcutConfig"
                 : $"{bodyParam}, httpConfig?: ng.IRequestShortcutConfig";
+            }
         }
 
         public string GetConstructorParameterNamesList()

@@ -18,7 +18,9 @@ namespace WebApiToTypeScript.Interfaces
 
         public TypeScriptBlock CreateInterfacesBlock()
         {
-            return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}");
+            return Config.ServiceUseAngularNext 
+                ? new TypeScriptBlock($"export {Config.NamespaceOrModuleName} {Config.InterfacesNamespace}").AddHeader($"import {{ { Config.EnumsNamespace } }} from './enums';\n")
+                : new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}");
         }
 
         public TypeScriptBlock WriteInterfacesToBlock(TypeScriptBlock interfacesBlock)

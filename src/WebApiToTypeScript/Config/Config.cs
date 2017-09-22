@@ -24,6 +24,12 @@ namespace WebApiToTypeScript.Config
         public string EndpointsNamespace { get; set; }
             = "Endpoints";
 
+        public string EndpointsPrefix { get; set; }
+            = "";
+
+        public string EndpointsHeader { get; set; }
+            = "";
+
         public bool GenerateService { get; set; }
             = false;
 
@@ -32,6 +38,9 @@ namespace WebApiToTypeScript.Config
 
         public string ServiceFileName { get; set; }
             = "Service.ts";
+
+        public bool ServiceUseAngularNext { get; set; }
+            = false;
 
         public string ServiceNamespace { get; set; }
             = "Endpoints";
@@ -80,6 +89,9 @@ namespace WebApiToTypeScript.Config
 
         public List<MatchConfig> InterfaceMatches { get; set; }
             = new List<MatchConfig>();
+
+        public string InterfaceHeader { get; set; }
+            = "";
 
         public bool GenerateViews { get; set; }
             = false;
