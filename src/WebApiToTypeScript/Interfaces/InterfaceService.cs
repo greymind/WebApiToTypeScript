@@ -172,7 +172,9 @@ namespace WebApiToTypeScript.Interfaces
             var typeDefinition = interfaceNode.TypeDefinition;
 
             string implementsString = null;
-            string extendsString = null;
+
+            string _interfaceExtendsString = null;
+            string _classExtendsString = null;
 
             var iHaveGenericParameters = typeDefinition.HasGenericParameters;
             if (iHaveGenericParameters)
@@ -189,34 +191,40 @@ namespace WebApiToTypeScript.Interfaces
 
             if (hasBaseClass)
             {
-                var iHaveGenericArguments = typeDefinition.BaseType.IsGenericInstance;
-                if (iHaveGenericArguments)
+                if (typeDefinition.BaseType is GenericInstanceType baseTypeInstance)
                 {
-                    var baseTypeInstance = typeDefinition.BaseType as GenericInstanceType;
-                    var genericArguments = baseTypeInstance.GenericArguments
+                    var classGenericArguments = baseTypeInstance.GenericArguments
                         .Select(p => p.IsGenericParameter
                             ? p.Name
                             : TypeService.GetTypeScriptType(p.GetElementType(), p.Name).TypeName);
 
-                    extendsString = WrapInAngledBrackets(string.Join(", ", genericArguments));
+                    var interfaceGenericArguments = baseTypeInstance.GenericArguments
+                        .Select(p => p.IsGenericParameter
+                            ? p.Name
+                            : TypeService.GetTypeScriptType(p.GetElementType(), p.Name).InterfaceName);
+
+                    _classExtendsString = WrapInAngledBrackets(string.Join(", ", classGenericArguments));
+                    _interfaceExtendsString = WrapInAngledBrackets(string.Join(", ", interfaceGenericArguments));
                 }
-
-                var baseTypeHasGenericParameters = typeDefinition.BaseType.HasGenericParameters;
-                if (baseTypeHasGenericParameters)
+                else
                 {
-                    var genericParameters = typeDefinition.BaseType.GenericParameters
-                        .Select(p => p.Name);
+                    var baseTypeHasGenericParameters = typeDefinition.BaseType.HasGenericParameters;
+                    if (baseTypeHasGenericParameters)
+                    {
+                        var genericParameters = typeDefinition.BaseType.GenericParameters
+                            .Select(p => p.Name);
 
-                    extendsString = WrapInAngledBrackets(string.Join(", ", genericParameters));
+                        _classExtendsString = _interfaceExtendsString = WrapInAngledBrackets(string.Join(", ", genericParameters));
+                    }
                 }
             }
 
             var interfaceExtendsString = hasBaseClass
-                ? $" extends I{baseTypeName}{extendsString}"
+                ? $" extends I{baseTypeName}{_interfaceExtendsString}"
                 : string.Empty;
 
             var classExtendsString = hasBaseClass
-                ? $" extends {baseTypeName}{extendsString}"
+                ? $" extends {baseTypeName}{_classExtendsString}"
                 : string.Empty;
 
             var blockTypeName = TypeService.CleanGenericName(typeDefinition.Name);
