@@ -84,6 +84,9 @@ namespace WebApiToTypeScript.Config
         public List<MatchConfig> InterfaceMatches { get; set; }
             = new List<MatchConfig>();
 
+        public string InterfaceHeader { get; set; }
+            = "";
+
         public bool GenerateViews { get; set; }
             = false;
 

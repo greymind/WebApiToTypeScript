@@ -21,9 +21,23 @@ namespace WebApiToTypeScript.Interfaces
 
         public TypeScriptBlock CreateInterfacesBlock()
         {
-            return Config.ServiceUseAngularNext 
-                ? new TypeScriptBlock($"export {Config.NamespaceOrModuleName} {Config.InterfacesNamespace}").AddHeader($"import {{ { Config.EnumsNamespace } }} from './enums';\n")
-                : new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}");
+            if (Config.ServiceUseAngularNext)
+            {
+                var block = new TypeScriptBlock($"export {Config.NamespaceOrModuleName} {Config.InterfacesNamespace}")
+                    .AddHeader($"import {{ { Config.EnumsNamespace } }} from './enums';");
+
+                if(!string.IsNullOrEmpty(Config.InterfaceHeader))
+                {
+                    block.AddHeader(Config.InterfaceHeader);
+                }
+
+                return block;
+            }
+            else
+            {
+                return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}");
+            }
+
         }
 
         public TypeScriptBlock WriteInterfacesToBlock(TypeScriptBlock interfacesBlock)
@@ -69,7 +83,7 @@ namespace WebApiToTypeScript.Interfaces
         public InterfaceNode AddInterfaceNode(TypeDefinition typeDefinition)
         {
             Debug.Assert(typeDefinition != null);
-            
+
             var interfaceNode = SearchForInterfaceNode(InterfaceNode, typeDefinition);
 
             if (interfaceNode != null)
@@ -214,7 +228,7 @@ namespace WebApiToTypeScript.Interfaces
                 LogMessage($"Interface name [{blockTypeName}] of type [{typeDefinition.FullName}] is invalid!");
                 return;
             }
-            
+
             var classImplementsString =
                 $" implements I{blockTypeName}{implementsString}";
 
@@ -306,7 +320,7 @@ namespace WebApiToTypeScript.Interfaces
                     classBlock
                        .AddAndUseBlock("constructor()")
                        .AddStatement("super();");
-                }               
+                }
             }
         }
 
