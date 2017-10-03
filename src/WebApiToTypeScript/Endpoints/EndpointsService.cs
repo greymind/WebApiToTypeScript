@@ -17,6 +17,11 @@ namespace WebApiToTypeScript.Endpoints
                 .AddHeader("import * as _ from 'lodash';")
                 .AddHeader($"import {{ { Config.InterfacesNamespace } }} from './interfaces';")
                 .AddHeader($"import {{ { Config.EnumsNamespace } }} from './enums';\n");
+
+                if (!string.IsNullOrEmpty(Config.EndpointsHeader))
+                {
+                    block.AddHeader(Config.EndpointsHeader);
+                }
             }
             else
             {

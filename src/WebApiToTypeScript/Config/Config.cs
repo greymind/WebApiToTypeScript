@@ -27,6 +27,9 @@ namespace WebApiToTypeScript.Config
         public string EndpointsPrefix { get; set; }
             = "";
 
+        public string EndpointsHeader { get; set; }
+            = "";
+
         public bool GenerateService { get; set; }
             = false;
 
