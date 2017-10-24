@@ -53,11 +53,9 @@ namespace WebApiToTypeScript.Views
             var viewsIgnoredExtensions = Config.ViewsIgnoredExtensions;
             var viewsSourceDirectory = Path.GetFullPath(sourceDirectory);
 
-            var viewFiles = Directory.GetFiles(viewsSourceDirectory, $"*{Config.ViewsPattern}*", SearchOption.AllDirectories);
-                
-            viewFiles = viewFiles.Where(filename => {
-                return !viewsIgnoredExtensions.Any(ext => filename.EndsWith(ext));
-            }).ToArray();
+            var viewFiles = Directory.GetFiles(viewsSourceDirectory, $"*{Config.ViewsPattern}*", SearchOption.AllDirectories)
+                .Where(filename => !viewsIgnoredExtensions.Any(ext => filename.EndsWith(ext)))
+                .ToArray();
 
             foreach (var viewFile in viewFiles)
             {
