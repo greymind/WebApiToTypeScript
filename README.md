@@ -107,6 +107,9 @@ angular.module('framework').service('AngularEndpointsService', Framework.Endpoin
   "ViewsPattern": "string",
   "ViewsOutputDirectory": "string",
   "UseViewsGroupingNamespace": "boolean",
+  "ViewsIgnoredExtensions": [
+      "string"
+  ]
 
   "ScanOtherModules": "boolean",
   "WriteNamespaceAsModule": "boolean",
