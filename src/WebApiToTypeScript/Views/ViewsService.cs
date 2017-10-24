@@ -52,7 +52,7 @@ namespace WebApiToTypeScript.Views
             var sourceDirectory = viewConfig.SourceDirectory;
             var viewsSourceDirectory = Path.GetFullPath(sourceDirectory);
 
-            var viewFiles = Directory.GetFiles(viewsSourceDirectory, $"*{Config.ViewsPattern}*", SearchOption.AllDirectories);
+            var viewFiles = Directory.GetFiles(viewsSourceDirectory, $"*{Config.ViewsPattern}", SearchOption.AllDirectories);
 
             foreach (var viewFile in viewFiles)
             {
