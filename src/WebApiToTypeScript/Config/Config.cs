@@ -90,6 +90,9 @@ namespace WebApiToTypeScript.Config
         public string ViewsPattern { get; set; }
             = ".view.";
 
+        public string[] ViewsIgnoredExtensions { get; set; }
+            = { };
+
         public string ViewsOutputDirectory { get; set; }
             = "Generated";
 
