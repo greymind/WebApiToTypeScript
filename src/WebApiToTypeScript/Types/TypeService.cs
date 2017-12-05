@@ -354,7 +354,7 @@ namespace WebApiToTypeScript.Types
                     else if (genericType.GenericArguments.Count != 1)
                     {
                         LogMessage($"Multiple generic arguments for member [{memberFullName}]. This is currently unsupported!");
-                        return null;
+                        return ObjectType;
                     }
                     else if (genericCollectionTypeFullNames.Any(gct => genericType.ElementType.FullName == gct))
                     {
