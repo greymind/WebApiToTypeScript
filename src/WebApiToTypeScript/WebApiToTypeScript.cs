@@ -20,7 +20,7 @@ namespace WebApiToTypeScript
     public class WebApiToTypeScript : AppDomainIsolatedTask
     {
         private Stopwatch stopwatch;
-                
+
         public const string IEndpoint = nameof(IEndpoint);
 
         public static Config.Config Config { get; private set; }
@@ -44,7 +44,9 @@ namespace WebApiToTypeScript
         {
             InitializeServices();
 
-            var apiControllers = TypeService.GetControllers(Config.WebApiModuleFileName);
+            var apiControllers = Config.WebApiModuleFileNames
+                .SelectMany(f => TypeService.GetControllers(f))
+                .ToArray();
 
             if (Config.GenerateViews)
             {
@@ -147,7 +149,7 @@ namespace WebApiToTypeScript
             Config = GetConfig(ConfigFilePath);
 
             TypeService = new TypeService();
-            TypeService.LoadAllTypes(Config.WebApiModuleFileName);
+            LoadAllTypes();
 
             EnumsService = new EnumsService();
             InterfaceService = new InterfaceService();
@@ -159,9 +161,18 @@ namespace WebApiToTypeScript
             ResourceService = new ResourceService();
         }
 
-        private static string ToAbsolutePath(string baseDir, string directory)
+        private void LoadAllTypes()
         {
-            return Path.GetFullPath(Path.Combine(baseDir, directory));
+            Config.WebApiModuleFileNames
+                .ToList()
+                .ForEach(f => TypeService.LoadAllTypes(f));
+        }
+
+        private string ToAbsolutePath(string baseDir, string directory)
+        {
+            return string.IsNullOrEmpty(directory)
+                ? null
+                : Path.GetFullPath(Path.Combine(baseDir, directory));
         }
 
         private Config.Config GetConfig(string configFilePath)
@@ -173,6 +184,13 @@ namespace WebApiToTypeScript
             var baseDir = Path.GetFullPath(Path.GetDirectoryName(configFilePath) ?? "");
 
             config.WebApiModuleFileName = ToAbsolutePath(baseDir, config.WebApiModuleFileName);
+
+            config.WebApiModuleFileNames = new string[] { config.WebApiModuleFileName }
+                .Concat(config.WebApiModuleFileNames ?? (new string[] { }))
+                .Where(f => !string.IsNullOrEmpty(f))
+                .Select(f => ToAbsolutePath(baseDir, f))
+                .ToArray();
+
             config.EndpointsOutputDirectory = ToAbsolutePath(baseDir, config.EndpointsOutputDirectory);
             config.ServiceOutputDirectory = ToAbsolutePath(baseDir, config.ServiceOutputDirectory);
             config.EnumsOutputDirectory = ToAbsolutePath(baseDir, config.EnumsOutputDirectory);

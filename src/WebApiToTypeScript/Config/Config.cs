@@ -6,6 +6,8 @@ namespace WebApiToTypeScript.Config
     {
         public string WebApiModuleFileName { get; set; }
 
+        public string[] WebApiModuleFileNames { get; set; }
+
         public bool GenerateEndpointsReturnTypes { get; set; }
             = false;
 
