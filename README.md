@@ -62,6 +62,7 @@ angular.module('framework').service('AngularEndpointsService', Framework.Endpoin
 ```
 {
   "WebApiModuleFileName": "string",
+  "WebApiModuleFileNames": [ "string" ]
   
   "GenerateEndpointsReturnTypes": "boolean",
   "GenerateEndpoints": "boolean",  
