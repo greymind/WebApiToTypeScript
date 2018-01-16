@@ -12,27 +12,36 @@ namespace WebApiToTypeScript.Endpoints
             {
                 var constructorBlock = new TypeScriptBlock($"export class {Config.ServiceName}")
                     .AddHeader("import { Injectable } from '@angular/core';")
-                    .AddHeader("import { Http, Response, RequestOptionsArgs } from '@angular/http';")
+                    .AddHeader("import { Response } from '@angular/http';")
+                    .AddHeader("import { HttpClient } from '@angular/common/http';")
                     .AddHeader("import { Observable } from 'rxjs/Observable';")
                     .AddHeader("import * as _ from 'lodash';")
                     .AddHeader($"import {{ { Config.EndpointsNamespace } }} from './endpoints';\n")
+                    .AddHeader($"import {{ { Config.InterfacesNamespace } }} from './interfaces';\n")
                     .AddHeader("@Injectable()")
                 .AddAndUseBlock
                 (
-                    "constructor(http: Http)"
+                    "constructor(http: HttpClient)"
                 );
 
                 var serviceBlock = constructorBlock
                     .Parent
-                    .AddAndUseBlock($"static call<TView>(http: Http, endpoint: {Config.EndpointsNamespace}.IEndpoint, data)")
-                    .AddAndUseBlock("const options: RequestOptionsArgs  = ")
+                    .AddAndUseBlock($"static call<TView>(http: HttpClient, endpoint: {Config.EndpointsNamespace}.IEndpoint, data)")
+                    .AddAndUseBlock("const options: any  = ")
                     .AddStatement("method: endpoint._verb,")
-                    .AddStatement("url: endpoint.toString(),")
-                    .AddStatement("params: data")
+                    .AddStatement("url: endpoint.toString()")
+                    //.AddStatement("params: data")
                     .Parent
-                    .AddStatement("")
-                    .AddStatement($"const call = http.request(options.url, options);")
-                    .AddStatement("return call.map((response) => response.json()).toPromise();");
+                    .AddAndUseBlock($"if(endpoint._verb == 'GET')")
+                    .AddStatement($"options.params = data;")
+                    .Parent
+                    .AddAndUseBlock("else")
+                    .AddStatement($"options.body = data;")
+                    .Parent
+                    //.AddStatement($"const call = http.request(options.url, options);")
+                    .AddStatement($"const call: Observable<any> = http.request(options.method, options.url, options);")
+                    //.AddStatement("return call.map((response) => response.json()).toPromise();");
+                    .AddStatement("return call.toPromise();");
 
                 return serviceBlock
                 .Parent;

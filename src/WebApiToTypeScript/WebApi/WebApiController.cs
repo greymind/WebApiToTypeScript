@@ -51,17 +51,28 @@ namespace WebApiToTypeScript.WebApi
             //var e = apiController.CustomAttributes.FirstOrDefault(p => p.AttributeType.Name == "InsightRouteAttribute")?.AttributeType.GetType();
             //var x = e != null ? System.Activator.CreateInstance(e) : null;
 
+            // Temporary hacks
             if (config.ServiceUseAngularNext)
             {
                 var y = apiController.CustomAttributes
                     ?.SingleOrDefault(a => a.AttributeType.Name == "InsightRouteAttribute");
 
-                var c = y?.ConstructorArguments?.FirstOrDefault();
-                var d = (c == null || !c.HasValue || c.Value.Value == null) ? "" : c.Value.Value.ToString();               
+                if (y != null)
+                {
+                    var c = y.ConstructorArguments?.FirstOrDefault();
+                    var d = (c == null || !c.HasValue || c.Value.Value == null) ? "" : c.Value.Value.ToString();
 
-                return y == null ? "" : "insight/api/" + d;
+                    return "insight/api/" + d;
+                }
+
+                return apiController.CustomAttributes
+                    ?.SingleOrDefault(a => a.AttributeType.Name == "RoutePrefixAttribute")
+                    ?.ConstructorArguments
+                    .First()
+                    .Value
+                    .ToString();
             }
-            
+
             return apiController.CustomAttributes
                 ?.SingleOrDefault(a => a.AttributeType.Name == "RoutePrefixAttribute")
                 ?.ConstructorArguments
