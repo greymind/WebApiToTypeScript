@@ -36,7 +36,8 @@ namespace WebApiToTypeScript.WebApi
             Actions = apiController.Methods
                 .Where(m => m.IsPublic
                     && m.HasCustomAttributes
-                    && m.CustomAttributes.Any(a => WebApiHttpVerb.Verbs.Any(v => v.VerbAttribute == a.AttributeType.Name)))
+                    && m.CustomAttributes.Any(a => WebApiHttpVerb.Verbs.Any(v => v.VerbAttribute == a.AttributeType.Name)
+                        || a.AttributeType.Name == "RouteAttribute"))
                 .Select(m => new WebApiAction
                 (
                     controller: this,

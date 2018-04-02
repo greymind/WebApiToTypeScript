@@ -38,6 +38,8 @@ namespace WebApiToTypeScript.WebApi
                 .Select(a => WebApiHttpVerb.Verbs.SingleOrDefault(v => v.VerbAttribute == a.AttributeType.Name))
                 .Where(a => a != null)
                 .ToList();
+            if (Verbs.Count == 0)
+                Verbs.Add(WebApiHttpVerb.Get);
 
             Route = GetMethodRoute(Method) ?? string.Empty;
 
