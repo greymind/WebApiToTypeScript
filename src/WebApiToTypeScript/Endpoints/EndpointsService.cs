@@ -9,7 +9,24 @@ namespace WebApiToTypeScript.Endpoints
     {
         public TypeScriptBlock CreateEndpointBlock()
         {
-            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}");
+            TypeScriptBlock block;
+
+            if(Config.ServiceUseAngularNext)
+            {
+                block = new TypeScriptBlock($"export {Config.NamespaceOrModuleName} {Config.EndpointsNamespace}")
+                .AddHeader("import * as _ from 'lodash';")
+                .AddHeader($"import {{ { Config.InterfacesNamespace } }} from './interfaces';")
+                .AddHeader($"import {{ { Config.EnumsNamespace } }} from './enums';\n");
+
+                if (!string.IsNullOrEmpty(Config.EndpointsHeader))
+                {
+                    block.AddHeader(Config.EndpointsHeader);
+                }
+            }
+            else
+            {
+                block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}");
+            }            
 
             block
                 .AddAndUseBlock($"export interface {IEndpoint}")
@@ -132,16 +149,28 @@ namespace WebApiToTypeScript.Endpoints
             var callArgument = callArguments
                 .SingleOrDefault();
 
-            var callArgumentsList = string.IsNullOrWhiteSpace(callArgument)
-                ? "httpConfig?: ng.IRequestShortcutConfig"
-                : $"{callArgument}, httpConfig?: ng.IRequestShortcutConfig";
+            var callArgumentsList = Config.ServiceUseAngularNext
+                                        ? string.IsNullOrWhiteSpace(callArgument)
+                                            ? ""
+                                            : $"{callArgument}"
+                                        : string.IsNullOrWhiteSpace(callArgument)
+                                            ? "httpConfig?: ng.IRequestShortcutConfig"
+                                            : $"{callArgument}, httpConfig?: ng.IRequestShortcutConfig";
 
             string typeScriptReturnType, typeScriptTypeForCall;
 
             action.GetReturnTypes(out typeScriptReturnType, out typeScriptTypeForCall);
 
-            interfaceWithCallBlock
+            if(Config.ServiceUseAngularNext)
+            {
+                interfaceWithCallBlock
+                .AddStatement($"call{typeScriptTypeForCall}({callArgumentsList}): Promise{typeScriptReturnType};");
+            }
+            else
+            {
+                interfaceWithCallBlock
                 .AddStatement($"call{typeScriptTypeForCall}({callArgumentsList}): ng.IPromise{typeScriptReturnType};");
+            }
 
             if (Config.EndpointsSupportCaching && verb == WebApiHttpVerb.Get)
                 interfaceWithCallBlock
@@ -158,7 +187,7 @@ namespace WebApiToTypeScript.Endpoints
                 : string.Empty;
 
             toStringBlock
-                .AddStatement($"return `{action.Controller.BaseEndpoint}{action.Endpoint}`{queryString};");
+                .AddStatement($"return `{Config.EndpointsPrefix}{action.Controller.BaseEndpoint}{action.Endpoint}`{queryString};");
         }
 
         private void WriteGetQueryStringToBlock(TypeScriptBlock classBlock, string actionName, WebApiAction action)

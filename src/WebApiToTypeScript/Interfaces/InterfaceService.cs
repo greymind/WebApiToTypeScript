@@ -18,7 +18,23 @@ namespace WebApiToTypeScript.Interfaces
 
         public TypeScriptBlock CreateInterfacesBlock()
         {
-            return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}");
+            if (Config.ServiceUseAngularNext)
+            {
+                var block = new TypeScriptBlock($"export {Config.NamespaceOrModuleName} {Config.InterfacesNamespace}")
+                    .AddHeader($"import {{ { Config.EnumsNamespace } }} from './enums';");
+
+                if(!string.IsNullOrEmpty(Config.InterfaceHeader))
+                {
+                    block.AddHeader(Config.InterfaceHeader);
+                }
+
+                return block;
+            }
+            else
+            {
+                return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}");
+            }
+
         }
 
         public TypeScriptBlock WriteInterfacesToBlock(TypeScriptBlock interfacesBlock)

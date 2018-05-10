@@ -77,16 +77,18 @@ namespace WebApiToTypeScript
 
                 foreach (var apiController in apiControllers)
                 {
-                    var webApiController = new WebApiController(apiController);
+                    var webApiController = new WebApiController(apiController, Config);
 
                     if (Config.GenerateEndpoints || Config.GenerateService)
                         EndpointsService.WriteEndpointClassToBlock(endpointBlock, webApiController);
 
                     if (Config.GenerateService)
                     {
-                        var classBlock = serviceBlock.Children
-                            .OfType<TypeScriptBlock>()
-                            .First();
+                        var classBlock = Config.ServiceUseAngularNext 
+                                            ? serviceBlock 
+                                            : serviceBlock.Children
+                                                .OfType<TypeScriptBlock>()
+                                                .First();
 
                         AngularEndpointsService.WriteServiceObjectToBlock(classBlock, webApiController);
                     }

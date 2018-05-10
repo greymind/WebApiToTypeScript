@@ -22,7 +22,9 @@ namespace WebApiToTypeScript.Enums
         public TypeScriptBlock CreateEnumsBlock()
         {
             return Config.GenerateEnums
-                ? new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EnumsNamespace}")
+                ? Config.ServiceUseAngularNext 
+                                            ? new TypeScriptBlock($"export {Config.NamespaceOrModuleName} {Config.EnumsNamespace}")
+                                            : new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EnumsNamespace}")
                 : new TypeScriptBlock();
         }
 
