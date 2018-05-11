@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using WebApiToTypeScript.WebApi;
@@ -101,6 +102,57 @@ namespace WebApiToTypeScript
             }
 
             return postfix;
+        }
+
+        public static string GetCommonPrefix(params string[] samples)
+        {
+            var array = samples
+                .First()
+                .Substring(0, samples.Min(s => s.Length))
+                .TakeWhile((c, i) => samples.All(s => s[i] == c))
+                .ToArray();
+
+            var commonPrefix = new String(array);
+
+            return commonPrefix;
+        }
+
+        public static string GetRelativePath(string fromPath, string toPath)
+        {
+            var commonPrefix = GetCommonPrefix(fromPath, toPath);
+
+            var fromRelative = fromPath.Replace(commonPrefix, "")
+                .TrimStart(Path.DirectorySeparatorChar);
+
+            var toRelative = toPath.Replace(commonPrefix, "")
+                .TrimStart(Path.DirectorySeparatorChar);
+
+            var fromDepth = fromRelative
+                .Split(new[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries)
+                .Length;
+
+            var toDepth = toRelative
+                .Split(new[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries)
+                .Length;
+
+            var relativePathToEnumsFile = ".";
+
+            if (fromDepth > 0)
+            {
+                var relativeDots = Enumerable.Range(0, fromDepth)
+                    .Select(i => "..")
+                    .ToArray();
+
+                relativePathToEnumsFile = $"{String.Join(Path.DirectorySeparatorChar.ToString(), relativeDots)}";
+            }
+
+            if (toDepth > 0)
+            {
+                relativePathToEnumsFile = $"{relativePathToEnumsFile}{Path.DirectorySeparatorChar}{toRelative}";
+            }
+
+            return relativePathToEnumsFile
+                .Replace(Path.DirectorySeparatorChar, '/');
         }
     }
 }

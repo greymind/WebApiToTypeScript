@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.WebApi;
@@ -9,7 +10,16 @@ namespace WebApiToTypeScript.Endpoints
     {
         public TypeScriptBlock CreateEndpointBlock()
         {
-            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}", suppressOuter: string.IsNullOrEmpty(Config.EndpointsNamespace));
+            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}", suppressOuter: Config.NoNamespacesOrModules);
+
+            if (Config.NoNamespacesOrModules && Config.GenerateInterfaces)
+            {
+                var relativePathToInterfacesFile = Helpers.GetRelativePath(Config.EndpointsOutputDirectory, Config.InterfacesOutputDirectory);
+                var interfacesFileName = Path.GetFileNameWithoutExtension(Config.InterfacesFileName);
+
+                block = block
+                    .AddStatement($"import * as Interfaces from \"{relativePathToInterfacesFile}/{interfacesFileName}\"");
+            }
 
             block
                 .AddAndUseBlock($"export interface {IEndpoint}")

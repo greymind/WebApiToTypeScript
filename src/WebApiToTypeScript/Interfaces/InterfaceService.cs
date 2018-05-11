@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.Config;
@@ -18,11 +19,20 @@ namespace WebApiToTypeScript.Interfaces
 
         public TypeScriptBlock CreateInterfacesBlock()
         {
-            return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}", suppressOuter: string.IsNullOrEmpty(Config.InterfacesNamespace));
+            return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}", suppressOuter: Config.NoNamespacesOrModules);
         }
 
         public TypeScriptBlock WriteInterfacesToBlock(TypeScriptBlock interfacesBlock)
         {
+            if (Config.NoNamespacesOrModules && Config.GenerateEnums)
+            {
+                var relativePathToEnumsFile = Helpers.GetRelativePath(Config.InterfacesOutputDirectory, Config.EnumsOutputDirectory);
+                var enumsFileName = Path.GetFileNameWithoutExtension(Config.EnumsFileName);
+
+                interfacesBlock = interfacesBlock
+                    .AddStatement($"import * as Enums from \"{relativePathToEnumsFile}/{enumsFileName}\"");
+            }
+
             WriteInterfaces(interfacesBlock, InterfaceNode);
 
             return interfacesBlock;
@@ -261,6 +271,8 @@ namespace WebApiToTypeScript.Interfaces
 
                 string interfaceName;
                 string typeName;
+                bool isEnum = false;
+
                 if (thing.CSharpType.IsGenericParameter)
                 {
                     typeName = interfaceName = thing.CSharpType.GenericParameterName;
@@ -305,6 +317,7 @@ namespace WebApiToTypeScript.Interfaces
 
                         typeName = typeScriptType.TypeName;
                         interfaceName = typeScriptType.InterfaceName;
+                        isEnum = typeScriptType.IsEnum;
                     }
                     else
                     {
@@ -354,6 +367,15 @@ namespace WebApiToTypeScript.Interfaces
                 var collectionString = Helpers.GetCollectionPostfix(thing.CSharpType.CollectionLevel);
 
                 thingName = TypeService.FixIfReservedWord(thingName);
+
+                if (Config.NoNamespacesOrModules)
+                {
+                    if (isEnum)
+                    {
+                        interfaceName = $"Enums.{interfaceName}";
+                        typeName = $"Enums.{typeName}";
+                    }
+                }
 
                 interfaceBlock
                     .AddStatement($"{thingName}: {interfaceName}{collectionString};");

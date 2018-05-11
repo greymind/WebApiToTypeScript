@@ -192,7 +192,7 @@ namespace WebApiToTypeScript.Types
             typeScriptType.InterfaceName = typeScriptTypeName;
 
             typeScriptType.IsPrimitive = IsPrimitiveTypeScriptType(typeScriptType.TypeName);
-            typeScriptType.IsEnum = (!string.IsNullOrEmpty(Config.EnumsNamespace) && typeScriptTypeName.StartsWith($"{Config.EnumsNamespace}"))
+            typeScriptType.IsEnum = (!Config.NoNamespacesOrModules && typeScriptTypeName.StartsWith($"{Config.EnumsNamespace}"))
                 || typeMapping.TreatAsEnum
                 || typeScriptType.IsPrimitive;
 
@@ -231,7 +231,7 @@ namespace WebApiToTypeScript.Types
                 {
                     EnumsService.AddEnum(typeDefinition);
 
-                    var enumPrefix = !string.IsNullOrEmpty(Config.EnumsNamespace)
+                    var enumPrefix = !Config.NoNamespacesOrModules
                         ? $"{Config.EnumsNamespace}."
                         : "";
 
@@ -268,9 +268,14 @@ namespace WebApiToTypeScript.Types
                     InterfaceService.AddInterfaceNode(typeDefinition);
 
                     var cleanTypeName = CleanGenericName(typeDefinition.Name);
+                    var interfacePrefix = Config.NoNamespacesOrModules
+                        ? Config.GenerateInterfaces
+                            ? "Interfaces."
+                            : ""
+                        : $"{Config.InterfacesNamespace}.";
 
-                    result.TypeName = $"{Config.InterfacesNamespace}.{cleanTypeName}";
-                    result.InterfaceName = $"{Config.InterfacesNamespace}.I{cleanTypeName}";
+                    result.TypeName = $"{interfacePrefix}{cleanTypeName}";
+                    result.InterfaceName = $"{interfacePrefix}I{cleanTypeName}";
                 }
 
                 return result;

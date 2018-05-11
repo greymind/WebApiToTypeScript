@@ -166,6 +166,10 @@ namespace WebApiToTypeScript.Config
         public bool WriteNamespaceAsModule { get; set; }
             = false;
 
+        // When set, it will ignore all namespace names and generate imports instead as needed
+        public bool NoNamespacesOrModules { get; set; }
+            = false;
+
         public string NamespaceOrModuleName
             => WriteNamespaceAsModule ? "module" : "namespace";
 

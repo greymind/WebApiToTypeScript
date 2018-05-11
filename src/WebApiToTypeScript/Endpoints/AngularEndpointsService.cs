@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 using WebApiToTypeScript.Block;
 using WebApiToTypeScript.WebApi;
 
@@ -6,11 +7,35 @@ namespace WebApiToTypeScript.Endpoints
 {
     public class AngularEndpointsService : ServiceAware
     {
+        public const string Endpoints = "Endpoints";
+        public const string IEndpoint = "IEndpoint";
+
         public TypeScriptBlock CreateServiceBlock()
         {
-            var constructorBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}", suppressOuter: string.IsNullOrEmpty(Config.ServiceNamespace))
-                .AddStatement("type BeforeCallHandler = (endpoint: IEndpoint, data, config: ng.IRequestConfig) => ng.IPromise<void>;")
-                .AddStatement("type AfterCallHandler = <TView> (endpoint: IEndpoint, data, config: ng.IRequestConfig, response: TView) => ng.IPromise<void>;")
+            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}", suppressOuter: Config.NoNamespacesOrModules);
+
+            if (Config.NoNamespacesOrModules)
+            {
+                if (Config.GenerateInterfaces)
+                {
+                    var relativePathToInterfacesFile = Helpers.GetRelativePath(Config.EndpointsOutputDirectory, Config.InterfacesOutputDirectory);
+                    var interfacesFileName = Path.GetFileNameWithoutExtension(Config.InterfacesFileName);
+
+                    block = block
+                        .AddStatement($"import * as Interfaces from \"{relativePathToInterfacesFile}/{interfacesFileName}\"");
+                }
+
+                var relativePathToEndpointsFile = Helpers.GetRelativePath(Config.ServiceOutputDirectory, Config.EndpointsOutputDirectory);
+                var endpointsFileName = Path.GetFileNameWithoutExtension(Config.EndpointsFileName);
+
+                block = block
+                    .AddStatement($"import * as {Endpoints} from \"{relativePathToEndpointsFile}/{endpointsFileName}\"")
+                    .AddStatement("");
+            }
+
+            var constructorBlock = block
+                .AddStatement($"type BeforeCallHandler = (endpoint: {Endpoints}.{IEndpoint}, data, config: ng.IRequestConfig) => ng.IPromise<void>;")
+                .AddStatement($"type AfterCallHandler = <TView> (endpoint: {Endpoints}.{IEndpoint}, data, config: ng.IRequestConfig, response: TView) => ng.IPromise<void>;")
                 .AddAndUseBlock($"export class {Config.ServiceName}")
                 .AddStatement("static $inject = ['$http', '$q'];")
                 .AddStatement("static endpointCache = {};", condition: Config.EndpointsSupportCaching)
@@ -18,7 +43,7 @@ namespace WebApiToTypeScript.Endpoints
 
             var serviceBlock = constructorBlock
                 .Parent
-                .AddAndUseBlock("static call<TView>(httpService: ng.IHttpService, qService: ng.IQService, endpoint: IEndpoint, data, httpConfig?: ng.IRequestShortcutConfig)")
+                .AddAndUseBlock($"static call<TView>(httpService: ng.IHttpService, qService: ng.IQService, endpoint: {Endpoints}.{IEndpoint}, data, httpConfig?: ng.IRequestShortcutConfig)")
                 .AddAndUseBlock("const config =")
                 .AddStatement("method: endpoint._verb,")
                 .AddStatement("url: endpoint.toString(),")
@@ -50,7 +75,7 @@ namespace WebApiToTypeScript.Endpoints
             if (Config.EndpointsSupportCaching)
             {
                 serviceBlock
-                    .AddAndUseBlock("static callCached<TView>(httpService: ng.IHttpService, qService: ng.IQService, endpoint: IEndpoint, data, httpConfig?: ng.IRequestShortcutConfig)")
+                    .AddAndUseBlock($"static callCached<TView>(httpService: ng.IHttpService, qService: ng.IQService, endpoint: {Endpoints}.{IEndpoint}, data, httpConfig?: ng.IRequestShortcutConfig)")
                     .AddStatement("var cacheKey = endpoint.toString();")
                     .AddAndUseBlock("if (this.endpointCache[cacheKey] == null)")
                     .AddAndUseBlock("return this.call<TView>(httpService, qService, endpoint, data, httpConfig).then(result =>", isFunctionBlock: true, terminationString: ";")
@@ -73,12 +98,12 @@ namespace WebApiToTypeScript.Endpoints
                 .OfType<TypeScriptBlock>()
                 .First();
 
-            var endpointsPrefix = string.IsNullOrEmpty(Config.EndpointsNamespace)
-                ? $"{Config.EndpointsNamespace}."
-                : "";
+            var endpointsPrefix = !Config.NoNamespacesOrModules
+                ? $"{Config.EndpointsNamespace}"
+                : $"{Endpoints}";
 
             var controllerBlock = serviceBlock
-                .AddStatement($"public {webApiController.Name}: {endpointsPrefix}{webApiController.Name}.I{webApiController.Name}Service = <any>{{}};");
+                .AddStatement($"public {webApiController.Name}: {endpointsPrefix}.{webApiController.Name}.I{webApiController.Name}Service = <any>{{}};");
 
             var actions = webApiController.Actions;
 
@@ -105,9 +130,9 @@ namespace WebApiToTypeScript.Endpoints
                     var callArgumentDefinition = action.GetCallArgumentDefinition(verb);
                     var callArgumentValue = action.GetCallArgumentValue(verb);
 
-                    var interfaceFullName = $"{endpointsPrefix}{webApiController.Name}.I{actionName}";
-                    var interfaceWithCallFullName = $"{endpointsPrefix}{webApiController.Name}.I{actionName}WithCall";
-                    var endpointFullName = $"{endpointsPrefix}{webApiController.Name}.{actionName}";
+                    var interfaceFullName = $"{endpointsPrefix}.{webApiController.Name}.I{actionName}";
+                    var interfaceWithCallFullName = $"{endpointsPrefix}.{webApiController.Name}.I{actionName}WithCall";
+                    var endpointFullName = $"{endpointsPrefix}.{webApiController.Name}.{actionName}";
 
                     string typeScriptReturnType, typeScriptTypeForCall;
 
