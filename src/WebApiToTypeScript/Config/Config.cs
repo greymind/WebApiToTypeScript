@@ -138,7 +138,7 @@ namespace WebApiToTypeScript.Config
         public string ViewsOutputDirectory { get; set; }
             = "Generated";
 
-        // If true, will group views
+        // If true, will group views under "Views"
         public bool UseViewsGroupingNamespace { get; set; }
             = true;
 
