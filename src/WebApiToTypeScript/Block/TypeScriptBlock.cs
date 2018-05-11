@@ -133,7 +133,8 @@ namespace WebApiToTypeScript.Block
                 AppendNewLineIfApplicable(nextChild, child, isThisTheLastChild, stringBuilder);
             }
 
-            var blockEndString = IsFunctionBlock ? "})" : "}";
+            var blockEndString = IsFunctionBlock ? "})"
+                : !SuppressOuter ? "}" : "";
 
             stringBuilder.AppendLine($"{blockEndString}{TerminationString}");
 

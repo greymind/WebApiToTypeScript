@@ -9,7 +9,7 @@ namespace WebApiToTypeScript.Endpoints
     {
         public TypeScriptBlock CreateEndpointBlock()
         {
-            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}", suppressOuter: !string.IsNullOrEmpty(Config.EndpointsNamespace));
+            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}", suppressOuter: string.IsNullOrEmpty(Config.EndpointsNamespace));
 
             block
                 .AddAndUseBlock($"export interface {IEndpoint}")

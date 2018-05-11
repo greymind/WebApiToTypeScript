@@ -8,7 +8,7 @@ namespace WebApiToTypeScript.Endpoints
     {
         public TypeScriptBlock CreateServiceBlock()
         {
-            var constructorBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}", suppressOuter: !string.IsNullOrEmpty(Config.ServiceNamespace))
+            var constructorBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}", suppressOuter: string.IsNullOrEmpty(Config.ServiceNamespace))
                 .AddStatement("type BeforeCallHandler = (endpoint: IEndpoint, data, config: ng.IRequestConfig) => ng.IPromise<void>;")
                 .AddStatement("type AfterCallHandler = <TView> (endpoint: IEndpoint, data, config: ng.IRequestConfig, response: TView) => ng.IPromise<void>;")
                 .AddAndUseBlock($"export class {Config.ServiceName}")
