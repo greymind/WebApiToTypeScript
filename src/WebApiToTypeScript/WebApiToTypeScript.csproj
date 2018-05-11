@@ -70,7 +70,9 @@
     <Compile Include="Config\ResourceConfig.cs" />
     <Compile Include="Config\ViewConfig.cs" />
     <Compile Include="Endpoints\AngularEndpointsService.cs" />
+    <Compile Include="Endpoints\AngularJSEndpointsService.cs" />
     <Compile Include="Endpoints\EndpointsService.cs" />
+    <Compile Include="Endpoints\IEndpointsService.cs" />
     <Compile Include="Resources\ParameterTransform.cs" />
     <Compile Include="Resources\ResourceService.cs" />
     <Compile Include="Resources\ResourceBlock.cs" />

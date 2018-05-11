@@ -6,34 +6,13 @@ using WebApiToTypeScript.WebApi;
 
 namespace WebApiToTypeScript.Endpoints
 {
-    public class AngularEndpointsService : ServiceAware, IEndpointsService
+    public class AngularJSEndpointsService : ServiceAware, IEndpointsService
     {
         public TypeScriptBlock CreateServiceBlock()
         {
-            Debug.Assert(Config.NoNamespacesOrModules, $"Angular service doesn't support {nameof(Config.NoNamespacesOrModules)} = false!");
+            Debug.Assert(!Config.NoNamespacesOrModules, $"AngularJS service doesn't support {nameof(Config.NoNamespacesOrModules)} = true!");
 
-            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}", suppressOuter: true);
-
-            if (Config.GenerateInterfaces)
-            {
-                var relativePathToInterfacesFile = Helpers.GetRelativePath(Config.EndpointsOutputDirectory, Config.InterfacesOutputDirectory);
-                var interfacesFileName = Path.GetFileNameWithoutExtension(Config.InterfacesFileName);
-
-                block = block
-                    .AddStatement($"import * as Interfaces from '{relativePathToInterfacesFile}/{interfacesFileName}'");
-            }
-
-            var relativePathToEndpointsFile = Helpers.GetRelativePath(Config.ServiceOutputDirectory, Config.EndpointsOutputDirectory);
-            var endpointsFileName = Path.GetFileNameWithoutExtension(Config.EndpointsFileName);
-
-            block = block
-                .AddStatement($"import * as {Endpoints} from '{relativePathToEndpointsFile}/{endpointsFileName}'")
-                .AddStatement("")
-                .AddStatement("import { Injectable } from '@angular/core';")
-                .AddStatement("import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';")
-                .AddStatement("");
-
-            var constructorBlock = block
+            var constructorBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}")
                 .AddStatement($"type BeforeCallHandler = (endpoint: {Endpoints}.{IEndpoint}, data, config: ng.IRequestConfig) => ng.IPromise<void>;")
                 .AddStatement($"type AfterCallHandler = <TView> (endpoint: {Endpoints}.{IEndpoint}, data, config: ng.IRequestConfig, response: TView) => ng.IPromise<void>;")
                 .AddAndUseBlock($"export class {Config.ServiceName}")
@@ -98,7 +77,7 @@ namespace WebApiToTypeScript.Endpoints
                 .OfType<TypeScriptBlock>()
                 .First();
 
-            var endpointsPrefix = $"{Endpoints}";
+            var endpointsPrefix = $"{Config.EndpointsNamespace}";
 
             var controllerBlock = serviceBlock
                 .AddStatement($"public {webApiController.Name}: {endpointsPrefix}.{webApiController.Name}.I{webApiController.Name}Service = <any>{{}};");

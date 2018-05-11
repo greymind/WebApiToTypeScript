@@ -24,13 +24,19 @@ namespace WebApiToTypeScript
         public const string IEndpoint = nameof(IEndpoint);
         public const string Endpoints = nameof(Endpoints);
 
+        public const string AngularJS = nameof(AngularJS);
+        public const string Angular = nameof(Angular);
+        public const string Axios = nameof(Axios);
+
         public static Config.Config Config { get; private set; }
         public static EnumsService EnumsService { get; private set; }
         public static TypeService TypeService { get; private set; }
         public static InterfaceService InterfaceService { get; private set; }
 
         public static EndpointsService EndpointsService { get; private set; }
+
         public static AngularEndpointsService AngularEndpointsService { get; private set; }
+        public static AngularJSEndpointsService AngularJSEndpointsService { get; private set; }
 
         public static ViewsService ViewsService { get; private set; }
         public static ResourceService ResourceService { get; private set; }
@@ -74,7 +80,22 @@ namespace WebApiToTypeScript
                 StartAnalysis("controllers and actions");
 
                 var endpointBlock = EndpointsService.CreateEndpointBlock();
-                var serviceBlock = AngularEndpointsService.CreateServiceBlock();
+                IEndpointsService endpointsService = null;
+
+                if (Config.ServiceType == AngularJS)
+                {
+                    endpointsService = AngularJSEndpointsService;
+                }
+                else if (Config.ServiceType == Angular)
+                {
+                    endpointsService = AngularEndpointsService;
+                }
+                else
+                {
+                    LogMessage($"Service type {Config.ServiceType} not supported!");
+                }
+
+                var serviceBlock = endpointsService.CreateServiceBlock();
 
                 foreach (var apiController in apiControllers)
                 {
@@ -89,7 +110,7 @@ namespace WebApiToTypeScript
                             .OfType<TypeScriptBlock>()
                             .First();
 
-                        AngularEndpointsService.WriteServiceObjectToBlock(classBlock, webApiController);
+                        endpointsService.WriteServiceObjectToBlock(classBlock, webApiController);
                     }
                 }
 
@@ -156,7 +177,9 @@ namespace WebApiToTypeScript
             InterfaceService = new InterfaceService();
 
             EndpointsService = new EndpointsService();
+
             AngularEndpointsService = new AngularEndpointsService();
+            AngularJSEndpointsService = new AngularJSEndpointsService();
 
             ViewsService = new ViewsService();
             ResourceService = new ResourceService();

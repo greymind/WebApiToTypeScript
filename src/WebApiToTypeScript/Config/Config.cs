@@ -38,6 +38,11 @@ namespace WebApiToTypeScript.Config
         public bool GenerateService { get; set; }
             = false;
 
+        // Specifies the type of service to be generated
+        //   Supported values: AngularJS, Angular, Axios
+        public string ServiceType { get; set; }
+            = "AngularJS";
+
         // Directory name for service
         public string ServiceOutputDirectory { get; set; }
             = "Generated";
