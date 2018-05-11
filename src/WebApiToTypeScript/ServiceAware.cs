@@ -6,7 +6,8 @@ namespace WebApiToTypeScript
 {
     public abstract class ServiceAware
     {
-        protected string IEndpoint = WebApiToTypeScript.IEndpoint;
+        protected const string IEndpoint = WebApiToTypeScript.IEndpoint;
+        protected const string Endpoints = WebApiToTypeScript.Endpoints;
 
         protected TypeService TypeService
             => WebApiToTypeScript.TypeService;

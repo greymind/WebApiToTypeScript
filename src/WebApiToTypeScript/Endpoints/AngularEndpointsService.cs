@@ -7,8 +7,6 @@ namespace WebApiToTypeScript.Endpoints
 {
     public class AngularEndpointsService : ServiceAware
     {
-        public const string Endpoints = "Endpoints";
-
         public TypeScriptBlock CreateServiceBlock()
         {
             var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}", suppressOuter: Config.NoNamespacesOrModules);

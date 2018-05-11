@@ -22,6 +22,7 @@ namespace WebApiToTypeScript
         private Stopwatch stopwatch;
 
         public const string IEndpoint = nameof(IEndpoint);
+        public const string Endpoints = nameof(Endpoints);
 
         public static Config.Config Config { get; private set; }
         public static EnumsService EnumsService { get; private set; }
