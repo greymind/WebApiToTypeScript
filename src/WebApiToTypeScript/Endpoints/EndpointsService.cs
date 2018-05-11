@@ -9,7 +9,7 @@ namespace WebApiToTypeScript.Endpoints
     {
         public TypeScriptBlock CreateEndpointBlock()
         {
-            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}");
+            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}", suppressOuter: !string.IsNullOrEmpty(Config.EndpointsNamespace));
 
             block
                 .AddAndUseBlock($"export interface {IEndpoint}")
@@ -79,7 +79,7 @@ namespace WebApiToTypeScript.Endpoints
                     var ctorBlock = controllerBlock
                         .AddAndUseBlock($"export interface I{actionName}Ctor")
                         .AddStatement($"new(args?: I{actionName}): I{actionName}Endpoint");
-                    
+
                     if (Config.GenerateService)
                     {
                         var interfaceWithCallBlock = controllerBlock
@@ -106,7 +106,7 @@ namespace WebApiToTypeScript.Endpoints
                                 .AddStatement($"this.{mapping.Name} = new {mapping.TypeMapping.TypeScriptTypeName}();");
                         }
                     }
-                    
+
                     WriteGetQueryStringToBlock(controllerBlock, actionName, action);
 
                     WriteToStringToBlock(controllerBlock, actionName, action);
@@ -128,7 +128,7 @@ namespace WebApiToTypeScript.Endpoints
         {
             var callArguments = action.BodyParameters
                 .Select(a => a.GetParameterString(withOptionals: false, interfaceName: true));
-            
+
             var callArgument = callArguments
                 .SingleOrDefault();
 

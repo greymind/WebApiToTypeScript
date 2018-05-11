@@ -30,6 +30,7 @@ namespace WebApiToTypeScript.Block
         private const int IndentPerLevel = 4;
 
         public string Outer { get; set; }
+        public bool SuppressOuter { get; set; }
 
         public List<ITypeScriptCode> Children { get; set; }
             = new List<ITypeScriptCode>();
@@ -41,9 +42,10 @@ namespace WebApiToTypeScript.Block
         public string TerminationString { get; set; }
             = string.Empty;
 
-        public TypeScriptBlock(string outer = "")
+        public TypeScriptBlock(string outer = "", bool suppressOuter = false)
         {
             Outer = outer;
+            SuppressOuter = suppressOuter;
         }
 
         public TypeScriptBlock AddBlock(string outer = null, bool isFunctionBlock = false, string terminationString = "")
@@ -103,21 +105,24 @@ namespace WebApiToTypeScript.Block
                 Indent = indent
             };
 
-            if (!string.IsNullOrEmpty(Outer))
+            if (!SuppressOuter)
             {
-                var outerPaddingString = Outer.EndsWith("(") ? string.Empty : " ";
-                stringBuilder.AppendLine($"{Outer}{outerPaddingString}{{");
-            }
-            else
-            {
-                stringBuilder.AppendLine($"{{");
+                if (!string.IsNullOrEmpty(Outer))
+                {
+                    var outerPaddingString = Outer.EndsWith("(") ? string.Empty : " ";
+                    stringBuilder.AppendLine($"{Outer}{outerPaddingString}{{");
+                }
+                else
+                {
+                    stringBuilder.AppendLine($"{{");
+                }
             }
 
             for (var c = 0; c < Children.Count; c++)
             {
                 var child = Children[c];
 
-                var childIndent = stringBuilder.Indent + IndentPerLevel;
+                var childIndent = stringBuilder.Indent + (!SuppressOuter ? IndentPerLevel : 0);
                 var childString = child.ToString(childIndent);
 
                 stringBuilder.AppendWithoutIndent(childString);

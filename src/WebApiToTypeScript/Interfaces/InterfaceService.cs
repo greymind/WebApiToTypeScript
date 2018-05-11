@@ -18,7 +18,7 @@ namespace WebApiToTypeScript.Interfaces
 
         public TypeScriptBlock CreateInterfacesBlock()
         {
-            return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}");
+            return new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.InterfacesNamespace}", suppressOuter: string.IsNullOrEmpty(Config.InterfacesNamespace));
         }
 
         public TypeScriptBlock WriteInterfacesToBlock(TypeScriptBlock interfacesBlock)

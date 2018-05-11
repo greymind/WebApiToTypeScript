@@ -8,7 +8,7 @@ namespace WebApiToTypeScript.Endpoints
     {
         public TypeScriptBlock CreateServiceBlock()
         {
-            var constructorBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}")
+            var constructorBlock = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.ServiceNamespace}", suppressOuter: !string.IsNullOrEmpty(Config.ServiceNamespace))
                 .AddStatement("type BeforeCallHandler = (endpoint: IEndpoint, data, config: ng.IRequestConfig) => ng.IPromise<void>;")
                 .AddStatement("type AfterCallHandler = <TView> (endpoint: IEndpoint, data, config: ng.IRequestConfig, response: TView) => ng.IPromise<void>;")
                 .AddAndUseBlock($"export class {Config.ServiceName}")
@@ -73,8 +73,12 @@ namespace WebApiToTypeScript.Endpoints
                 .OfType<TypeScriptBlock>()
                 .First();
 
+            var endpointsPrefix = string.IsNullOrEmpty(Config.EndpointsNamespace)
+                ? $"{Config.EndpointsNamespace}."
+                : "";
+
             var controllerBlock = serviceBlock
-                .AddStatement($"public {webApiController.Name}: {Config.EndpointsNamespace}.{webApiController.Name}.I{webApiController.Name}Service = <any>{{}};");
+                .AddStatement($"public {webApiController.Name}: {endpointsPrefix}{webApiController.Name}.I{webApiController.Name}Service = <any>{{}};");
 
             var actions = webApiController.Actions;
 
@@ -101,9 +105,9 @@ namespace WebApiToTypeScript.Endpoints
                     var callArgumentDefinition = action.GetCallArgumentDefinition(verb);
                     var callArgumentValue = action.GetCallArgumentValue(verb);
 
-                    var interfaceFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.I{actionName}";
-                    var interfaceWithCallFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.I{actionName}WithCall";
-                    var endpointFullName = $"{Config.EndpointsNamespace}.{webApiController.Name}.{actionName}";
+                    var interfaceFullName = $"{endpointsPrefix}{webApiController.Name}.I{actionName}";
+                    var interfaceWithCallFullName = $"{endpointsPrefix}{webApiController.Name}.I{actionName}WithCall";
+                    var endpointFullName = $"{endpointsPrefix}{webApiController.Name}.{actionName}";
 
                     string typeScriptReturnType, typeScriptTypeForCall;
 
