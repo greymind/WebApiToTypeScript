@@ -18,7 +18,7 @@ namespace WebApiToTypeScript.Endpoints
                 var interfacesFileName = Path.GetFileNameWithoutExtension(Config.InterfacesFileName);
 
                 block = block
-                    .AddStatement($"import * as Interfaces from \"{relativePathToInterfacesFile}/{interfacesFileName}\"");
+                    .AddStatement($"import * as Interfaces from '{relativePathToInterfacesFile}/{interfacesFileName}'");
             }
 
             block

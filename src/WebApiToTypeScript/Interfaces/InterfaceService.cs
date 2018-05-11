@@ -30,7 +30,7 @@ namespace WebApiToTypeScript.Interfaces
                 var enumsFileName = Path.GetFileNameWithoutExtension(Config.EnumsFileName);
 
                 interfacesBlock = interfacesBlock
-                    .AddStatement($"import * as Enums from \"{relativePathToEnumsFile}/{enumsFileName}\"");
+                    .AddStatement($"import * as Enums from '{relativePathToEnumsFile}/{enumsFileName}'");
             }
 
             WriteInterfaces(interfacesBlock, InterfaceNode);
