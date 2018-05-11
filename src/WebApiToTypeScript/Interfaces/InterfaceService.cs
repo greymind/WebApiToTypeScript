@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
 using WebApiToTypeScript.Block;
+using WebApiToTypeScript.Config;
 using WebApiToTypeScript.Types;
 
 namespace WebApiToTypeScript.Interfaces
@@ -30,33 +30,24 @@ namespace WebApiToTypeScript.Interfaces
 
         public void AddMatchingInterfaces()
         {
-            foreach (var interfaceMatch in Config.InterfaceMatches)
+            foreach (var interfaceMatchConfig in Config.InterfaceMatches)
             {
-                var matchConfigExists = !string.IsNullOrEmpty(interfaceMatch.Match);
-                var matchRegEx = matchConfigExists ? new Regex(interfaceMatch.Match) : null;
-
-                var excludeMatchConfigExists = !string.IsNullOrEmpty(interfaceMatch.ExcludeMatch);
-                var excludeMatchRegEx = excludeMatchConfigExists ? new Regex(interfaceMatch.ExcludeMatch) : null;
-
-                var baseTypeNameConfigExists = !string.IsNullOrEmpty(interfaceMatch.BaseTypeName);
+                // todo-balki Do we need this? Won't base types be automatically added if needed?
+                //   Or maybe we need this to go in BEFORE derived types or some reason? Maybe some older implementation?
+                var baseTypeNameConfigExists = !string.IsNullOrEmpty(interfaceMatchConfig.BaseTypeName);
                 if (baseTypeNameConfigExists)
                 {
-                    var baseType = TypeService.GetTypeDefinition(interfaceMatch.BaseTypeName);
+                    var baseType = TypeService.GetTypeDefinition(interfaceMatchConfig.BaseTypeName);
                     AddInterfaceNode(baseType);
                 }
 
-                foreach (var type in TypeService.Types)
+                var matchingTypes = TypeService.Types
+                    .Select(type => MatchConfigWithBaseType.IsMatch(TypeService, interfaceMatchConfig, type) ? type : null)
+                    .Where(type => type != null);
+
+                foreach (var type in matchingTypes)
                 {
-                    var isMatch = matchRegEx != null && matchRegEx.IsMatch(type.FullName)
-                        && (!excludeMatchConfigExists || !excludeMatchRegEx.IsMatch(type.FullName));
-
-                    var doesBaseTypeMatch = !baseTypeNameConfigExists
-                        || TypeService.GetBaseTypes(type).Any(t => t.FullName.EndsWith(interfaceMatch.BaseTypeName));
-
-                    if (isMatch && doesBaseTypeMatch)
-                    {
-                        AddInterfaceNode(type);
-                    }
+                    AddInterfaceNode(type);
                 }
             }
         }
@@ -71,6 +62,12 @@ namespace WebApiToTypeScript.Interfaces
                 return interfaceNode;
 
             if (typeDefinition.IsInterface)
+                return null;
+
+            var anyExcludes = Config.InterfaceExcludeMatches
+                .Any(interfaceExcludeMatchConfig => MatchConfigWithBaseType.IsMatch(TypeService, interfaceExcludeMatchConfig, typeDefinition));
+
+            if (anyExcludes)
                 return null;
 
             interfaceNode = AddInterfaceNode(typeDefinition, InterfaceNode);

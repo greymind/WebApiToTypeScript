@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Mono.Cecil;
 using WebApiToTypeScript.Block;
+using WebApiToTypeScript.Config;
 
 namespace WebApiToTypeScript.Enums
 {
@@ -109,22 +110,11 @@ namespace WebApiToTypeScript.Enums
 
         internal void AddMatchingEnums()
         {
-            foreach (var interfaceMatch in Config.EnumMatches)
+            foreach (var enumMatchConfig in Config.EnumMatches)
             {
-                var matchConfigExists = !string.IsNullOrEmpty(interfaceMatch.Match);
-
-                if (!matchConfigExists)
-                    return;
-
-                var matchRegEx = new Regex(interfaceMatch.Match);
-
-                var excludeMatchConfigExists = !string.IsNullOrEmpty(interfaceMatch.ExcludeMatch);
-                var excludeMatchRegEx = excludeMatchConfigExists ? new Regex(interfaceMatch.ExcludeMatch) : null;
-
                 var matchingTypes = TypeService
                     .Types
-                    .Where(type => type.IsEnum && matchRegEx.IsMatch(type.FullName)
-                        && (!excludeMatchConfigExists || !excludeMatchRegEx.IsMatch(type.FullName)));
+                    .Where(type => MatchConfigWithBaseType.IsMatch(enumMatchConfig, type.FullName));
 
                 foreach (var matchingType in matchingTypes)
                 {
