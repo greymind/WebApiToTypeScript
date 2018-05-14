@@ -54,12 +54,24 @@ namespace WebApiToTypeScript.Endpoints
 
             var serviceBlock = constructorBlock
                 .Parent
-                .AddAndUseBlock($"static call<TView>(httpClient: {Config.CustomHttpService}, endpoint: {Endpoints}.{IEndpoint}, data, httpHeaders?: HttpHeaders)")
-                .AddAndUseBlock($"const call = httpClient.request<TView>(endpoint._verb, endpoint.toString(),", isFunctionBlock: true, terminationString: ";")
-                .AddStatement($"headers: httpHeaders,")
-                .AddStatement($"body: data")
-                .Parent
-                .AddStatement($"return call;")
+                .AddAndUseBlock($"static call<TView>(httpClient: {Config.CustomHttpService}, endpoint: {Endpoints}.{IEndpoint}, data, httpHeaders?: HttpHeaders)");
+
+            if (Config.CustomHttpService != "HttpClient")
+            {
+                serviceBlock = serviceBlock
+                    .AddStatement($"return httpClient.request<TView>(endpoint._verb, endpoint.toString(), data, httpHeaders);")
+            }
+            else
+            {
+                serviceBlock = serviceBlock
+                    .AddAndUseBlock($"const call = httpClient.request<TView>(endpoint._verb, endpoint.toString(),", isFunctionBlock: true, terminationString: ";")
+                    .AddStatement($"headers: httpHeaders,")
+                    .AddStatement($"body: data")
+                    .Parent
+                    .AddStatement($"return call;");
+            }
+
+            serviceBlock = serviceBlock
                 .Parent
                 .AddStatement("private static onBeforeCallHandlers: ({ name: string; handler: BeforeCallHandler; })[] = []")
                 .AddStatement("private static onAfterCallHandlers: ({ name: string; handler: AfterCallHandler; })[] = []")
