@@ -34,6 +34,15 @@ namespace WebApiToTypeScript.Endpoints
                 .AddStatement("import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';")
                 .AddNewLine();
 
+            foreach (var statement in Config.CustomEndpointsServiceStatements)
+            {
+                block = block
+                    .AddStatement(statement);
+            }
+
+            block = block
+                .AddNewLine();
+
             var constructorBlock = block
                 .AddStatement($"type BeforeCallHandler = (endpoint: {Endpoints}.{IEndpoint}, data, config: any) => Promise<void>;")
                 .AddStatement($"type AfterCallHandler = <TView> (endpoint: {Endpoints}.{IEndpoint}, data, config: any, response: TView) => Promise<void>;")
@@ -41,11 +50,11 @@ namespace WebApiToTypeScript.Endpoints
                 .AddStatement($"@Injectable()", condition: true, noNewLine: true)
                 .AddAndUseBlock($"export class {Config.ServiceName}")
                 .AddStatement("static endpointCache = {};", condition: Config.EndpointsSupportCaching)
-                .AddAndUseBlock("constructor(private httpClient: HttpClient)");
+                .AddAndUseBlock($"constructor(private httpClient: {Config.CustomHttpService})");
 
             var serviceBlock = constructorBlock
                 .Parent
-                .AddAndUseBlock($"static call<TView>(httpClient: HttpClient, endpoint: {Endpoints}.{IEndpoint}, data, httpHeaders?: HttpHeaders)")
+                .AddAndUseBlock($"static call<TView>(httpClient: {Config.CustomHttpService}, endpoint: {Endpoints}.{IEndpoint}, data, httpHeaders?: HttpHeaders)")
                 .AddAndUseBlock($"const call = httpClient.request<TView>(endpoint._verb, endpoint.toString(),", isFunctionBlock: true, terminationString: ";")
                 .AddStatement($"headers: httpHeaders,")
                 .AddStatement($"body: data")

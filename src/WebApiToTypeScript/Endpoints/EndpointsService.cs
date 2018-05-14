@@ -27,9 +27,17 @@ namespace WebApiToTypeScript.Endpoints
             block = block
                 .AddStatement("")
                 .AddStatement($"import * as _ from 'lodash';")
-                .AddStatement("import { environment } from '../../environments/environment';")
                 .AddStatement("import { Observable } from 'rxjs/Observable';", condition: LibraryEndpointsService.GetObservableOrPromise() == "Observable")
                 .AddStatement("import { HttpHeaders } from '@angular/common/http';");
+
+            foreach (var statement in Config.CustomEndpointsStatements)
+            {
+                block = block
+                    .AddStatement(statement);
+            }
+
+            block = block
+                .AddNewLine();
 
             block
                 .AddAndUseBlock($"export interface {IEndpoint}")

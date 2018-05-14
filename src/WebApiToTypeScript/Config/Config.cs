@@ -184,5 +184,12 @@ namespace WebApiToTypeScript.Config
 
         public string RoutePrefix { get; set; }
             = "api/";
+
+        public string CustomHttpService { get; set; }
+            = "HttpClient";
+
+        public string[] CustomEndpointsStatements { get; set; }
+
+        public string[] CustomEndpointsServiceStatements { get; set; }
     }
 }
