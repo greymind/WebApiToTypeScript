@@ -34,16 +34,16 @@ namespace WebApiToTypeScript.Endpoints
                 .AddStatement("");
 
             var constructorBlock = block
-                .AddStatement($"type BeforeCallHandler = (endpoint: {Endpoints}.{IEndpoint}, data, config: ng.IRequestConfig) => ng.IPromise<void>;")
-                .AddStatement($"type AfterCallHandler = <TView> (endpoint: {Endpoints}.{IEndpoint}, data, config: ng.IRequestConfig, response: TView) => ng.IPromise<void>;")
+                .AddStatement($"type BeforeCallHandler = (endpoint: {Endpoints}.{IEndpoint}, data, config: any) => Promise<void>;")
+                .AddStatement($"type AfterCallHandler = <TView> (endpoint: {Endpoints}.{IEndpoint}, data, config: any, response: TView) => Promise<void>;")
                 .AddAndUseBlock($"export class {Config.ServiceName}")
                 .AddStatement("static $inject = ['$http', '$q'];")
                 .AddStatement("static endpointCache = {};", condition: Config.EndpointsSupportCaching)
-                .AddAndUseBlock("constructor($http: ng.IHttpService, $q: ng.IQService)");
+                .AddAndUseBlock("constructor(private $http: HttpClient, $q: ng.IQService)");
 
             var serviceBlock = constructorBlock
                 .Parent
-                .AddAndUseBlock($"static call<TView>(httpService: ng.IHttpService, qService: ng.IQService, endpoint: {Endpoints}.{IEndpoint}, data, httpConfig?: ng.IRequestShortcutConfig)")
+                .AddAndUseBlock($"static call<TView>(httpService: HttpClient, qService: ng.IQService, endpoint: {Endpoints}.{IEndpoint}, data, httpConfig?: ng.IRequestShortcutConfig)")
                 .AddAndUseBlock("const config =")
                 .AddStatement("method: endpoint._verb,")
                 .AddStatement("url: endpoint.toString(),")
