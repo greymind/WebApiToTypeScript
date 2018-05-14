@@ -59,7 +59,7 @@ namespace WebApiToTypeScript.Endpoints
             if (Config.CustomHttpService != "HttpClient")
             {
                 serviceBlock = serviceBlock
-                    .AddStatement($"return httpClient.request<TView>(endpoint._verb, endpoint.toString(), data, httpHeaders);")
+                    .AddStatement($"return httpClient.request<TView>(endpoint._verb, endpoint.toString(), data, httpHeaders);");
             }
             else
             {
