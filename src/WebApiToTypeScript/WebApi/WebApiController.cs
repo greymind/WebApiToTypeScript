@@ -42,7 +42,7 @@ namespace WebApiToTypeScript.WebApi
                 (
                     controller: this,
                     method: m,
-                    name: GetUniqueMethodName(methodNames, m.Name)
+                    name: GetUniqueMethodName(methodNames, m)
                 ))
                 .ToList();
         }
@@ -57,13 +57,28 @@ namespace WebApiToTypeScript.WebApi
                 .ToString();
         }
 
-        private string GetUniqueMethodName(HashSet<string> methodNames, string originalMethodName)
+        private string GetUniqueMethodName(HashSet<string> methodNames, MethodDefinition method)
         {
-            var methodName = originalMethodName;
+            var resolvedMethodName = method.Name;
+
+            // Try to handle Get and GetAll uniquely
+            if (resolvedMethodName == WebApiHttpVerb.Get.Verb)
+            {
+                var isGetAll = method.Parameters.Count == 0
+                    || method.Parameters.All(p => Helpers.HasCustomAttribute(p, WebApiAction.FromUriAttributeName));
+
+                resolvedMethodName = isGetAll
+                    ? $"{WebApiHttpVerb.Get.Verb}All"
+                    : $"{WebApiHttpVerb.Get.Verb}";
+            }
+
+            var methodName = resolvedMethodName;
+
+            // If conflict still exists, just append a counter to differentiate the overloads
 
             var counter = 1;
             while (methodNames.Contains(methodName))
-                methodName = $"{originalMethodName}{counter++}";
+                methodName = $"{resolvedMethodName}{counter++}";
 
             methodNames.Add(methodName);
 

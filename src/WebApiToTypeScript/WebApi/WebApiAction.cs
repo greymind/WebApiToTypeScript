@@ -7,6 +7,9 @@ namespace WebApiToTypeScript.WebApi
 {
     public class WebApiAction : ServiceAware
     {
+        public const string FromBodyAttributeName = "FromBodyAttribute";
+        public const string FromUriAttributeName = "FromUriAttribute";
+
         public string Name { get; set; }
         public string Route { get; set; }
         public string Endpoint { get; set; }
@@ -203,16 +206,13 @@ namespace WebApiToTypeScript.WebApi
             var isBodyAllowed = Verbs.Contains(WebApiHttpVerb.Post)
                 || Verbs.Contains(WebApiHttpVerb.Put);
 
-            var fromBodyAttributeName = "FromBodyAttribute";
-            var fromUriAttributeName = "FromUriAttribute";
-
             var isThereAnythingFromBody = actionParameters
-                .Any(ap => Helpers.HasCustomAttribute(ap, fromBodyAttributeName));
+                .Any(ap => Helpers.HasCustomAttribute(ap, FromBodyAttributeName));
 
             foreach (var actionParameter in actionParameters)
             {
-                var isFromBody = Helpers.HasCustomAttribute(actionParameter, fromBodyAttributeName);
-                var isFromUri = Helpers.HasCustomAttribute(actionParameter, fromUriAttributeName);
+                var isFromBody = Helpers.HasCustomAttribute(actionParameter, FromBodyAttributeName);
+                var isFromUri = Helpers.HasCustomAttribute(actionParameter, FromUriAttributeName);
                 var isPrimitive = actionParameter.ParameterType.IsPrimitive;
 
                 if (!isPrimitive)
@@ -230,7 +230,7 @@ namespace WebApiToTypeScript.WebApi
                         Name = actionParameter.Name,
                         ParameterName = actionParameter.Name,
                         Parameter = actionParameter,
-                        CustomAttributes = new List<string> { fromBodyAttributeName },
+                        CustomAttributes = new List<string> { FromBodyAttributeName },
                         IsOptional = false
                     });
                 }
