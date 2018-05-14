@@ -39,6 +39,18 @@ namespace WebApiToTypeScript.WebApi
                 .Where(a => a != null)
                 .ToList();
 
+            if (Verbs.Count == 0)
+            {
+                Verbs = WebApiHttpVerb.Verbs
+                    .Where(v => v.Verb == Method.Name)
+                    .ToList();
+            }
+
+            if (Verbs.Count == 0)
+            {
+                LogMessage($"No HTTP action verb defined for {name}!");
+            }
+
             Route = GetMethodRoute(Method) ?? string.Empty;
 
             RouteParts = Helpers.GetRouteParts(Route);
