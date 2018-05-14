@@ -181,5 +181,8 @@ namespace WebApiToTypeScript.Config
         // List of type mappings to override C# types
         public List<TypeMapping> TypeMappings { get; set; }
             = new List<TypeMapping>();
+
+        public string RoutePrefix { get; set; }
+            = "api/";
     }
 }

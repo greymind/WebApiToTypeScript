@@ -27,6 +27,8 @@ namespace WebApiToTypeScript.Endpoints
             block = block
                 .AddStatement("")
                 .AddStatement($"import * as _ from 'lodash';")
+                .AddStatement("import { environment } from '../../environments/environment';")
+                .AddStatement("import { Observable } from 'rxjs/Observable';", condition: LibraryEndpointsService.GetObservableOrPromise() == "Observable")
                 .AddStatement("import { HttpHeaders } from '@angular/common/http';");
 
             block
@@ -160,12 +162,14 @@ namespace WebApiToTypeScript.Endpoints
 
             action.GetReturnTypes(out typeScriptReturnType, out typeScriptTypeForCall);
 
+            var observableOrPromise = LibraryEndpointsService.GetObservableOrPromise();
+
             interfaceWithCallBlock
-                .AddStatement($"call{typeScriptTypeForCall}({callArgumentsList}): Promise{typeScriptReturnType};");
+                .AddStatement($"call{typeScriptTypeForCall}({callArgumentsList}): {observableOrPromise}{typeScriptReturnType};");
 
             if (Config.EndpointsSupportCaching && verb == WebApiHttpVerb.Get)
                 interfaceWithCallBlock
-                    .AddStatement($"callCached{typeScriptTypeForCall}({callArgumentsList}): Promise{typeScriptReturnType};");
+                    .AddStatement($"callCached{typeScriptTypeForCall}({callArgumentsList}): {observableOrPromise}{typeScriptReturnType};");
         }
 
         private void WriteToStringToBlock(TypeScriptBlock classBlock, string actionName, WebApiAction action)

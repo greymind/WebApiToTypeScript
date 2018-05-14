@@ -16,15 +16,15 @@ namespace WebApiToTypeScript.WebApi
         public List<WebApiRoutePart> RouteParts { get; set; }
             = new List<WebApiRoutePart>();
 
-        public WebApiController(TypeDefinition apiController)
+        public WebApiController(Config.Config config, TypeDefinition apiController)
         {
             Name = apiController.Name
                 .Replace("Controller", string.Empty);
 
-            BaseRoute = GetEndpointRoute(apiController) ?? $"api/{Name}";
+            BaseRoute = GetEndpointRoute(apiController) ?? $"{Name}";
 
             RouteParts = Helpers.GetRouteParts(BaseRoute);
-            BaseEndpoint = Helpers.GetBaseEndpoint(RouteParts);
+            BaseEndpoint = Helpers.GetBaseEndpoint(config.RoutePrefix, RouteParts);
 
             BuildActions(apiController);
         }

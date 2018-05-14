@@ -8,5 +8,8 @@ namespace WebApiToTypeScript.Endpoints
         TypeScriptBlock CreateServiceBlock();
         void WriteServiceObjectToBlock(TypeScriptBlock serviceBlock, WebApiController webApiController);
         string GetAdditionalCallArguments();
+
+        string GetAdditionalCallParameters();
+        string GetObservableOrPromise();
     }
 }

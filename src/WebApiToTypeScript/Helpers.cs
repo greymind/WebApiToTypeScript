@@ -43,7 +43,7 @@ namespace WebApiToTypeScript
                 return inKebabCase;
         }
 
-        public static string GetBaseEndpoint(List<WebApiRoutePart> routeParts)
+        public static string GetBaseEndpoint(string routePrefix, List<WebApiRoutePart> routeParts)
         {
             var baseEndpointParts = routeParts
                 .Select(routePart => string.IsNullOrEmpty(routePart.ParameterName)
@@ -51,8 +51,8 @@ namespace WebApiToTypeScript
                     : $"${{this.{routePart.ParameterName}}}");
 
             return baseEndpointParts.Any()
-                ? $"/{string.Join("/", baseEndpointParts)}"
-                : string.Empty;
+                ? $"{routePrefix}{string.Join("/", baseEndpointParts)}"
+                : routePrefix;
         }
 
         public static List<WebApiRoutePart> GetRouteParts(string baseRoute)

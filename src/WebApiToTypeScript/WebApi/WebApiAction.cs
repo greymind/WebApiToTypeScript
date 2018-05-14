@@ -57,7 +57,7 @@ namespace WebApiToTypeScript.WebApi
             Route = GetMethodRoute(Method) ?? string.Empty;
 
             RouteParts = Helpers.GetRouteParts(Route);
-            Endpoint = Helpers.GetBaseEndpoint(RouteParts);
+            Endpoint = Helpers.GetBaseEndpoint("/", RouteParts);
 
             BuildQueryStringAndBodyRouteParts();
         }
@@ -117,25 +117,32 @@ namespace WebApiToTypeScript.WebApi
                 })
                 .SingleOrDefault();
 
+            var additionalCallParameters = LibraryEndpointsService.GetAdditionalCallParameters();
+            var prefix = !string.IsNullOrEmpty(additionalCallParameters)
+                ? ", "
+                : "";
+
             return (!isFormBody || string.IsNullOrEmpty(callArgumentValueString))
-                 ? "null, httpConfig"
-                 : $"{callArgumentValueString}, httpConfig";
+                 ? $"null{prefix}{additionalCallParameters}"
+                 : $"{callArgumentValueString}{prefix}{additionalCallParameters}";
         }
 
         public string GetCallArgumentDefinition(WebApiHttpVerb verb)
         {
             var isFormBody = verb == WebApiHttpVerb.Post || verb == WebApiHttpVerb.Put;
 
+            var additionalCallArguments = LibraryEndpointsService.GetAdditionalCallArguments();
+
             if (!isFormBody)
-                return "httpConfig?: ng.IRequestShortcutConfig";
+                return additionalCallArguments;
 
             var bodyParam = BodyParameters
                 .Select(a => a.GetParameterString(withOptionals: false, interfaceName: true))
                 .SingleOrDefault();
 
             return string.IsNullOrWhiteSpace(bodyParam)
-                ? "httpConfig?: ng.IRequestShortcutConfig"
-                : $"{bodyParam}, httpConfig?: ng.IRequestShortcutConfig";
+                ? additionalCallArguments
+                : $"{bodyParam}, {additionalCallArguments}";
         }
 
         public string GetConstructorParameterNamesList()

@@ -146,5 +146,15 @@ namespace WebApiToTypeScript.Endpoints
         {
             return $"httpConfig?: ng.IRequestShortcutConfig";
         }
+
+        public string GetAdditionalCallParameters()
+        {
+            return $"httpConfig";
+        }
+
+        public string GetObservableOrPromise()
+        {
+            return $"Promise";
+        }
     }
 }

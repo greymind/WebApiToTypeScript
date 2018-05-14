@@ -28,36 +28,29 @@ namespace WebApiToTypeScript.Endpoints
 
             block = block
                 .AddStatement($"import * as {Endpoints} from '{relativePathToEndpointsFile}/{endpointsFileName}';")
-                .AddStatement("")
+                .AddNewLine()
+                .AddStatement($"import * as _ from 'lodash';")
                 .AddStatement("import { Injectable } from '@angular/core';")
                 .AddStatement("import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';")
-                .AddStatement("");
+                .AddNewLine();
 
             var constructorBlock = block
                 .AddStatement($"type BeforeCallHandler = (endpoint: {Endpoints}.{IEndpoint}, data, config: any) => Promise<void>;")
                 .AddStatement($"type AfterCallHandler = <TView> (endpoint: {Endpoints}.{IEndpoint}, data, config: any, response: TView) => Promise<void>;")
+                .AddNewLine()
+                .AddStatement($"@Injectable()", condition: true, noNewLine: true)
                 .AddAndUseBlock($"export class {Config.ServiceName}")
-                .AddStatement("static $inject = ['$http', '$q'];")
                 .AddStatement("static endpointCache = {};", condition: Config.EndpointsSupportCaching)
-                .AddAndUseBlock("constructor(private $http: HttpClient, $q: ng.IQService)");
+                .AddAndUseBlock("constructor(private httpClient: HttpClient)");
 
             var serviceBlock = constructorBlock
                 .Parent
-                .AddAndUseBlock($"static call<TView>(httpService: HttpClient, qService: ng.IQService, endpoint: {Endpoints}.{IEndpoint}, data, httpConfig?: ng.IRequestShortcutConfig)")
-                .AddAndUseBlock("const config =")
-                .AddStatement("method: endpoint._verb,")
-                .AddStatement("url: endpoint.toString(),")
-                .AddStatement("data: data")
+                .AddAndUseBlock($"static call<TView>(httpClient: HttpClient, endpoint: {Endpoints}.{IEndpoint}, data, httpHeaders?: HttpHeaders)")
+                .AddAndUseBlock($"const call = httpClient.request<TView>(endpoint._verb, endpoint.toString(),", isFunctionBlock: true, terminationString: ";")
+                .AddStatement($"headers: httpHeaders,")
+                .AddStatement($"body: data")
                 .Parent
-                .AddStatement("httpConfig && _.extend(config, httpConfig);")
-                .AddStatement("")
-                .AddAndUseBlock($"return qService.all({Config.ServiceName}.onBeforeCallHandlers.map(onBeforeCall => onBeforeCall.handler(endpoint, data, config))).then(before =>", isFunctionBlock: true, terminationString: ";")
-                .AddStatement($"const call = httpService<TView>(config);")
-                .AddAndUseBlock("return call.then(response =>", isFunctionBlock: true, terminationString: ";")
-                .AddStatement("let result = response.data;")
-                .AddStatement($"return qService.all({Config.ServiceName}.onAfterCallHandlers.map(onAfterCall => onAfterCall.handler<TView>(endpoint, data, config, result))).then(after => result);")
-                .Parent
-                .Parent
+                .AddStatement($"return call;")
                 .Parent
                 .AddStatement("private static onBeforeCallHandlers: ({ name: string; handler: BeforeCallHandler; })[] = []")
                 .AddStatement("private static onAfterCallHandlers: ({ name: string; handler: AfterCallHandler; })[] = []")
@@ -74,6 +67,8 @@ namespace WebApiToTypeScript.Endpoints
 
             if (Config.EndpointsSupportCaching)
             {
+                LogMessage($"{Config.EndpointsSupportCaching} not supported!");
+
                 serviceBlock
                     .AddAndUseBlock($"static callCached<TView>(httpService: ng.IHttpService, qService: ng.IQService, endpoint: {Endpoints}.{IEndpoint}, data, httpConfig?: ng.IRequestShortcutConfig)")
                     .AddStatement("var cacheKey = endpoint.toString();")
@@ -144,20 +139,22 @@ namespace WebApiToTypeScript.Endpoints
                             terminationString: ";"
                         )
                         .AddStatement($"var endpoint = new {endpointFullName}(args);")
-                        .AddAndUseBlock("return _.extendOwn(endpoint,", isFunctionBlock: true, terminationString: ";")
+                        .AddAndUseBlock("return _.merge({}, endpoint,", isFunctionBlock: true, terminationString: ";")
                         .AddAndUseBlock
                         (
                             outer: $"call{typeScriptTypeForCall}({callArgumentDefinition})",
                             isFunctionBlock: false,
                             terminationString: Config.EndpointsSupportCaching ? "," : string.Empty
                         )
-                        .AddStatement($"return {Config.ServiceName}.call{typeScriptReturnType}($http, $q, this, {callArgumentValue});")
+                        .AddStatement($"return {Config.ServiceName}.call{typeScriptReturnType}(httpClient, this, {callArgumentValue});")
                         .Parent;
 
                     if (Config.EndpointsSupportCaching && verb == WebApiHttpVerb.Get)
                     {
+                        LogMessage($"{Config.EndpointsSupportCaching} not supported yet!");
+
                         endpointExtendBlock.AddAndUseBlock($"callCached{typeScriptTypeForCall}({callArgumentDefinition})")
-                            .AddStatement($"return {Config.ServiceName}.callCached{typeScriptReturnType}($http, $q, this, {callArgumentValue});");
+                            .AddStatement($"return {Config.ServiceName}.callCached{typeScriptReturnType}(httpClient, $q, this, {callArgumentValue});");
                     }
                 }
             }
@@ -166,6 +163,16 @@ namespace WebApiToTypeScript.Endpoints
         public string GetAdditionalCallArguments()
         {
             return $"httpHeaders?: HttpHeaders";
+        }
+
+        public string GetAdditionalCallParameters()
+        {
+            return $"httpHeaders";
+        }
+
+        public string GetObservableOrPromise()
+        {
+            return $"Observable";
         }
     }
 }

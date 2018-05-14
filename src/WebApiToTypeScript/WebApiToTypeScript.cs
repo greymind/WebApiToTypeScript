@@ -86,7 +86,7 @@ namespace WebApiToTypeScript
 
                 foreach (var apiController in apiControllers)
                 {
-                    var webApiController = new WebApiController(apiController);
+                    var webApiController = new WebApiController(Config, apiController);
 
                     if (Config.GenerateEndpoints || Config.GenerateService)
                         EndpointsService.WriteEndpointClassToBlock(endpointBlock, webApiController);
