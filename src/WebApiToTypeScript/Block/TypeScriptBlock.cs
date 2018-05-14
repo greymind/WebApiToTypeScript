@@ -5,11 +5,13 @@ namespace WebApiToTypeScript.Block
 {
     public interface ITypeScriptCode
     {
+        bool NoNewLine { get; }
         string ToString(int indent);
     }
 
     public class TypeScriptStatement : ITypeScriptCode
     {
+        public bool NoNewLine { get; set; }
         public string Statement { get; set; }
 
         public string ToString(int indent)
@@ -29,6 +31,7 @@ namespace WebApiToTypeScript.Block
     {
         private const int IndentPerLevel = 4;
 
+        public bool NoNewLine { get; set; }
         public string Outer { get; set; }
         public bool SuppressOuter { get; set; }
 
@@ -77,12 +80,13 @@ namespace WebApiToTypeScript.Block
             return child;
         }
 
-        public TypeScriptBlock AddStatement(string statement, bool condition = true)
+        public TypeScriptBlock AddStatement(string statement, bool condition = true, bool noNewLine = false)
         {
             if (condition)
             {
                 var child = new TypeScriptStatement
                 {
+                    NoNewLine = noNewLine,
                     Statement = statement
                 };
 
@@ -144,6 +148,7 @@ namespace WebApiToTypeScript.Block
         private static void AppendNewLineIfApplicable(ITypeScriptCode nextChild, ITypeScriptCode child,
             bool isThisTheLastChild, IndentAwareStringBuilder stringBuilder)
         {
+            var isCurrentChildNoNewLine = child.NoNewLine;
             var isNextChildDifferent = nextChild?.GetType() != child.GetType();
             var isNextChildABlock = nextChild is TypeScriptBlock;
             var isNextChildANonElseBlock = isNextChildABlock
@@ -151,7 +156,8 @@ namespace WebApiToTypeScript.Block
             var isNextChildFunctionBlock = isNextChildABlock
                 && ((TypeScriptBlock)nextChild).IsFunctionBlock;
 
-            if ((isNextChildDifferent || isNextChildANonElseBlock)
+            if (!isCurrentChildNoNewLine
+                && (isNextChildDifferent || isNextChildANonElseBlock)
                 && !isThisTheLastChild && !isNextChildFunctionBlock)
             {
                 stringBuilder.AppendLine(string.Empty);
