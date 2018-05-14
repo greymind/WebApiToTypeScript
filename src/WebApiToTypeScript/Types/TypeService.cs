@@ -184,6 +184,45 @@ namespace WebApiToTypeScript.Types
             return GetTypeScriptType(cSharpType, parameterName, GetTypeMapping);
         }
 
+        public TypeScriptType GetPrefixedTypeScriptType(TypeReference cSharpType, string parameterName, string interfacePrefix = "Interfaces")
+        {
+            return GetPrefixedTypeScriptType(cSharpType, parameterName, GetTypeMapping, interfacePrefix);
+        }
+
+        public TypeScriptType GetPrefixedTypeScriptType(TypeReference cSharpType, string parameterName, Func<string, string, TypeMapping> getTypeMapping, string interfacePrefix = "Interfaces")
+        {
+            var typeScriptType = TypeService.GetTypeScriptType(cSharpType, parameterName, getTypeMapping);
+
+            string prefix = "";
+
+            if (typeScriptType.IsEnum && Config.GenerateEnums)
+            {
+                prefix = Config.NoNamespacesOrModules
+                    ? "Enums."
+                    : $"{Config.EnumsNamespace}.";
+            }
+            else if (Config.GenerateInterfaces)
+            {
+                prefix = Config.NoNamespacesOrModules
+                    ? !typeScriptType.IsPrimitive
+                        ? !string.IsNullOrEmpty(interfacePrefix)
+                            ? $"{interfacePrefix}."
+                            : ""
+                        : ""
+                    : $"{Config.EnumsNamespace}.";
+            }
+
+            return new TypeScriptType
+            {
+                CollectionLevel = typeScriptType.CollectionLevel,
+                IsEnum = typeScriptType.IsEnum,
+                IsMappedType = typeScriptType.IsMappedType,
+                IsPrimitive = typeScriptType.IsPrimitive,
+                InterfaceName = $"{prefix}{typeScriptType.InterfaceName}",
+                TypeName = $"{prefix}{typeScriptType.TypeName}"
+            };
+        }
+
         private TypeScriptType MapTypeMappingToTypeScriptType(TypeMapping typeMapping, TypeScriptType typeScriptType)
         {
             var typeScriptTypeName = typeMapping.TypeScriptTypeName;
@@ -268,14 +307,9 @@ namespace WebApiToTypeScript.Types
                     InterfaceService.AddInterfaceNode(typeDefinition);
 
                     var cleanTypeName = CleanGenericName(typeDefinition.Name);
-                    var interfacePrefix = Config.NoNamespacesOrModules
-                        ? Config.GenerateInterfaces
-                            ? "Interfaces."
-                            : ""
-                        : $"{Config.InterfacesNamespace}.";
 
-                    result.TypeName = $"{interfacePrefix}{cleanTypeName}";
-                    result.InterfaceName = $"{interfacePrefix}I{cleanTypeName}";
+                    result.TypeName = $"{cleanTypeName}";
+                    result.InterfaceName = $"I{cleanTypeName}";
                 }
 
                 return result;

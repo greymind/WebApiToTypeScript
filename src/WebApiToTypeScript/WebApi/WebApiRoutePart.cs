@@ -27,10 +27,15 @@ namespace WebApiToTypeScript.WebApi
             return TypeService.GetTypeScriptType(Parameter.ParameterType, ParameterName, GetTypeMapping);
         }
 
+        public TypeScriptType GetPrefixedTypeScriptType()
+        {
+            return TypeService.GetPrefixedTypeScriptType(Parameter.ParameterType, ParameterName, GetTypeMapping);
+        }
+
         public string GetParameterString(bool withOptionals = true, bool interfaceName = false)
         {
             var isOptional = withOptionals && IsOptional && TypeService.IsParameterOptional(Parameter);
-            var typeScriptType = GetTypeScriptType();
+            var typeScriptType = GetPrefixedTypeScriptType();
 
             var collectionString = Helpers.GetCollectionPostfix(typeScriptType.CollectionLevel);
 

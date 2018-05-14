@@ -271,7 +271,6 @@ namespace WebApiToTypeScript.Interfaces
 
                 string interfaceName;
                 string typeName;
-                bool isEnum = false;
 
                 if (thing.CSharpType.IsGenericParameter)
                 {
@@ -313,18 +312,17 @@ namespace WebApiToTypeScript.Interfaces
 
                     if (union.Count == 1)
                     {
-                        var typeScriptType = TypeService.GetTypeScriptType(union[0], thing.Name);
+                        var typeScriptType = TypeService.GetPrefixedTypeScriptType(union[0], thing.Name, string.Empty);
 
                         typeName = typeScriptType.TypeName;
                         interfaceName = typeScriptType.InterfaceName;
-                        isEnum = typeScriptType.IsEnum;
                     }
                     else
                     {
                         typeName = string.Join(" | ", union
                             .Select(t =>
                             {
-                                var type = TypeService.GetTypeScriptType(t, thing.Name);
+                                var type = TypeService.GetPrefixedTypeScriptType(t, thing.Name, string.Empty);
                                 return type.TypeName;
                             })
                             .Distinct());
@@ -332,7 +330,7 @@ namespace WebApiToTypeScript.Interfaces
                         interfaceName = string.Join(" | ", union
                             .Select(t =>
                             {
-                                var type = TypeService.GetTypeScriptType(t, thing.Name);
+                                var type = TypeService.GetPrefixedTypeScriptType(t, thing.Name, string.Empty);
                                 return type.InterfaceName;
                             }).Distinct());
                     }
@@ -367,15 +365,6 @@ namespace WebApiToTypeScript.Interfaces
                 var collectionString = Helpers.GetCollectionPostfix(thing.CSharpType.CollectionLevel);
 
                 thingName = TypeService.FixIfReservedWord(thingName);
-
-                if (Config.NoNamespacesOrModules)
-                {
-                    if (isEnum)
-                    {
-                        interfaceName = $"Enums.{interfaceName}";
-                        typeName = $"Enums.{typeName}";
-                    }
-                }
 
                 interfaceBlock
                     .AddStatement($"{thingName}: {interfaceName}{collectionString};");

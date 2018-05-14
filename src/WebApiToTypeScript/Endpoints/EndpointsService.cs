@@ -87,7 +87,7 @@ namespace WebApiToTypeScript.Endpoints
                         .AddAndUseBlock($"export interface I{actionName}Endpoint extends I{actionName}, IEndpoint");
 
                     var ctorBlock = controllerBlock
-                        .AddAndUseBlock($"export interface I{actionName}Ctor")
+                        .AddAndUseBlock($"export interface I{actionName}Ctor")  
                         .AddStatement($"new(args?: I{actionName}): I{actionName}Endpoint");
 
                     if (Config.GenerateService)
