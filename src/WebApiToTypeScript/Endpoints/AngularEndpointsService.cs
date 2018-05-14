@@ -20,14 +20,14 @@ namespace WebApiToTypeScript.Endpoints
                 var interfacesFileName = Path.GetFileNameWithoutExtension(Config.InterfacesFileName);
 
                 block = block
-                    .AddStatement($"import * as Interfaces from '{relativePathToInterfacesFile}/{interfacesFileName}'");
+                    .AddStatement($"import * as Interfaces from '{relativePathToInterfacesFile}/{interfacesFileName}';");
             }
 
             var relativePathToEndpointsFile = Helpers.GetRelativePath(Config.ServiceOutputDirectory, Config.EndpointsOutputDirectory);
             var endpointsFileName = Path.GetFileNameWithoutExtension(Config.EndpointsFileName);
 
             block = block
-                .AddStatement($"import * as {Endpoints} from '{relativePathToEndpointsFile}/{endpointsFileName}'")
+                .AddStatement($"import * as {Endpoints} from '{relativePathToEndpointsFile}/{endpointsFileName}';")
                 .AddStatement("")
                 .AddStatement("import { Injectable } from '@angular/core';")
                 .AddStatement("import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';")
@@ -161,6 +161,11 @@ namespace WebApiToTypeScript.Endpoints
                     }
                 }
             }
+        }
+
+        public string GetAdditionalCallArguments()
+        {
+            return $"httpHeaders?: HttpHeaders";
         }
     }
 }

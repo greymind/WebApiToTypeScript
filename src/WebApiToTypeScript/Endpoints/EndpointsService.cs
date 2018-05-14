@@ -18,8 +18,16 @@ namespace WebApiToTypeScript.Endpoints
                 var interfacesFileName = Path.GetFileNameWithoutExtension(Config.InterfacesFileName);
 
                 block = block
-                    .AddStatement($"import * as Interfaces from '{relativePathToInterfacesFile}/{interfacesFileName}'");
+                    .AddStatement($"import * as Interfaces from '{relativePathToInterfacesFile}/{interfacesFileName}';");
             }
+
+            var relativePathToEndpointsFile = Helpers.GetRelativePath(Config.ServiceOutputDirectory, Config.EndpointsOutputDirectory);
+            var endpointsFileName = Path.GetFileNameWithoutExtension(Config.EndpointsFileName);
+
+            block = block
+                .AddStatement("")
+                .AddStatement($"import * as _ from 'lodash';")
+                .AddStatement("import { HttpHeaders } from '@angular/common/http';");
 
             block
                 .AddAndUseBlock($"export interface {IEndpoint}")
@@ -142,20 +150,22 @@ namespace WebApiToTypeScript.Endpoints
             var callArgument = callArguments
                 .SingleOrDefault();
 
+            var additionalCallArguments = LibraryEndpointsService.GetAdditionalCallArguments();
+
             var callArgumentsList = string.IsNullOrWhiteSpace(callArgument)
-                ? "httpConfig?: ng.IRequestShortcutConfig"
-                : $"{callArgument}, httpConfig?: ng.IRequestShortcutConfig";
+                ? additionalCallArguments
+                : $"{callArgument}, {additionalCallArguments}";
 
             string typeScriptReturnType, typeScriptTypeForCall;
 
             action.GetReturnTypes(out typeScriptReturnType, out typeScriptTypeForCall);
 
             interfaceWithCallBlock
-                .AddStatement($"call{typeScriptTypeForCall}({callArgumentsList}): ng.IPromise{typeScriptReturnType};");
+                .AddStatement($"call{typeScriptTypeForCall}({callArgumentsList}): Promise{typeScriptReturnType};");
 
             if (Config.EndpointsSupportCaching && verb == WebApiHttpVerb.Get)
                 interfaceWithCallBlock
-                    .AddStatement($"callCached{typeScriptTypeForCall}({callArgumentsList}): ng.IPromise{typeScriptReturnType};");
+                    .AddStatement($"callCached{typeScriptTypeForCall}({callArgumentsList}): Promise{typeScriptReturnType};");
         }
 
         private void WriteToStringToBlock(TypeScriptBlock classBlock, string actionName, WebApiAction action)

@@ -1,3 +1,4 @@
+using WebApiToTypeScript.Endpoints;
 using WebApiToTypeScript.Enums;
 using WebApiToTypeScript.Interfaces;
 using WebApiToTypeScript.Types;
@@ -17,6 +18,9 @@ namespace WebApiToTypeScript
 
         protected InterfaceService InterfaceService
             => WebApiToTypeScript.InterfaceService;
+
+        protected IEndpointsService LibraryEndpointsService
+            => WebApiToTypeScript.LibraryEndpointsService;
 
         public Config.Config Config
             => WebApiToTypeScript.Config;

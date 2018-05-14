@@ -35,6 +35,7 @@ namespace WebApiToTypeScript
 
         public static EndpointsService EndpointsService { get; private set; }
 
+        public static IEndpointsService LibraryEndpointsService { get; private set; }
         public static AngularEndpointsService AngularEndpointsService { get; private set; }
         public static AngularJSEndpointsService AngularJSEndpointsService { get; private set; }
 
@@ -80,22 +81,8 @@ namespace WebApiToTypeScript
                 StartAnalysis("controllers and actions");
 
                 var endpointBlock = EndpointsService.CreateEndpointBlock();
-                IEndpointsService endpointsService = null;
 
-                if (Config.ServiceType == AngularJS)
-                {
-                    endpointsService = AngularJSEndpointsService;
-                }
-                else if (Config.ServiceType == Angular)
-                {
-                    endpointsService = AngularEndpointsService;
-                }
-                else
-                {
-                    LogMessage($"Service type {Config.ServiceType} not supported!");
-                }
-
-                var serviceBlock = endpointsService.CreateServiceBlock();
+                var serviceBlock = LibraryEndpointsService.CreateServiceBlock();
 
                 foreach (var apiController in apiControllers)
                 {
@@ -110,7 +97,7 @@ namespace WebApiToTypeScript
                             .OfType<TypeScriptBlock>()
                             .First();
 
-                        endpointsService.WriteServiceObjectToBlock(classBlock, webApiController);
+                        LibraryEndpointsService.WriteServiceObjectToBlock(classBlock, webApiController);
                     }
                 }
 
@@ -180,6 +167,19 @@ namespace WebApiToTypeScript
 
             AngularEndpointsService = new AngularEndpointsService();
             AngularJSEndpointsService = new AngularJSEndpointsService();
+
+            if (Config.ServiceType == AngularJS)
+            {
+                LibraryEndpointsService = AngularJSEndpointsService;
+            }
+            else if (Config.ServiceType == Angular)
+            {
+                LibraryEndpointsService = AngularEndpointsService;
+            }
+            else
+            {
+                LogMessage($"Service type {Config.ServiceType} not supported!");
+            }
 
             ViewsService = new ViewsService();
             ResourceService = new ResourceService();

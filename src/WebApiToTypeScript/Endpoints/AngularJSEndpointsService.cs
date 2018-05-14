@@ -141,5 +141,10 @@ namespace WebApiToTypeScript.Endpoints
                 }
             }
         }
+
+        public string GetAdditionalCallArguments()
+        {
+            return $"httpConfig?: ng.IRequestShortcutConfig";
+        }
     }
 }
