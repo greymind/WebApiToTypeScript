@@ -8,6 +8,8 @@ namespace WebApiToTypeScript.Endpoints
 {
     public class AngularEndpointsService : ServiceAware, IEndpointsService
     {
+        private const string HttpClient = nameof(HttpClient);
+
         public TypeScriptBlock CreateServiceBlock()
         {
             Debug.Assert(Config.NoNamespacesOrModules, $"Angular service doesn't support {nameof(Config.NoNamespacesOrModules)} = false!");
@@ -26,12 +28,17 @@ namespace WebApiToTypeScript.Endpoints
             var relativePathToEndpointsFile = Helpers.GetRelativePath(Config.ServiceOutputDirectory, Config.EndpointsOutputDirectory);
             var endpointsFileName = Path.GetFileNameWithoutExtension(Config.EndpointsFileName);
 
+            var httpServiceType = !string.IsNullOrEmpty(Config.CustomHttpService)
+                ? Config.CustomHttpService
+                : HttpClient;
+
             block = block
                 .AddStatement($"import * as {Endpoints} from '{relativePathToEndpointsFile}/{endpointsFileName}';")
                 .AddNewLine()
                 .AddStatement($"import * as _ from 'lodash';")
                 .AddStatement("import { Injectable } from '@angular/core';")
-                .AddStatement("import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';")
+                .AddStatement("import { HttpClient, HttpHeaders } from '@angular/common/http';", condition: httpServiceType == HttpClient)
+                .AddStatement("import { HttpHeaders } from '@angular/common/http';", condition: httpServiceType != HttpClient)
                 .AddNewLine();
 
             foreach (var statement in Config.CustomEndpointsServiceStatements)
@@ -50,13 +57,13 @@ namespace WebApiToTypeScript.Endpoints
                 .AddStatement($"@Injectable()", condition: true, noNewLine: true)
                 .AddAndUseBlock($"export class {Config.ServiceName}")
                 .AddStatement("static endpointCache = {};", condition: Config.EndpointsSupportCaching)
-                .AddAndUseBlock($"constructor(private httpClient: {Config.CustomHttpService})");
+                .AddAndUseBlock($"constructor(private httpClient: {httpServiceType})");
 
             var serviceBlock = constructorBlock
                 .Parent
-                .AddAndUseBlock($"static call<TView>(httpClient: {Config.CustomHttpService}, endpoint: {Endpoints}.{IEndpoint}, data, httpHeaders?: HttpHeaders)");
+                .AddAndUseBlock($"static call<TView>(httpClient: {httpServiceType}, endpoint: {Endpoints}.{IEndpoint}, data, httpHeaders?: HttpHeaders)");
 
-            if (Config.CustomHttpService != "HttpClient")
+            if (httpServiceType != HttpClient)
             {
                 serviceBlock = serviceBlock
                     .AddStatement($"return httpClient.request<TView>(endpoint._verb, endpoint.toString(), data, httpHeaders);");

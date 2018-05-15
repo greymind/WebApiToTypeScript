@@ -186,7 +186,7 @@ namespace WebApiToTypeScript.Config
             = "api/";
 
         public string CustomHttpService { get; set; }
-            = "HttpClient";
+            = "";
 
         public string[] CustomEndpointsStatements { get; set; }
 
