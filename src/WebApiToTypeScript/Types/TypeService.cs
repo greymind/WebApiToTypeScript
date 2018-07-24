@@ -200,7 +200,7 @@ namespace WebApiToTypeScript.Types
             return typeScriptType;
         }
 
-        public TypeScriptType GetTypeScriptType(TypeReference cSharpType, string parameterName, Func<string, string, TypeMapping> getTypeMapping)
+        public TypeScriptType GetTypeScriptType(TypeReference cSharpType, string parameterName, Func<string, string, TypeMapping> getTypeMapping, bool ignoreEnumDefinitions = false)
         {
             var result = new TypeScriptType();
 
@@ -220,7 +220,7 @@ namespace WebApiToTypeScript.Types
 
             if (typeDefinition?.IsEnum ?? false)
             {
-                if (!Config.GenerateEnums)
+                if (!Config.GenerateEnums || ignoreEnumDefinitions)
                 {
                     result.TypeName = "number";
                     result.InterfaceName = "number";

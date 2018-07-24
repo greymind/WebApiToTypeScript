@@ -11,6 +11,8 @@ namespace WebApiToTypeScript.WebApi
         public string Route { get; set; }
         public string Endpoint { get; set; }
 
+        public bool IsMobileAction { get; set; }
+
         public WebApiController Controller { get; set; }
 
         public MethodDefinition Method { get; set; }
@@ -27,12 +29,14 @@ namespace WebApiToTypeScript.WebApi
         public List<WebApiRoutePart> BodyParameters { get; }
             = new List<WebApiRoutePart>();
 
-        public WebApiAction(WebApiController controller, MethodDefinition method, string name)
+        public WebApiAction(WebApiController controller, MethodDefinition method, string name, bool isMobileAction = false)
         {
             Controller = controller;
 
             Method = method;
             Name = name;
+
+            IsMobileAction = isMobileAction;
 
             Verbs = Method.CustomAttributes
                 .Select(a => WebApiHttpVerb.Verbs.SingleOrDefault(v => v.VerbAttribute == a.AttributeType.Name))
@@ -172,8 +176,8 @@ namespace WebApiToTypeScript.WebApi
                     IsOptional = routePart.IsOptional && TypeService.IsParameterOptional(routePart.Parameter),
                     TypeMapping = routePart.GetTypeMapping(),
                     Name = routePart.Parameter.Name,
-                    StringWithOptionals = routePart.GetParameterString(interfaceName: true),
-                    String = routePart.GetParameterString(withOptionals: false, interfaceName: true)
+                    StringWithOptionals = routePart.GetParameterString(interfaceName: true, ignoreEnumDefinitions: this.IsMobileAction),
+                    String = routePart.GetParameterString(withOptionals: false, interfaceName: true, ignoreEnumDefinitions: this.IsMobileAction)
                 })
                 .OrderBy(p => p.IsOptional)
                 .ToArray();

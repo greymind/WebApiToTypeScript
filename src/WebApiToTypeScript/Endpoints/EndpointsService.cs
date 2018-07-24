@@ -7,9 +7,16 @@ namespace WebApiToTypeScript.Endpoints
 {
     public class EndpointsService : ServiceAware
     {
+        private readonly bool isMobile;
+
+        public EndpointsService(bool isMobile = false)
+        {
+            this.isMobile = isMobile;
+        }
+
         public TypeScriptBlock CreateEndpointBlock()
         {
-            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}");
+            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {(!isMobile ? Config.EndpointsNamespace : Config.MobileEndpointsNamespace)}");
 
             block
                 .AddAndUseBlock($"export interface {IEndpoint}")
@@ -20,14 +27,14 @@ namespace WebApiToTypeScript.Endpoints
                 .AddAndUseBlock("if (value == null)")
                 .AddStatement("return;")
                 .Parent
-                .AddAndUseBlock($"if (_.isArray(value))")
-                .AddStatement($"var encodedItems = _.map(value, (item: any) => encodeURIComponent(item.toString()));")
-                .AddStatement($"_(encodedItems).each(item => parameters.push(`${{key}}=${{item}}`));")
+                .AddAndUseBlock($"if (Array.isArray(value))")
+                .AddStatement($"var encodedItems = value.map((item: any) => encodeURIComponent(item.toString()));")
+                .AddStatement($"encodedItems.forEach(item => parameters.push(`${{key}}=${{item}}`));")
                 .Parent
-                .AddAndUseBlock("else if (_.isObject(value) && value.getQueryParams)")
+                .AddAndUseBlock("else if (value && typeof value === 'object' && value.constructor === Object && value.getQueryParams)")
                 .AddStatement(@"addParameter(parameters, key, value.getQueryParams());")
                 .Parent
-                .AddAndUseBlock("else if (_.isObject(value))")
+                .AddAndUseBlock("else if (value && typeof value === 'object' && value.constructor === Object)")
                 .AddStatement(@"Object.keys(value).forEach((key) => { addParameter(parameters, key, value[key]); });")
                 .Parent
                 .AddAndUseBlock("else")
@@ -42,13 +49,13 @@ namespace WebApiToTypeScript.Endpoints
                 .AddAndUseBlock($"export {Config.NamespaceOrModuleName} {webApiController.Name}");
 
             TypeScriptBlock serviceBlock = null;
-            if (Config.GenerateService)
+            if (Config.GenerateService && !isMobile)
             {
                 serviceBlock = controllerBlock
                     .AddAndUseBlock($"export interface I{webApiController.Name}Service");
             }
 
-            var actions = webApiController.Actions;
+            var actions = !isMobile ? webApiController.Actions : webApiController.MobileActions;
 
             foreach (var action in actions)
             {
@@ -80,7 +87,7 @@ namespace WebApiToTypeScript.Endpoints
                         .AddAndUseBlock($"export interface I{actionName}Ctor")
                         .AddStatement($"new(args?: I{actionName}): I{actionName}Endpoint");
                     
-                    if (Config.GenerateService)
+                    if (Config.GenerateService && !isMobile)
                     {
                         var interfaceWithCallBlock = controllerBlock
                             .AddAndUseBlock($"export interface I{actionName}WithCall extends I{actionName}, {IEndpoint}");

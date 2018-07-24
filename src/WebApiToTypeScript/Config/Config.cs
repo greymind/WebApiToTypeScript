@@ -14,8 +14,14 @@ namespace WebApiToTypeScript.Config
         public bool GenerateEndpoints { get; set; }
             = false;
 
+        public bool GenerateMobileEndpoints { get; set; }
+            = false;
+
         public string EndpointsOutputDirectory { get; set; }
             = "Generated";
+
+        public string MobileEndpointsOutputDirectory { get; set; }
+            = "GeneratedMobile";
 
         public bool EndpointsSupportCaching { get; set; }
             = false;
@@ -23,8 +29,14 @@ namespace WebApiToTypeScript.Config
         public string EndpointsFileName { get; set; }
             = "Endpoints.ts";
 
+        public string MobileEndpointsFileName { get; set; }
+            = "MobileEndpoints.ts";
+
         public string EndpointsNamespace { get; set; }
             = "Endpoints";
+
+        public string MobileEndpointsNamespace { get; set; }
+            = "MobileEndpoints";
 
         public bool GenerateService { get; set; }
             = false;
@@ -124,5 +136,8 @@ namespace WebApiToTypeScript.Config
 
         public List<TypeMapping> TypeMappings { get; set; }
             = new List<TypeMapping>();
+
+        public string MobileEndpointAttributeName { get; set; } 
+            = "MobileEndpointAttribute";
     }
 }
