@@ -148,7 +148,7 @@ namespace WebApiToTypeScript.WebApi
             return constructorParametersList;
         }
 
-        public ConstructorParameterMapping[] GetConstructorParameterMappings()
+        public ConstructorParameterMapping[] GetConstructorParameterMappings(bool ignoreEnumDefinitions = false)
         {
             var tempConstructorParameters = Method.Parameters
                 .Select(p => new
@@ -176,8 +176,8 @@ namespace WebApiToTypeScript.WebApi
                     IsOptional = routePart.IsOptional && TypeService.IsParameterOptional(routePart.Parameter),
                     TypeMapping = routePart.GetTypeMapping(),
                     Name = routePart.Parameter.Name,
-                    StringWithOptionals = routePart.GetParameterString(interfaceName: true, ignoreEnumDefinitions: this.IsMobileAction),
-                    String = routePart.GetParameterString(withOptionals: false, interfaceName: true, ignoreEnumDefinitions: this.IsMobileAction)
+                    StringWithOptionals = routePart.GetParameterString(interfaceName: true, ignoreEnumDefinitions: ignoreEnumDefinitions),
+                    String = routePart.GetParameterString(withOptionals: false, interfaceName: true, ignoreEnumDefinitions: ignoreEnumDefinitions)
                 })
                 .OrderBy(p => p.IsOptional)
                 .ToArray();

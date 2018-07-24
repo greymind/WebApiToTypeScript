@@ -29,7 +29,7 @@ namespace WebApiToTypeScript
         public static InterfaceService InterfaceService { get; private set; }
 
         public static EndpointsService EndpointsService { get; private set; }
-        public static EndpointsService MobileEndpointsService { get; private set; }
+        public static MobileEndpointsService MobileEndpointsService { get; private set; }
         public static AngularEndpointsService AngularEndpointsService { get; private set; }
 
         public static ViewsService ViewsService { get; private set; }
@@ -84,7 +84,7 @@ namespace WebApiToTypeScript
                     if (Config.GenerateEndpoints || Config.GenerateService)
                         EndpointsService.WriteEndpointClassToBlock(endpointBlock, webApiController);
 
-                    if (Config.GenerateMobileEndpoints && webApiController.MobileActions.Any())
+                    if (Config.GenerateMobileEndpoints && webApiController.Actions.Any(a => a.IsMobileAction))
                         MobileEndpointsService.WriteEndpointClassToBlock(mobileEndpointBlock, webApiController);
 
                     if (Config.GenerateService)
@@ -165,7 +165,7 @@ namespace WebApiToTypeScript
             InterfaceService = new InterfaceService();
 
             EndpointsService = new EndpointsService();
-            MobileEndpointsService = new EndpointsService(isMobile: true);
+            MobileEndpointsService = new MobileEndpointsService();
             AngularEndpointsService = new AngularEndpointsService();
 
             ViewsService = new ViewsService();

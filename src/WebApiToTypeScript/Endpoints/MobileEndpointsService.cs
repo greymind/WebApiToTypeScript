@@ -5,11 +5,11 @@ using WebApiToTypeScript.WebApi;
 
 namespace WebApiToTypeScript.Endpoints
 {
-    public class EndpointsService : ServiceAware
+    public class MobileEndpointsService : ServiceAware
     {
         public TypeScriptBlock CreateEndpointBlock()
         {
-            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.EndpointsNamespace}");
+            var block = new TypeScriptBlock($"{Config.NamespaceOrModuleName} {Config.MobileEndpointsNamespace}");
 
             block
                 .AddAndUseBlock($"export interface {IEndpoint}")
@@ -20,14 +20,14 @@ namespace WebApiToTypeScript.Endpoints
                 .AddAndUseBlock("if (value == null)")
                 .AddStatement("return;")
                 .Parent
-                .AddAndUseBlock($"if (_.isArray(value))")
-                .AddStatement($"var encodedItems = _.map(value, (item: any) => encodeURIComponent(item.toString()));")
-                .AddStatement($"_(encodedItems).each(item => parameters.push(`${{key}}=${{item}}`));")
+                .AddAndUseBlock($"if (Array.isArray(value))")
+                .AddStatement($"var encodedItems = value.map((item: any) => encodeURIComponent(item.toString()));")
+                .AddStatement($"encodedItems.forEach(item => parameters.push(`${{key}}=${{item}}`));")
                 .Parent
-                .AddAndUseBlock("else if (_.isObject(value) && value.getQueryParams)")
+                .AddAndUseBlock("else if (value && typeof value === 'object' && value.constructor === Object && value.getQueryParams)")
                 .AddStatement(@"addParameter(parameters, key, value.getQueryParams());")
                 .Parent
-                .AddAndUseBlock("else if (_.isObject(value))")
+                .AddAndUseBlock("else if (value && typeof value === 'object' && value.constructor === Object)")
                 .AddStatement(@"Object.keys(value).forEach((key) => { addParameter(parameters, key, value[key]); });")
                 .Parent
                 .AddAndUseBlock("else")
@@ -41,14 +41,7 @@ namespace WebApiToTypeScript.Endpoints
             var controllerBlock = endpointsBlock
                 .AddAndUseBlock($"export {Config.NamespaceOrModuleName} {webApiController.Name}");
 
-            TypeScriptBlock serviceBlock = null;
-            if (Config.GenerateService)
-            {
-                serviceBlock = controllerBlock
-                    .AddAndUseBlock($"export interface I{webApiController.Name}Service");
-            }
-
-            var actions = webApiController.Actions;
+            var actions = webApiController.Actions.Where(a => a.IsMobileAction);
 
             foreach (var action in actions)
             {
@@ -80,22 +73,11 @@ namespace WebApiToTypeScript.Endpoints
                         .AddAndUseBlock($"export interface I{actionName}Ctor")
                         .AddStatement($"new(args?: I{actionName}): I{actionName}Endpoint");
                     
-                    if (Config.GenerateService)
-                    {
-                        var interfaceWithCallBlock = controllerBlock
-                            .AddAndUseBlock($"export interface I{actionName}WithCall extends I{actionName}, {IEndpoint}");
-
-                        WriteInterfaceWithCallToBlock(interfaceWithCallBlock, action, verb);
-
-                        serviceBlock
-                            .AddStatement($"{actionName}: (args?: I{actionName}) => I{actionName}WithCall");
-                    }
-
                     var ctorImplBlock = controllerBlock
                         .AddAndUseBlock($"export var {actionName} : I{actionName}Ctor = <any>(function(args?: I{actionName})", false, ");")
                         .AddStatement($"this._verb = '{verb.VerbMethod}';");
 
-                    var constructorParameterMappings = action.GetConstructorParameterMappings(ignoreEnumDefinitions: false);
+                    var constructorParameterMappings = action.GetConstructorParameterMappings(ignoreEnumDefinitions: true);
                     foreach (var mapping in constructorParameterMappings)
                     {
                         ctorImplBlock.AddStatement($"this.{mapping.Name} = args != null ? args.{mapping.Name} : null;");
@@ -116,7 +98,7 @@ namespace WebApiToTypeScript.Endpoints
 
         private void WriteInterfaceToBlock(TypeScriptBlock interfaceBlock, WebApiAction action)
         {
-            var constructorParameterMappings = action.GetConstructorParameterMappings(ignoreEnumDefinitions: false);
+            var constructorParameterMappings = action.GetConstructorParameterMappings(ignoreEnumDefinitions: true);
             foreach (var constructorParameterMapping in constructorParameterMappings)
             {
                 interfaceBlock

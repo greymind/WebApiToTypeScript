@@ -13,9 +13,6 @@ namespace WebApiToTypeScript.WebApi
         public List<WebApiAction> Actions { get; set; }
             = new List<WebApiAction>();
 
-        public List<WebApiAction> MobileActions { get; set; }
-            = new List<WebApiAction>();
-
         public List<WebApiRoutePart> RouteParts { get; set; }
             = new List<WebApiRoutePart>();
 
@@ -30,7 +27,6 @@ namespace WebApiToTypeScript.WebApi
             BaseEndpoint = Helpers.GetBaseEndpoint(RouteParts);
 
             BuildActions(apiController);
-            BuildMobileActions(apiController);
         }
 
         private void BuildActions(TypeDefinition apiController)
@@ -46,26 +42,7 @@ namespace WebApiToTypeScript.WebApi
                     controller: this,
                     method: m,
                     name: GetUniqueMethodName(methodNames, m.Name),
-                    isMobileAction: false
-                ))
-                .ToList();
-        }
-
-        private void BuildMobileActions(TypeDefinition apiController)
-        {
-            var methodNames = new HashSet<string>();
-
-            MobileActions = apiController.Methods
-                .Where(m => m.IsPublic
-                            && m.HasCustomAttributes
-                            && m.CustomAttributes.Any(a => WebApiHttpVerb.Verbs.Any(v => v.VerbAttribute == a.AttributeType.Name))
-                            && m.CustomAttributes.Any(a => a.AttributeType.Name == WebApiToTypeScript.Config.MobileEndpointAttributeName))
-                .Select(m => new WebApiAction
-                (
-                    controller: this,
-                    method: m,
-                    name: GetUniqueMethodName(methodNames, m.Name),
-                    isMobileAction: true
+                    isMobileAction: m.CustomAttributes.Any(a => a.AttributeType.Name == WebApiToTypeScript.Config.MobileEndpointAttributeName)
                 ))
                 .ToList();
         }
