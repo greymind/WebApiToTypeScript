@@ -106,30 +106,6 @@ namespace WebApiToTypeScript.Endpoints
             }
         }
 
-        private void WriteInterfaceWithCallToBlock(TypeScriptBlock interfaceWithCallBlock, WebApiAction action, WebApiHttpVerb verb)
-        {
-            var callArguments = action.BodyParameters
-                .Select(a => a.GetParameterString(withOptionals: false, interfaceName: true));
-            
-            var callArgument = callArguments
-                .SingleOrDefault();
-
-            var callArgumentsList = string.IsNullOrWhiteSpace(callArgument)
-                ? "httpConfig?: ng.IRequestShortcutConfig"
-                : $"{callArgument}, httpConfig?: ng.IRequestShortcutConfig";
-
-            string typeScriptReturnType, typeScriptTypeForCall;
-
-            action.GetReturnTypes(out typeScriptReturnType, out typeScriptTypeForCall);
-
-            interfaceWithCallBlock
-                .AddStatement($"call{typeScriptTypeForCall}({callArgumentsList}): ng.IPromise{typeScriptReturnType};");
-
-            if (Config.EndpointsSupportCaching && verb == WebApiHttpVerb.Get)
-                interfaceWithCallBlock
-                    .AddStatement($"callCached{typeScriptTypeForCall}({callArgumentsList}): ng.IPromise{typeScriptReturnType};");
-        }
-
         private void WriteToStringToBlock(TypeScriptBlock classBlock, string actionName, WebApiAction action)
         {
             var toStringBlock = classBlock
