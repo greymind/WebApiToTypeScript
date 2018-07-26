@@ -22,15 +22,15 @@ namespace WebApiToTypeScript.WebApi
         public List<string> CustomAttributes { get; set; }
             = new List<string>();
 
-        public TypeScriptType GetTypeScriptType()
+        public TypeScriptType GetTypeScriptType(bool ignoreEnumDefinitions = false)
         {
-            return TypeService.GetTypeScriptType(Parameter.ParameterType, ParameterName, GetTypeMapping);
+            return TypeService.GetTypeScriptType(Parameter.ParameterType, ParameterName, GetTypeMapping, ignoreEnumDefinitions);
         }
 
-        public string GetParameterString(bool withOptionals = true, bool interfaceName = false)
+        public string GetParameterString(bool withOptionals = true, bool interfaceName = false, bool ignoreEnumDefinitions = false)
         {
             var isOptional = withOptionals && IsOptional && TypeService.IsParameterOptional(Parameter);
-            var typeScriptType = GetTypeScriptType();
+            var typeScriptType = GetTypeScriptType(ignoreEnumDefinitions);
 
             var collectionString = Helpers.GetCollectionPostfix(typeScriptType.CollectionLevel);
 

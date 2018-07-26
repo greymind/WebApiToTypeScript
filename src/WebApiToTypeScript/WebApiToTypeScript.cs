@@ -29,6 +29,7 @@ namespace WebApiToTypeScript
         public static InterfaceService InterfaceService { get; private set; }
 
         public static EndpointsService EndpointsService { get; private set; }
+        public static MobileEndpointsService MobileEndpointsService { get; private set; }
         public static AngularEndpointsService AngularEndpointsService { get; private set; }
 
         public static ViewsService ViewsService { get; private set; }
@@ -73,6 +74,7 @@ namespace WebApiToTypeScript
                 StartAnalysis("controllers and actions");
 
                 var endpointBlock = EndpointsService.CreateEndpointBlock();
+                var mobileEndpointBlock = MobileEndpointsService.CreateEndpointBlock();
                 var serviceBlock = AngularEndpointsService.CreateServiceBlock();
 
                 foreach (var apiController in apiControllers)
@@ -81,6 +83,9 @@ namespace WebApiToTypeScript
 
                     if (Config.GenerateEndpoints || Config.GenerateService)
                         EndpointsService.WriteEndpointClassToBlock(endpointBlock, webApiController);
+
+                    if (Config.GenerateMobileEndpoints && webApiController.Actions.Any(a => a.IsMobileAction))
+                        MobileEndpointsService.WriteEndpointClassToBlock(mobileEndpointBlock, webApiController);
 
                     if (Config.GenerateService)
                     {
@@ -95,6 +100,11 @@ namespace WebApiToTypeScript
                 if (Config.GenerateEndpoints || Config.GenerateService)
                 {
                     CreateFileForBlock(endpointBlock, Config.EndpointsOutputDirectory, Config.EndpointsFileName);
+                }
+
+                if (Config.GenerateMobileEndpoints)
+                {
+                    CreateFileForBlock(mobileEndpointBlock, Config.MobileEndpointsOutputDirectory, Config.MobileEndpointsFileName);
                 }
 
                 if (Config.GenerateService)
@@ -155,6 +165,7 @@ namespace WebApiToTypeScript
             InterfaceService = new InterfaceService();
 
             EndpointsService = new EndpointsService();
+            MobileEndpointsService = new MobileEndpointsService();
             AngularEndpointsService = new AngularEndpointsService();
 
             ViewsService = new ViewsService();

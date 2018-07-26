@@ -7,6 +7,12 @@
     "EndpointsOutputDirectory": "./Scripts/Generated",
     "EndpointsFileName": "Endpoints.ts",
     "EndpointsNamespace": "Endpoints",
+	
+	"GenerateMobileEndpoints": true,
+	"MobileEndpointsOutputDirectory": "./Scripts/Generated",
+	"MobileEndpointsFileName": "MobileEndpoints.ts",
+	"MobileEndpointsNamespace": "MobileEndpoints",
+	"MobileEndpointAttributeName": "MobileEndpointAttribute",
 
     "GenerateService": true,
     "ServiceOutputDirectory": "./Scripts/Generated",

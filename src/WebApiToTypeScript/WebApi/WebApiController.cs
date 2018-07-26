@@ -41,7 +41,8 @@ namespace WebApiToTypeScript.WebApi
                 (
                     controller: this,
                     method: m,
-                    name: GetUniqueMethodName(methodNames, m.Name)
+                    name: GetUniqueMethodName(methodNames, m.Name),
+                    isMobileAction: m.CustomAttributes.Any(a => a.AttributeType.Name == WebApiToTypeScript.Config.MobileEndpointAttributeName)
                 ))
                 .ToList();
         }

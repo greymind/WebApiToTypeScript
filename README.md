@@ -70,6 +70,12 @@ angular.module('framework').service('AngularEndpointsService', Framework.Endpoin
   "EndpointsSupportCaching": "boolean",
   "EndpointsFileName": "string",
   "EndpointsNamespace": "string",
+  
+  "GenerateMobileEndpoints": "boolean",
+  "MobileEndpointsOutputDirectory": "string",
+  "MobileEndpointsFileName": "string",
+  "MobileEndpointsNamespace": "string",
+  "MobileEndpointAttributeName": "string",
 
   "GenerateService": "boolean",
   "ServiceOutputDirectory": "string",

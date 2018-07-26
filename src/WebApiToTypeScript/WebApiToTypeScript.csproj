@@ -69,6 +69,7 @@
     <Compile Include="Config\ResourceConfig.cs" />
     <Compile Include="Config\ViewConfig.cs" />
     <Compile Include="Endpoints\AngularEndpointsService.cs" />
+    <Compile Include="Endpoints\MobileEndpointsService.cs" />
     <Compile Include="Endpoints\EndpointsService.cs" />
     <Compile Include="Resources\ParameterTransform.cs" />
     <Compile Include="Resources\ResourceService.cs" />
