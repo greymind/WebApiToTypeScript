@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using WebApiToTypeScript.Block;
+using WebApiToTypeScript.Config;
 using WebApiToTypeScript.Endpoints;
 using WebApiToTypeScript.Enums;
 using WebApiToTypeScript.Interfaces;
@@ -40,6 +41,7 @@ namespace WebApiToTypeScript
 
         [Required]
         public string ConfigFilePath { get; set; }
+        public CommandLineConfig CommandLineConfig { get; set; }
 
         public override bool Execute()
         {
@@ -181,9 +183,13 @@ namespace WebApiToTypeScript
 
         private string ToAbsolutePath(string baseDir, string directory)
         {
-            return string.IsNullOrEmpty(directory)
-                ? null
-                : Path.GetFullPath(Path.Combine(baseDir, directory));
+            if (string.IsNullOrEmpty(directory))
+                return null;
+
+            if (Path.IsPathRooted(directory))
+                return directory;
+
+            return Path.GetFullPath(Path.Combine(baseDir, directory));
         }
 
         private Config.Config GetConfig(string configFilePath)
@@ -191,6 +197,7 @@ namespace WebApiToTypeScript
             var configFileContent = File.ReadAllText(configFilePath);
 
             var config = JsonConvert.DeserializeObject<Config.Config>(configFileContent);
+            config.ApplyCommandLineConfiguration(CommandLineConfig);
 
             var baseDir = Path.GetFullPath(Path.GetDirectoryName(configFilePath) ?? "");
 
