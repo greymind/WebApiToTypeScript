@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using CommandLine;
+using WebApiToTypeScript.Config;
 
 namespace Watts
 {
@@ -18,6 +20,10 @@ namespace Watts
             else if (args.Length > 0 && File.Exists(args[0]))
             {
                 watts.ConfigFilePath = args[0];
+
+                Parser.Default.ParseArguments<CommandLineConfig>(args)
+                    .WithParsed(cfg => watts.CommandLineConfig = cfg)
+                    .WithNotParsed((a) => Console.WriteLine("Command line configuration parse failed"));
             }
 
             int status = 0;

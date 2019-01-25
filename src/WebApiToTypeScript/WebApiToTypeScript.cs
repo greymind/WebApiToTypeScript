@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using WebApiToTypeScript.Block;
+using WebApiToTypeScript.Config;
 using WebApiToTypeScript.Endpoints;
 using WebApiToTypeScript.Enums;
 using WebApiToTypeScript.Interfaces;
@@ -40,6 +41,7 @@ namespace WebApiToTypeScript
 
         [Required]
         public string ConfigFilePath { get; set; }
+        public CommandLineConfig CommandLineConfig { get; set; }
 
         public override bool Execute()
         {
@@ -215,7 +217,7 @@ namespace WebApiToTypeScript
             foreach (var resourceConfig in config.ResourceConfigs)
                 resourceConfig.SourcePath = ToAbsolutePath(baseDir, resourceConfig.SourcePath);
 
-            return config;
+            return config.ApplyCommandLineConfiguration(CommandLineConfig);
         }
 
         private void CreateFileForBlock(TypeScriptBlock typeScriptBlock, string outputDirectory, string fileName)
