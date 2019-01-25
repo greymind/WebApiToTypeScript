@@ -140,15 +140,13 @@ namespace WebApiToTypeScript.Config
         public string MobileEndpointAttributeName { get; set; } 
             = "MobileEndpointAttribute";
 
-        public Config ApplyCommandLineConfiguration(CommandLineConfig commandLineConfig)
+        public void ApplyCommandLineConfiguration(CommandLineConfig commandLineConfig)
         {
             if (commandLineConfig == null)
-                return this;
+                return;
 
             if (!string.IsNullOrEmpty(commandLineConfig.WebApiModuleFileNames))
                 this.WebApiModuleFileNames = commandLineConfig.WebApiModuleFileNames.Split(',');
-
-            return this;
         }
     }
 }
