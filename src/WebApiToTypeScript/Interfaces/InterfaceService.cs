@@ -163,7 +163,7 @@ namespace WebApiToTypeScript.Interfaces
                 WriteInterfaceNode(interfacesBlock, interfaceNode);
             }
 
-            foreach (var derivedInterfaceNode in interfaceNode.DerivedInterfaces)
+            foreach (var derivedInterfaceNode in interfaceNode.DerivedInterfaces.ToList())
                 WriteInterfaces(interfacesBlock, derivedInterfaceNode);
         }
 
