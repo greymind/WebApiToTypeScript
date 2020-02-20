@@ -4,7 +4,8 @@ function Activate() {
     $MSBuildPaths = @(
         "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\MSBuild.exe",
         "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe",
-        "C:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe"
+        "C:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe",
+        "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
     )
 
     for ($i = 0; $i -lt $MSBuildPaths.Count; $i++) {
