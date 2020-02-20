@@ -10,7 +10,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A tool for code generating TypeScript endpoints, interfaces, enums, resources and view paths for your ASP.NET Web API controllers/web apps</description>
     <summary>A tool for code generating TypeScript endpoints, interfaces, enums, resources and view paths for your ASP.NET Web API controllers/web apps</summary>
-    <releaseNotes>Added support for command line overrides</releaseNotes>
+    <releaseNotes>Fixed derived interface generation in some cases.</releaseNotes>
     <copyright>Copyright (c) 2016-2019 Balakrishnan (Balki) Ranganathan</copyright>
     <tags>WebAPI TypeScript Endpoint Enum Interface Code Generation Angular Service Balki Greymind Watts Web API</tags>
   </metadata>
